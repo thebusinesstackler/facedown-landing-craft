@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, Quote } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { 
   Carousel,
   CarouselContent,
@@ -9,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious
 } from '@/components/ui/carousel';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Testimonials: React.FC = () => {
   const testimonials = [
@@ -38,17 +39,21 @@ const Testimonials: React.FC = () => {
     }
   ];
 
+  const [activeIndex, setActiveIndex] = useState(0);
+
   return (
-    <section id="testimonials" className="py-20 bg-gradient-to-r from-medical-light/50 to-white relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full opacity-5">
-        <div className="absolute top-20 left-10 w-40 h-40 rounded-full bg-medical-blue"></div>
-        <div className="absolute bottom-20 right-10 w-60 h-60 rounded-full bg-medical-green"></div>
-        <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full bg-medical-blue"></div>
+    <section id="testimonials" className="py-20 relative overflow-hidden">
+      {/* Background elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-medical-light/30 via-white/80 to-medical-light/30 z-0" />
+      <div className="absolute top-0 left-0 w-full h-full z-0">
+        <div className="absolute top-20 left-10 w-40 h-40 rounded-full bg-medical-blue/5 blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-60 h-60 rounded-full bg-medical-green/5 blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full bg-medical-blue/5 blur-3xl"></div>
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center justify-center gap-2 bg-medical-blue/10 px-4 py-1.5 rounded-full text-medical-blue font-medium text-sm mb-4">
+        <div className="text-center max-w-3xl mx-auto mb-16 opacity-95">
+          <div className="inline-flex items-center justify-center gap-2 bg-medical-blue/10 px-4 py-1.5 rounded-full text-medical-blue font-medium text-sm mb-4 backdrop-blur-sm">
             <Star className="w-4 h-4" />
             <span>Patient Testimonials</span>
           </div>
@@ -62,34 +67,38 @@ const Testimonials: React.FC = () => {
           </p>
         </div>
         
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <Carousel 
             opts={{
-              align: "start",
+              align: "center",
               loop: true,
             }}
-            className="px-4 md:px-10"
+            className="w-full"
+            onSelect={(index) => setActiveIndex(index)}
           >
-            <CarouselContent>
+            <CarouselContent className="-ml-2 md:-ml-4">
               {testimonials.map((testimonial, idx) => (
-                <CarouselItem key={idx} className="sm:basis-full md:basis-1/2 lg:basis-1/2 p-1">
-                  <div className="h-full">
-                    <Card className="overflow-hidden h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-medical-light/20">
-                      <CardContent className="p-8 h-full flex flex-col">
-                        <div className="mb-6 flex justify-between items-center">
-                          <Quote className="w-10 h-10 text-medical-blue/40" />
-                          <div className="flex">
-                            {[...Array(testimonial.rating)].map((_, i) => (
-                              <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                            ))}
-                          </div>
+                <CarouselItem key={idx} className="pl-2 md:pl-4 sm:basis-full md:basis-1/2 lg:basis-1/3">
+                  <div className="h-full p-1">
+                    <Card className={`h-full overflow-hidden border-0 transition-all duration-500 backdrop-blur-sm ${
+                      activeIndex === idx 
+                        ? 'shadow-xl scale-105 bg-gradient-to-br from-white/90 to-medical-light/50' 
+                        : 'shadow-lg bg-gradient-to-br from-white/70 to-medical-light/30'
+                    }`}>
+                      <CardContent className="p-6 md:p-8 h-full flex flex-col">
+                        <div className="mb-4 flex">
+                          {[...Array(testimonial.rating)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          ))}
                         </div>
                         
-                        <blockquote className="text-gray-700 italic mb-8 flex-grow text-lg">
-                          "{testimonial.quote}"
-                        </blockquote>
+                        <ScrollArea className="flex-grow max-h-56">
+                          <p className="text-gray-700 mb-6 text-lg leading-relaxed">
+                            {testimonial.quote}
+                          </p>
+                        </ScrollArea>
                         
-                        <div className="mt-auto">
+                        <div className="mt-auto pt-4 border-t border-gray-100/50">
                           <div className="text-right">
                             <p className="font-bold text-medical-dark">{testimonial.name}</p>
                             <p className="text-sm text-gray-500">{testimonial.location}</p>
@@ -101,14 +110,30 @@ const Testimonials: React.FC = () => {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <div className="flex items-center justify-center mt-8 gap-4">
-              <CarouselPrevious className="relative static h-10 w-10 rounded-full border-2 border-medical-blue/30 hover:border-medical-blue transition-all bg-white/80" />
-              <CarouselNext className="relative static h-10 w-10 rounded-full border-2 border-medical-blue/30 hover:border-medical-blue transition-all bg-white/80" />
+            <div className="flex items-center justify-center mt-10 gap-4">
+              <CarouselPrevious className="relative static h-10 w-10 rounded-full bg-medical-blue/10 hover:bg-medical-blue/20 text-medical-blue border-0 backdrop-blur-sm transition-colors" />
+              <div className="flex gap-1">
+                {testimonials.map((_, idx) => (
+                  <button
+                    key={idx}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      activeIndex === idx ? 'bg-medical-blue w-6' : 'bg-medical-blue/30'
+                    }`}
+                    onClick={() => {
+                      const carouselApi = document.querySelector('[data-radix-carousel-viewport]')?.__embedded_carousel__;
+                      if (carouselApi) {
+                        carouselApi.scrollTo(idx);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+              <CarouselNext className="relative static h-10 w-10 rounded-full bg-medical-blue/10 hover:bg-medical-blue/20 text-medical-blue border-0 backdrop-blur-sm transition-colors" />
             </div>
           </Carousel>
         </div>
         
-        <div className="mt-16 text-center max-w-4xl mx-auto p-8 rounded-2xl bg-gradient-to-r from-medical-blue/5 to-white border border-medical-blue/10 shadow-md">
+        <div className="mt-16 text-center max-w-4xl mx-auto p-8 rounded-2xl bg-gradient-to-r from-medical-blue/5 to-white border border-medical-blue/10 shadow-md backdrop-blur-sm">
           <h3 className="text-2xl font-bold text-medical-dark mb-4">
             Join thousands of satisfied patients nationwide
           </h3>
