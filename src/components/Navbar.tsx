@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, Menu, X } from 'lucide-react';
@@ -61,14 +60,6 @@ const Navbar: React.FC = () => {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8 text-sm">
           <Link 
-            to="/#features" 
-            className={`font-medium transition-all hover:text-medical-green relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-medical-green after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-center ${
-              scrolled ? 'text-gray-800' : 'text-white'
-            }`}
-          >
-            Equipment
-          </Link>
-          <Link 
             to="/#how-it-works" 
             className={`font-medium transition-all hover:text-medical-green relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-medical-green after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-center ${
               scrolled ? 'text-gray-800' : 'text-white'
@@ -113,7 +104,7 @@ const Navbar: React.FC = () => {
             }`}
           >
             <Phone className="mr-2 h-4 w-4" />
-            <span>800-XXX-XXXX</span>
+            <span>(786) 592-0040</span>
           </Button>
           <Link to="/pricing">
             <Button className="bg-medical-green hover:bg-gradient-green text-white rounded-full transition-all duration-300 shadow-md hover:shadow-lg">
@@ -127,13 +118,6 @@ const Navbar: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 right-0 bg-white/95 backdrop-blur-md shadow-md border-t border-gray-100 p-4 z-50 animate-slide-down">
           <nav className="flex flex-col space-y-3 pb-4">
-            <Link 
-              to="/#features" 
-              className="px-4 py-2 text-gray-800 hover:text-medical-green hover:bg-gray-50 rounded-md"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Equipment
-            </Link>
             <Link 
               to="/#how-it-works" 
               className="px-4 py-2 text-gray-800 hover:text-medical-green hover:bg-gray-50 rounded-md"
@@ -165,7 +149,7 @@ const Navbar: React.FC = () => {
             <div className="pt-2 border-t border-gray-100">
               <Button className="w-full bg-medical-green hover:bg-medical-green/90 text-white">
                 <Phone className="mr-2 h-4 w-4" />
-                Call 800-XXX-XXXX
+                Call (786) 592-0040
               </Button>
             </div>
           </nav>

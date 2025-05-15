@@ -2,7 +2,6 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
-import Features from '@/components/Features';
 import HowItWorks from '@/components/HowItWorks';
 import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
@@ -21,7 +20,6 @@ const Index: React.FC = () => {
         <Hero />
       </div>
       <main className="flex-grow">
-        <Features />
         <HowItWorks />
         <OrderNow />
         <Testimonials />

@@ -16,7 +16,7 @@ const Footer: React.FC = () => {
             <div className="flex flex-col space-y-2 text-gray-300">
               <div className="flex items-center">
                 <Phone className="w-4 h-4 mr-2 text-medical-green" />
-                <span className="hover:text-white transition-colors">800-XXX-XXXX</span>
+                <span className="hover:text-white transition-colors">(786) 592-0040</span>
               </div>
               <div className="flex items-center">
                 <Mail className="w-4 h-4 mr-2 text-medical-green" />
