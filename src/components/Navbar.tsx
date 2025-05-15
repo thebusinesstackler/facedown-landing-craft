@@ -2,30 +2,34 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center">
-          <a href="/" className="flex items-center">
-            <span className="text-xl font-bold text-medical-blue">Face Down Recovery</span>
-          </a>
+          <Link to="/" className="flex items-center">
+            <span className="text-xl font-bold text-primary">Face Down Recovery</span>
+          </Link>
         </div>
         
         <nav className="hidden md:flex items-center gap-6 text-sm">
-          <a href="#features" className="font-medium transition-colors hover:text-medical-blue">
+          <Link to="/#features" className="font-medium transition-colors hover:text-primary">
             Equipment
-          </a>
-          <a href="#how-it-works" className="font-medium transition-colors hover:text-medical-blue">
+          </Link>
+          <Link to="/#how-it-works" className="font-medium transition-colors hover:text-primary">
             How It Works
-          </a>
-          <a href="#testimonials" className="font-medium transition-colors hover:text-medical-blue">
+          </Link>
+          <Link to="/pricing" className="font-medium transition-colors hover:text-primary">
+            Pricing
+          </Link>
+          <Link to="/#testimonials" className="font-medium transition-colors hover:text-primary">
             Testimonials
-          </a>
-          <a href="#contact" className="font-medium transition-colors hover:text-medical-blue">
+          </Link>
+          <Link to="/#contact" className="font-medium transition-colors hover:text-primary">
             Contact
-          </a>
+          </Link>
         </nav>
         
         <div className="flex items-center gap-2">
@@ -36,9 +40,11 @@ const Navbar: React.FC = () => {
             <Phone className="mr-2 h-4 w-4" />
             <span>800-XXX-XXXX</span>
           </Button>
-          <Button className="bg-medical-blue hover:bg-medical-blue/90 text-white">
-            Rent Equipment
-          </Button>
+          <Link to="/pricing">
+            <Button className="bg-medical-green hover:bg-medical-green/90 text-white">
+              Rent Equipment
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

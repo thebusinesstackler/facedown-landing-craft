@@ -2,10 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const TrustedPartnerSection: React.FC = () => {
   return (
-    <section className="py-16 bg-black text-white">
+    <section className="py-16 bg-medical-dark text-white">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
@@ -17,12 +18,14 @@ const TrustedPartnerSection: React.FC = () => {
               recovery tools to help you heal effectively. Our hassle-free rental process and exceptional support will ensure 
               your Rent face-down recovery equipment in Boca Raton and Palm Beach County goes as smoothly as possible.
             </p>
-            <Button 
-              size="lg" 
-              className="bg-green-500 hover:bg-green-600 text-white font-medium text-lg px-8 py-6 h-auto"
-            >
-              PLACE YOUR ORDER <ArrowRight className="ml-2" />
-            </Button>
+            <Link to="/pricing">
+              <Button 
+                size="lg" 
+                className="bg-medical-green hover:bg-medical-green/90 text-white font-medium text-lg px-8 py-6 h-auto"
+              >
+                PLACE YOUR ORDER <ArrowRight className="ml-2" />
+              </Button>
+            </Link>
           </div>
           
           <div className="flex justify-center md:justify-end">
