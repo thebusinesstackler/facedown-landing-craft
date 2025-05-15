@@ -11,6 +11,7 @@ import Footer from '@/components/Footer';
 import ContactForm from '@/components/ContactForm';
 import RecoveryImageGallery from '@/components/RecoveryImageGallery';
 import TrustedPartnerSection from '@/components/TrustedPartnerSection';
+import OrderNow from '@/components/OrderNow';
 
 const Index: React.FC = () => {
   return (
@@ -22,6 +23,7 @@ const Index: React.FC = () => {
       <main className="flex-grow">
         <Features />
         <HowItWorks />
+        <OrderNow />
         <Testimonials />
         <TrustedPartnerSection />
         <RecoveryImageGallery />
