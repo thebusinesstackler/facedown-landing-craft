@@ -11,11 +11,11 @@ const TrustedPartnerSection: React.FC = () => {
   const cityName = "Boca Raton"; // Dynamically replace with {city_name}
   
   return (
-    <section className="py-20 bg-white text-medical-dark border-t border-b border-gray-100">
+    <section className="py-20 bg-gradient-to-br from-white to-gray-50 text-medical-dark border-t border-b border-gray-100">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-medical-dark">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-medical-blue">
               Your Trusted Partner for {cityName} Rent Face-Down Recovery Equipment
             </h2>
             <div className="prose prose-lg text-gray-600 max-w-none">
@@ -44,11 +44,11 @@ const TrustedPartnerSection: React.FC = () => {
             <HoverCard>
               <HoverCardTrigger asChild>
                 <div 
-                  className="relative group rounded-lg overflow-hidden shadow-xl border-2 border-gray-200 max-w-md cursor-pointer"
+                  className="relative group rounded-lg overflow-hidden shadow-xl border-2 border-medical-amber/20 max-w-md cursor-pointer"
                   onMouseEnter={() => setIsHovering(true)}
                   onMouseLeave={() => setIsHovering(false)}
                 >
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <div className="absolute inset-0 bg-gradient-to-br from-medical-blue/40 to-medical-burgundy/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <ZoomIn className="text-white h-12 w-12" />
                   </div>
                   <img 
@@ -58,9 +58,9 @@ const TrustedPartnerSection: React.FC = () => {
                   />
                 </div>
               </HoverCardTrigger>
-              <HoverCardContent className="w-80 p-4 bg-white shadow-lg rounded-lg border border-gray-200">
+              <HoverCardContent className="w-80 p-4 bg-white shadow-lg rounded-lg border border-medical-amber/10">
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">Face-Down Recovery Equipment</h3>
+                  <h3 className="text-lg font-semibold text-medical-burgundy">Face-Down Recovery Equipment</h3>
                   <p className="text-sm text-gray-600">Click for detailed information about our equipment rental options in {cityName}.</p>
                 </div>
               </HoverCardContent>
