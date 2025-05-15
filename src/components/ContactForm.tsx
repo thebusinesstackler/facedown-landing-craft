@@ -82,6 +82,20 @@ const ContactForm: React.FC = () => {
             {/* Cities We Service Section */}
             <div className="bg-black/30 p-6 rounded-xl border border-gray-800">
               <h3 className="text-xl font-bold mb-4">Cities We Service</h3>
+              <div className="mb-4" dangerouslySetInnerHTML={{
+                __html: `[page-generator-pro-google-map 
+                map_mode="place" 
+                maptype="roadmap" 
+                location="{location(city_name)}" 
+                destination="{location(region_name)}" 
+                country_code="US" 
+                height="350" 
+                zoom="14" 
+                center_latitude="{location(city_latitude)}" 
+                center_longitude="{location(city_longitude)}" 
+                ignore_errors="0"]`
+              }} />
+              
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {servicedCities.map((location, index) => (
                   <div key={index} className="p-3 bg-black/50 rounded-lg border border-gray-800 hover:border-medical-green transition-colors">
