@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface SpintexHeadingProps {
@@ -11,32 +11,11 @@ interface SpintexHeadingProps {
 export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
   options,
   className,
-  interval = 3000
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setVisible(false);
-      
-      setTimeout(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % options.length);
-        setVisible(true);
-      }, 500); // Fade out duration
-      
-    }, interval);
-
-    return () => clearInterval(intervalId);
-  }, [options.length, interval]);
-
+  // Instead of cycling through options, just display the first one
   return (
-    <h1 className={cn(
-      visible ? "animate-fade-in" : "animate-fade-out",
-      "transition-opacity duration-500",
-      className
-    )}>
-      {options[currentIndex]}
+    <h1 className={cn(className)}>
+      {options[0]}
     </h1>
   );
 };
