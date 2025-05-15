@@ -15,9 +15,11 @@ import TrustedPartnerSection from '@/components/TrustedPartnerSection';
 const Index: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow">
+      <div className="relative">
+        <Navbar />
         <Hero />
+      </div>
+      <main className="flex-grow">
         <Features />
         <HowItWorks />
         <Testimonials />

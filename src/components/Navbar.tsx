@@ -6,28 +6,28 @@ import { Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="absolute top-0 left-0 right-0 z-50 w-full">
+      <div className="container flex h-20 items-center justify-between">
         <div className="flex items-center">
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold text-primary">Face Down Recovery</span>
+            <span className="text-xl font-bold text-white">Face Down Recovery</span>
           </Link>
         </div>
         
         <nav className="hidden md:flex items-center gap-6 text-sm">
-          <Link to="/#features" className="font-medium transition-colors hover:text-primary">
+          <Link to="/#features" className="font-medium transition-colors hover:text-medical-green text-white">
             Equipment
           </Link>
-          <Link to="/#how-it-works" className="font-medium transition-colors hover:text-primary">
+          <Link to="/#how-it-works" className="font-medium transition-colors hover:text-medical-green text-white">
             How It Works
           </Link>
-          <Link to="/pricing" className="font-medium transition-colors hover:text-primary">
+          <Link to="/pricing" className="font-medium transition-colors hover:text-medical-green text-white">
             Pricing
           </Link>
-          <Link to="/#testimonials" className="font-medium transition-colors hover:text-primary">
+          <Link to="/#testimonials" className="font-medium transition-colors hover:text-medical-green text-white">
             Testimonials
           </Link>
-          <Link to="/#contact" className="font-medium transition-colors hover:text-primary">
+          <Link to="/#contact" className="font-medium transition-colors hover:text-medical-green text-white">
             Contact
           </Link>
         </nav>
@@ -35,7 +35,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
-            className="hidden md:flex items-center text-medical-green"
+            className="hidden md:flex items-center text-white hover:bg-white/10"
           >
             <Phone className="mr-2 h-4 w-4" />
             <span>800-XXX-XXXX</span>
