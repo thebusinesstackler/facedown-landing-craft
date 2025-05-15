@@ -3,6 +3,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import SpintexHeading from './SpintexHeading';
 import { Separator } from '@/components/ui/separator';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Card } from '@/components/ui/card';
 
 const Hero: React.FC = () => {
   const spintexOptions = [
@@ -104,6 +106,62 @@ const Hero: React.FC = () => {
                   {"{Contact Us Now|Claim Offer|Get Started Today}"}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* New equipment showcase section with video */}
+        <div className="mt-24 py-12 bg-[#2a3b2d]/95 rounded-xl overflow-hidden">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Left video */}
+            <div className="relative rounded-lg overflow-hidden shadow-2xl mx-6">
+              <div className="aspect-w-16 aspect-h-9">
+                <video 
+                  autoPlay 
+                  muted 
+                  loop 
+                  className="w-full h-full object-cover"
+                >
+                  <source src="https://facedownrecoveryequipment.com/wp-content/uploads/2024/12/facedown-recovery-demo.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+            
+            {/* Right content */}
+            <div className="px-6 md:pr-12 space-y-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-white">
+                {"{Rent|Get} face-down recovery equipment {made easy|simplified} in {Boca Raton|your area}"}
+              </h2>
+              
+              <p className="text-lg text-white/80">
+                {"{Locally owned and operated|Family-owned and managed}, our team at Facedown Recovery Equipment makes {renting|obtaining} face-down recovery equipment in {Boca Raton|your city} {hassle-free|simple} with {quality-focused products|premium equipment}."}
+              </p>
+              
+              <ul className="space-y-4">
+                {[
+                  "{Custom|Specialized|Tailored} solutions for all needs",
+                  "{Affordable|Budget-friendly|Cost-effective} rental options for every budget",
+                  "{Quick|Fast|Rapid} delivery to ensure timely recovery",
+                  "{Affordable|Competitive} pricing with a {low-price|best-price} assurance",
+                  "{Flexible|Adaptable|Convenient} rental periods that fit your schedule",
+                  "{Easy-to-follow|Simple|Straightforward} rental process from start to finish",
+                  "{Complete|Comprehensive|Full} support from start to finish"
+                ].map((item, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <div className="bg-green-500 rounded-full p-1 flex-shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                        <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-lg">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              
+              <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 text-lg mt-6 w-full sm:w-auto">
+                Rent Now
+              </Button>
             </div>
           </div>
         </div>
