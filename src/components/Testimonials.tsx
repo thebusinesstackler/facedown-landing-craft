@@ -10,6 +10,12 @@ import {
   CarouselPrevious
 } from '@/components/ui/carousel';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem 
+} from '@/components/ui/pagination';
+import type { EmblaCarouselType } from 'embla-carousel-react';
 
 const Testimonials: React.FC = () => {
   const testimonials = [
@@ -40,6 +46,20 @@ const Testimonials: React.FC = () => {
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [api, setApi] = useState<EmblaCarouselType | null>(null);
+
+  useEffect(() => {
+    if (!api) return;
+    
+    const onSelect = () => {
+      setActiveIndex(api.selectedScrollSnap());
+    };
+    
+    api.on('select', onSelect);
+    return () => {
+      api.off('select', onSelect);
+    };
+  }, [api]);
 
   return (
     <section id="testimonials" className="py-20 relative overflow-hidden">
@@ -74,7 +94,7 @@ const Testimonials: React.FC = () => {
               loop: true,
             }}
             className="w-full"
-            onSelect={(index) => setActiveIndex(index)}
+            setApi={setApi}
           >
             <CarouselContent className="-ml-2 md:-ml-4">
               {testimonials.map((testimonial, idx) => (
@@ -112,22 +132,21 @@ const Testimonials: React.FC = () => {
             </CarouselContent>
             <div className="flex items-center justify-center mt-10 gap-4">
               <CarouselPrevious className="relative static h-10 w-10 rounded-full bg-medical-blue/10 hover:bg-medical-blue/20 text-medical-blue border-0 backdrop-blur-sm transition-colors" />
-              <div className="flex gap-1">
-                {testimonials.map((_, idx) => (
-                  <button
-                    key={idx}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      activeIndex === idx ? 'bg-medical-blue w-6' : 'bg-medical-blue/30'
-                    }`}
-                    onClick={() => {
-                      const carouselApi = document.querySelector('[data-radix-carousel-viewport]')?.__embedded_carousel__;
-                      if (carouselApi) {
-                        carouselApi.scrollTo(idx);
-                      }
-                    }}
-                  />
-                ))}
-              </div>
+              <Pagination className="inline-flex">
+                <PaginationContent>
+                  {testimonials.map((_, idx) => (
+                    <PaginationItem key={idx}>
+                      <button
+                        aria-label={`Go to slide ${idx + 1}`}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                          activeIndex === idx ? 'bg-medical-blue w-6' : 'bg-medical-blue/30'
+                        }`}
+                        onClick={() => api?.scrollTo(idx)}
+                      />
+                    </PaginationItem>
+                  ))}
+                </PaginationContent>
+              </Pagination>
               <CarouselNext className="relative static h-10 w-10 rounded-full bg-medical-blue/10 hover:bg-medical-blue/20 text-medical-blue border-0 backdrop-blur-sm transition-colors" />
             </div>
           </Carousel>
