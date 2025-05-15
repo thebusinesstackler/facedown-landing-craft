@@ -9,6 +9,7 @@ import FAQ from '@/components/FAQ';
 import ContactCTA from '@/components/ContactCTA';
 import Footer from '@/components/Footer';
 import ContactForm from '@/components/ContactForm';
+import RecoveryImageGallery from '@/components/RecoveryImageGallery';
 
 const Index: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const Index: React.FC = () => {
         <Features />
         <HowItWorks />
         <Testimonials />
+        <RecoveryImageGallery />
         <ContactForm />
         <FAQ />
         <ContactCTA />
