@@ -8,8 +8,9 @@ import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/h
 const TrustedPartnerSection: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false);
   
-  // Replace fixed city name with dynamic variable
-  const cityName = "{location(city_name)}"; 
+  // Replace fixed city name with a variable
+  const defaultCity = "Boca Raton";
+  const defaultRegion = "Florida";
   
   return (
     <section className="py-20 bg-gradient-to-br from-white to-gray-50 text-medical-dark border-t border-b border-gray-100">
@@ -17,17 +18,17 @@ const TrustedPartnerSection: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-medical-blue">
-              Your Trusted Partner for {cityName} Rent Face-Down Recovery Equipment
+              Your Trusted Partner for {defaultCity} Rent Face-Down Recovery Equipment
             </h2>
             <div className="prose prose-lg text-gray-600 max-w-none">
               <p>
-                Whether {"{healing after eye surgery|recovering from retinal surgery|needing post-operative support}"} in {cityName}, 
+                Whether {"{healing after eye surgery|recovering from retinal surgery|needing post-operative support}"} in {defaultCity}, 
                 FaceDown Recovery Equipment provides the {"{necessary|essential|vital}"} recovery tools to help you 
                 heal {"{effectively|properly|comfortably}"}.
               </p>
               <p className="mt-4">
                 Our {"{hassle-free|simple|convenient}"} rental process and {"{exceptional|outstanding|superior}"} support 
-                will ensure your recovery experience in {cityName} and {"{location(region_name)}"} County goes as 
+                will ensure your recovery experience in {defaultCity} and {defaultRegion} County goes as 
                 {"{smoothly|comfortably|seamlessly}"} as possible.
               </p>
             </div>
@@ -54,7 +55,7 @@ const TrustedPartnerSection: React.FC = () => {
                   </div>
                   <img 
                     src="https://facedownrecoveryequipment.com/wp-content/uploads/2024/12/facedown-positioning.jpg"
-                    alt="Face-down recovery positioning equipment in {location(city_name)}"
+                    alt={`Face-down recovery positioning equipment in ${defaultCity}`}
                     className={`w-full h-auto object-cover transition-transform duration-500 ${isHovering ? 'scale-110' : 'scale-100'}`}
                   />
                 </div>
@@ -62,7 +63,7 @@ const TrustedPartnerSection: React.FC = () => {
               <HoverCardContent className="w-80 p-4 bg-white shadow-lg rounded-lg border border-medical-amber/10">
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold text-medical-burgundy">Face-Down Recovery Equipment</h3>
-                  <p className="text-sm text-gray-600">Click for detailed information about our equipment rental options in {cityName}.</p>
+                  <p className="text-sm text-gray-600">Click for detailed information about our equipment rental options in {defaultCity}.</p>
                 </div>
               </HoverCardContent>
             </HoverCard>

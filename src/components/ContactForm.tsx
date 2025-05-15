@@ -4,6 +4,10 @@ import { Card } from '@/components/ui/card';
 import SpintexHeading from './SpintexHeading';
 
 const ContactForm: React.FC = () => {
+  // Define a default city name to use instead of the template variable
+  const defaultCity = "Boca Raton";
+  const defaultRegion = "Florida";
+
   useEffect(() => {
     // Load the form embed script
     const script = document.createElement('script');
@@ -19,11 +23,11 @@ const ContactForm: React.FC = () => {
 
   // List of cities serviced - could be dynamically loaded from a data source
   const servicedCities = [
-    { city: "{location(city_name)}", region: "{location(region_name)}", latitude: 26.3683, longitude: -80.1289 },
-    { city: "Miami", region: "{location(region_name)}", latitude: 25.7617, longitude: -80.1918 },
-    { city: "Fort Lauderdale", region: "{location(region_name)}", latitude: 26.1224, longitude: -80.1373 },
-    { city: "West Palm Beach", region: "{location(region_name)}", latitude: 26.7153, longitude: -80.0534 },
-    { city: "Delray Beach", region: "{location(region_name)}", latitude: 26.4615, longitude: -80.0728 }
+    { city: defaultCity, region: defaultRegion, latitude: 26.3683, longitude: -80.1289 },
+    { city: "Miami", region: defaultRegion, latitude: 25.7617, longitude: -80.1918 },
+    { city: "Fort Lauderdale", region: defaultRegion, latitude: 26.1224, longitude: -80.1373 },
+    { city: "West Palm Beach", region: defaultRegion, latitude: 26.7153, longitude: -80.0534 },
+    { city: "Delray Beach", region: defaultRegion, latitude: 26.4615, longitude: -80.0728 }
   ];
 
   return (
@@ -40,7 +44,7 @@ const ContactForm: React.FC = () => {
             interval={5000}
           />
           <p className="text-gray-300 text-lg">
-            {"{Fill out the form below|Contact us today|Reach out now}"} for {"{personalized recovery solutions|customized equipment|expert assistance}"} in {location(city_name)}.
+            {"{Fill out the form below|Contact us today|Reach out now}"} for {"{personalized recovery solutions|customized equipment|expert assistance}"} in {defaultCity}.
           </p>
         </div>
 
@@ -71,7 +75,7 @@ const ContactForm: React.FC = () => {
             {/* Smaller Map */}
             <div className="relative rounded-xl overflow-hidden h-[350px]">
               <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d114304.40083200874!2d-80.17553029943376!3d26.368296151218453!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88d8e3c5a9dae6bd%3A0x77a929f150d7516e!2{location(city_name)}%2C%20{location(region_name)}!5e0!3m2!1sen!2sus!4v1716644596117!5m2!1sen!2sus" 
+                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d114304.40083200874!2d-80.17553029943376!3d26.368296151218453!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88d8e3c5a9dae6bd%3A0x77a929f150d7516e!2${defaultCity}%2C%20${defaultRegion}!5e0!3m2!1sen!2sus!4v1716644596117!5m2!1sen!2sus`}
                 className="absolute inset-0 w-full h-full border-0 rounded-xl"
                 allowFullScreen={true}
                 loading="lazy"
@@ -82,19 +86,11 @@ const ContactForm: React.FC = () => {
             {/* Cities We Service Section */}
             <div className="bg-black/30 p-6 rounded-xl border border-gray-800">
               <h3 className="text-xl font-bold mb-4">Cities We Service</h3>
-              <div className="mb-4" dangerouslySetInnerHTML={{
-                __html: `[page-generator-pro-google-map 
-                map_mode="place" 
-                maptype="roadmap" 
-                location="{location(city_name)}" 
-                destination="{location(region_name)}" 
-                country_code="US" 
-                height="350" 
-                zoom="14" 
-                center_latitude="{location(city_latitude)}" 
-                center_longitude="{location(city_longitude)}" 
-                ignore_errors="0"]`
-              }} />
+              <div className="mb-4">
+                {/* Removed the dangerouslySetInnerHTML with problematic template variables */}
+                {/* Display a simple text instead */}
+                <p className="text-gray-300">We service {defaultCity} and surrounding areas in {defaultRegion}.</p>
+              </div>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {servicedCities.map((location, index) => (
@@ -106,7 +102,7 @@ const ContactForm: React.FC = () => {
               </div>
               <div className="mt-4 pt-4 border-t border-gray-800">
                 <p className="text-sm text-gray-400">
-                  Recovery in {"{location(city_name)}"} made easy - we provide equipment delivery and setup throughout {"{location(region_name)}"} and surrounding areas.
+                  Recovery in {defaultCity} made easy - we provide equipment delivery and setup throughout {defaultRegion} and surrounding areas.
                 </p>
               </div>
             </div>
