@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Star, Quote } from 'lucide-react';
 
 const Testimonials: React.FC = () => {
   const testimonials = [
@@ -8,66 +10,91 @@ const Testimonials: React.FC = () => {
       quote: "The equipment made all the difference in my recovery. Being able to maintain the face-down position comfortably helped me get through the challenging recovery period.",
       name: "Michael R.",
       location: "Dallas, TX",
-      rating: 5
+      rating: 5,
+      image: "https://i.pravatar.cc/150?img=1"
     },
     {
       quote: "Your sleep support system was a lifesaver! I was worried about how I would sleep face-down for so long, but the equipment made it possible. Thank you!",
       name: "Patricia L.",
       location: "Chicago, IL",
-      rating: 5
+      rating: 5,
+      image: "https://i.pravatar.cc/150?img=2"
     },
     {
       quote: "The delivery was prompt, and the setup team was very helpful in showing me how to use everything. The equipment was clean and in perfect condition.",
       name: "Robert S.",
       location: "Atlanta, GA",
-      rating: 5
+      rating: 5,
+      image: "https://i.pravatar.cc/150?img=3"
     },
     {
       quote: "I can't imagine going through vitrectomy recovery without this equipment. Worth every penny for the comfort and peace of mind.",
       name: "Susan T.",
       location: "Phoenix, AZ",
-      rating: 5
+      rating: 5,
+      image: "https://i.pravatar.cc/150?img=4"
     }
   ];
 
   return (
-    <section id="testimonials" className="py-20 bg-white">
+    <section id="testimonials" className="py-20 bg-gradient-to-b from-white to-medical-light/30">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-medical-dark mb-4">What Our Patients Say</h2>
+          <div className="inline-flex items-center justify-center gap-2 bg-medical-blue/10 px-4 py-1.5 rounded-full text-medical-blue font-medium text-sm mb-4">
+            <Star className="w-4 h-4" />
+            <span>{"{Patient|Customer|Client}"} Testimonials</span>
+          </div>
+          
+          <h2 className="text-3xl md:text-5xl font-bold text-medical-dark mb-6">
+            {"{What Our Patients Say|Hear From Our Patients|Patient Success Stories}"}
+          </h2>
+          
           <p className="text-gray-600 text-lg">
-            Read about real experiences from patients who used our equipment during their recovery.
+            {"{Read about real experiences|Discover authentic stories|See what patients are saying}"} from {"{patients|individuals|people}"} who used our equipment during their {"{recovery|healing journey|post-surgery period}"}.
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {testimonials.map((testimonial, idx) => (
-            <Card key={idx} className="overflow-hidden border-0 shadow-lg">
-              <CardContent className="p-8 bg-gradient-to-tr from-medical-light to-white">
+            <Card key={idx} className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+              <CardContent className="p-8 bg-white h-full flex flex-col">
+                <div className="mb-6">
+                  <Quote className="w-10 h-10 text-medical-blue/20" />
+                </div>
+                
                 <div className="flex mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                    </svg>
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
                 
-                <blockquote className="text-gray-700 italic mb-4">
+                <blockquote className="text-gray-700 italic mb-6 flex-grow">
                   "{testimonial.quote}"
                 </blockquote>
                 
-                <div className="mt-6">
-                  <p className="font-bold text-medical-dark">{testimonial.name}</p>
-                  <p className="text-sm text-gray-500">{testimonial.location}</p>
+                <div className="mt-6 flex items-center">
+                  <Avatar className="h-12 w-12 border-2 border-medical-blue/20">
+                    <AvatarImage src={testimonial.image} alt={testimonial.name} />
+                    <AvatarFallback className="bg-medical-blue/10 text-medical-blue">
+                      {testimonial.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="ml-4">
+                    <p className="font-bold text-medical-dark">{testimonial.name}</p>
+                    <p className="text-sm text-gray-500">{testimonial.location}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
         
-        <div className="mt-12 text-center">
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            We're proud to have helped thousands of patients across the nation with their vitrectomy recovery. Our equipment is trusted by both patients and medical professionals.
+        <div className="mt-16 text-center max-w-4xl mx-auto bg-medical-blue/5 p-8 rounded-2xl">
+          <h3 className="text-2xl font-bold text-medical-dark mb-4">
+            {"{Join|Be part of} thousands of {satisfied|happy} patients nationwide"}
+          </h3>
+          <p className="text-gray-600 max-w-3xl mx-auto">
+            {"{We're proud|We're honored|It's our privilege}"} to have helped thousands of patients across the nation with their vitrectomy recovery. Our equipment is {"{trusted by|recommended by|chosen by}"} both patients and medical professionals for {"{reliable|effective|comfortable}"} face-down recovery solutions.
           </p>
         </div>
       </div>
