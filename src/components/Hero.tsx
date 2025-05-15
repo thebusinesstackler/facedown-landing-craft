@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import SpintexHeading from './SpintexHeading';
@@ -163,6 +162,105 @@ const Hero: React.FC = () => {
                 Rent Now
               </Button>
             </div>
+          </div>
+        </div>
+        
+        {/* Equipment categories section */}
+        <div className="mt-24">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
+            Best Rent face-down recovery equipment in Boca Raton
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Column 1 */}
+            <Card className="p-8 shadow-lg border-2 border-blue-100 hover:border-medical-blue transition-colors">
+              <ul className="space-y-6">
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Vitrectomy Recovery Chair</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Face-Down Cushion</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Adjustable Recovery Chair</span>
+                </li>
+              </ul>
+            </Card>
+            
+            {/* Column 2 */}
+            <Card className="p-8 shadow-lg border-2 border-blue-100 hover:border-medical-blue transition-colors">
+              <ul className="space-y-6">
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Post-Surgery Equipment</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Recovery Equipment for Vitrectomy</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Face-Down Healing Pillow</span>
+                </li>
+              </ul>
+            </Card>
+            
+            {/* Column 3 */}
+            <Card className="p-8 shadow-lg border-2 border-blue-100 hover:border-medical-blue transition-colors">
+              <ul className="space-y-6">
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Recovery Cushions</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Portable Recovery Chair</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="bg-medical-blue rounded-full p-1 flex-shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 16 16" className="text-white" fill="currentColor">
+                      <path d="M6.00016 10.7799L3.11016 7.8899L2.40016 8.5999L6.00016 12.1999L14.0002 4.1999L13.2902 3.4899L6.00016 10.7799Z" />
+                    </svg>
+                  </div>
+                  <span className="text-medical-dark text-lg font-medium">Post-Surgery Healing Gear</span>
+                </li>
+              </ul>
+            </Card>
           </div>
         </div>
       </div>
