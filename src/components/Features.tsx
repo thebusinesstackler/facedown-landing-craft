@@ -58,30 +58,51 @@ const Features: React.FC = () => {
           ))}
         </div>
         
-        <div className="mt-20 bg-medical-blue/5 rounded-2xl p-8 md:p-12">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="text-2xl md:text-3xl font-bold text-medical-dark mb-6">Why Choose Our Equipment?</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {benefits.map((benefit, idx) => (
-                  <div key={idx} className="flex items-start">
-                    <div className="mr-3 mt-1 bg-medical-green rounded-full p-1">
-                      <Check className="h-4 w-4 text-white" />
+        {/* Slanted design testimonial section */}
+        <div className="mt-20 relative">
+          {/* Slanted background */}
+          <div className="absolute inset-0 transform -skew-y-2 bg-gradient-to-r from-medical-blue/10 to-medical-green/10 rounded-none -z-10"></div>
+          
+          {/* Content with padding for the slanted background */}
+          <div className="relative z-10 py-16 px-4 md:px-12">
+            <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+              <div className="relative">
+                <h3 className="text-2xl md:text-3xl font-bold text-medical-dark mb-6 relative">
+                  Why Choose Our Equipment?
+                  <span className="absolute -bottom-3 left-0 h-1 w-20 bg-medical-green"></span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                  {benefits.map((benefit, idx) => (
+                    <div key={idx} className="flex items-start group transition-all duration-300 hover:translate-x-1">
+                      <div className="mr-3 mt-1 bg-medical-green rounded-full p-1 shadow-md shadow-medical-green/30 transition-transform group-hover:scale-110">
+                        <Check className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-gray-700 font-medium">{benefit}</p>
                     </div>
-                    <p className="text-gray-700">{benefit}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h4 className="text-xl font-bold text-medical-dark mb-4">Doctor Recommended</h4>
-              <p className="text-gray-600 mb-4">
-                Our equipment is recommended by ophthalmologists nationwide to ensure proper positioning during your recovery period.
-              </p>
-              <blockquote className="border-l-4 border-medical-green pl-4 italic text-gray-600">
-                "Proper face-down positioning is critical for successful recovery after vitrectomy surgery. Quality equipment makes all the difference for patient comfort and compliance."
-              </blockquote>
-              <div className="mt-3 text-sm text-right text-gray-500">- Dr. Sarah Johnson, Ophthalmologist</div>
+              
+              <div className="relative">
+                <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-medical-green/10 -z-10"></div>
+                <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-medical-blue/10 -z-10"></div>
+                
+                <div className="bg-white rounded-xl shadow-xl p-8 border-l-4 border-medical-green transform transition-transform hover:-translate-y-1 hover:shadow-2xl">
+                  <h4 className="text-xl font-bold text-medical-dark mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-medical-green mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
+                    Doctor Recommended
+                  </h4>
+                  <p className="text-gray-600 mb-6">
+                    Our equipment is recommended by ophthalmologists nationwide to ensure proper positioning during your recovery period.
+                  </p>
+                  <blockquote className="border-l-4 border-medical-green pl-4 italic text-gray-600 bg-gray-50 p-3 rounded-r-lg">
+                    "Proper face-down positioning is critical for successful recovery after vitrectomy surgery. Quality equipment makes all the difference for patient comfort and compliance."
+                  </blockquote>
+                  <div className="mt-4 text-sm text-right text-gray-500 font-medium">— Dr. Sarah Johnson, Ophthalmologist</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
