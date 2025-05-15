@@ -25,7 +25,7 @@ const Hero: React.FC = () => {
   ];
 
   return (
-    <section className="relative h-screen flex items-center">
+    <section className="relative min-h-screen flex items-center">
       {/* Full-screen background image */}
       <div 
         className="absolute inset-0 bg-[url('https://facedownrecoveryequipment.com/wp-content/uploads/2024/12/facedown-recovery-solutions.jpg')] bg-cover bg-center bg-no-repeat"
@@ -38,24 +38,24 @@ const Hero: React.FC = () => {
         style={{ zIndex: -1 }}
       ></div>
       
-      <div className="container relative z-10 mx-auto px-4 py-20">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="text-center md:text-left space-y-6">
-            <div className="inline-block bg-medical-green/30 px-4 py-1.5 rounded-full text-white font-medium text-sm mb-2 backdrop-blur-sm">
+      <div className="container relative z-10 mx-auto px-4 py-12 md:py-20">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div className="text-center md:text-left space-y-4 md:space-y-6">
+            <div className="inline-block bg-medical-green/30 px-4 py-1.5 rounded-full text-white font-medium text-xs md:text-sm mb-2 backdrop-blur-sm">
               Medical Equipment for Post-Surgery Recovery
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-white">
+            <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold leading-tight text-white">
               Face-Down Recovery Equipment Rentals
             </h1>
             
             <SpintexHeading 
               options={subheadingSpintex}
-              className="text-2xl md:text-3xl font-medium text-white bg-black/40 p-3 inline-block backdrop-blur-sm"
+              className="text-xl md:text-2xl lg:text-3xl font-medium text-white bg-black/40 p-2 md:p-3 inline-block backdrop-blur-sm"
               interval={5000}
             />
             
-            <p className="text-lg md:text-xl text-gray-200 max-w-xl backdrop-blur-sm bg-black/20 p-4 rounded-lg">
+            <p className="text-base md:text-lg lg:text-xl text-gray-200 max-w-xl backdrop-blur-sm bg-black/20 p-3 md:p-4 rounded-lg">
               <SpintexHeading 
                 options={messageSpintex}
                 className="inline"
@@ -63,19 +63,19 @@ const Hero: React.FC = () => {
               />
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
-              <Button size="lg" className="bg-medical-green hover:bg-medical-green/90 text-white">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center md:justify-start pt-4">
+              <Button size="lg" className="bg-medical-green hover:bg-medical-green/90 text-white text-sm md:text-base">
                 Order Equipment
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 text-sm md:text-base mt-2 sm:mt-0">
                 Call For Support
               </Button>
             </div>
           </div>
           
-          <Card className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl border-white/20 shadow-2xl max-w-md mx-auto">
-            <h3 className="text-2xl font-bold text-white mb-4">Patient Recovery Support</h3>
-            <ul className="space-y-3 text-white">
+          <Card className="bg-white/10 backdrop-blur-lg p-4 md:p-6 rounded-2xl border-white/20 shadow-2xl max-w-md mx-auto mt-6 md:mt-0">
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">Patient Recovery Support</h3>
+            <ul className="space-y-2 md:space-y-3 text-white text-sm md:text-base">
               <li className="flex items-center gap-2">
                 <div className="bg-medical-green/80 p-1 rounded-full">✓</div>
                 <span>Express UPS shipping nationwide</span>
@@ -93,7 +93,7 @@ const Hero: React.FC = () => {
                 <span>24/7 patient support available</span>
               </li>
             </ul>
-            <Button size="lg" className="w-full mt-6 bg-medical-green hover:bg-medical-green/90 text-white">
+            <Button size="lg" className="w-full mt-4 md:mt-6 bg-medical-green hover:bg-medical-green/90 text-white text-sm md:text-base">
               Reserve Equipment Now
             </Button>
           </Card>
@@ -101,8 +101,8 @@ const Hero: React.FC = () => {
       </div>
       
       {/* Down arrow indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <ChevronDown className="h-8 w-8 text-white" />
+      <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <ChevronDown className="h-6 w-6 md:h-8 md:w-8 text-white" />
       </div>
     </section>
   );
