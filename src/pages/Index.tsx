@@ -10,6 +10,7 @@ import ContactCTA from '@/components/ContactCTA';
 import Footer from '@/components/Footer';
 import ContactForm from '@/components/ContactForm';
 import RecoveryImageGallery from '@/components/RecoveryImageGallery';
+import TrustedPartnerSection from '@/components/TrustedPartnerSection';
 
 const Index: React.FC = () => {
   return (
@@ -20,6 +21,7 @@ const Index: React.FC = () => {
         <Features />
         <HowItWorks />
         <Testimonials />
+        <TrustedPartnerSection />
         <RecoveryImageGallery />
         <ContactForm />
         <FAQ />
