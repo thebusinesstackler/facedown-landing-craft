@@ -7,15 +7,15 @@ const HowItWorks: React.FC = () => {
   const steps = [
     {
       number: "01",
-      title: "Contact Us",
-      description: "Call our team or fill out our online form. We'll help determine what equipment you need for your specific recovery plan.",
-      icon: "📞"
+      title: "Order Online",
+      description: "Order through our website or give us a call. We'll help determine what equipment you need for your specific recovery plan.",
+      icon: "🖥️"
     },
     {
       number: "02",
-      title: "Schedule Delivery",
-      description: "We coordinate with you and your medical provider to ensure timely delivery before your surgery date.",
-      icon: "📅"
+      title: "Same-Day Shipping",
+      description: "Orders placed before 2PM ship out the same day. We coordinate with you and your medical provider to ensure timely delivery.",
+      icon: "📦"
     },
     {
       number: "03",
@@ -26,13 +26,13 @@ const HowItWorks: React.FC = () => {
     {
       number: "04",
       title: "Recovery Period",
-      description: "Use your equipment for your prescribed face-down period with our 24/7 support available.",
+      description: "Use your equipment for your prescribed face-down period with our 24/7 support available throughout your recovery.",
       icon: "🏥"
     },
     {
       number: "05",
       title: "Equipment Pickup",
-      description: "Once your recovery period is complete, we'll schedule a convenient pickup time.",
+      description: "Once your recovery period is complete, we'll schedule a convenient pickup time for all equipment.",
       icon: "🚚"
     }
   ];
@@ -62,7 +62,7 @@ const HowItWorks: React.FC = () => {
 
   return (
     <section id="how-it-works" className="py-24 bg-gradient-to-b from-medical-light to-white">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <motion.div 
           className="text-center max-w-3xl mx-auto mb-20"
           initial={{ opacity: 0, y: -20 }}
