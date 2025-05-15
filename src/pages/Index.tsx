@@ -8,6 +8,7 @@ import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import ContactCTA from '@/components/ContactCTA';
 import Footer from '@/components/Footer';
+import ContactForm from '@/components/ContactForm';
 
 const Index: React.FC = () => {
   return (
@@ -18,6 +19,7 @@ const Index: React.FC = () => {
         <Features />
         <HowItWorks />
         <Testimonials />
+        <ContactForm />
         <FAQ />
         <ContactCTA />
       </main>
