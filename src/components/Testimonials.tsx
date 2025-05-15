@@ -15,7 +15,7 @@ import {
   PaginationContent,
   PaginationItem 
 } from '@/components/ui/pagination';
-import type { EmblaCarouselType } from 'embla-carousel-react';
+import type { UseEmblaCarouselType } from 'embla-carousel-react';
 
 const Testimonials: React.FC = () => {
   const testimonials = [
@@ -46,7 +46,7 @@ const Testimonials: React.FC = () => {
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [api, setApi] = useState<EmblaCarouselType | null>(null);
+  const [api, setApi] = useState<UseEmblaCarouselType[1] | null>(null);
 
   useEffect(() => {
     if (!api) return;
