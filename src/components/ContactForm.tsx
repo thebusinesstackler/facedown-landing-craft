@@ -28,7 +28,7 @@ const ContactForm: React.FC = () => {
 
   return (
     <section id="contact" className="py-20 bg-[#1F1F1F] text-white">
-      <div className="container mx-auto px-4">
+      <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <SpintexHeading 
             options={[
@@ -45,8 +45,8 @@ const ContactForm: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          <Card className="bg-black border border-gray-800 p-1 rounded-xl overflow-hidden">
-            <div className="aspect-video h-[721px]">
+          <Card className="bg-black border border-gray-800 p-1 rounded-xl overflow-hidden w-full">
+            <div className="w-full h-[721px]">
               <iframe
                 src="https://api.leadconnectorhq.com/widget/form/StF1ENbPXhNOQkDE2cQW"
                 style={{ width: '100%', height: '100%', border: 'none', borderRadius: '4px' }}
