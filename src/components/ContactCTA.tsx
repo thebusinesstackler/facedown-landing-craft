@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone } from 'lucide-react';
+import { Phone, ShoppingBag } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ContactCTA: React.FC = () => {
   return (
@@ -10,17 +11,20 @@ const ContactCTA: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Support Your Recovery?</h2>
           <p className="text-lg text-white/90 mb-8">
-            Contact us today to arrange for your face-down recovery equipment. Our specialists are ready to help you through every step of the process.
+            Contact us today to arrange for your {"{keyword}"} equipment. Our specialists are ready to help you through every step of the process.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-white text-medical-blue hover:bg-white/90">
               <Phone className="mr-2 h-4 w-4" />
-              Call 800-XXX-XXXX
+              Call (786) 592-0040
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-              Request Information
-            </Button>
+            <Link to="/pricing">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Order Now
+              </Button>
+            </Link>
           </div>
         </div>
         
