@@ -17,16 +17,16 @@ const FAQ: React.FC = () => {
       answer: "{The process is simple|Renting is straightforward|It's easy to get started}! {Simply call us|Contact us|Reach out} at {our toll-free number|our customer service line} or {complete|fill out|submit} the {online form|request form on our website}. Our {team|specialists|recovery experts} will {guide you|assist you|help you} through the {entire process|selection process|rental procedure} and {answer|address|respond to} any {questions|concerns|queries} you may have."
     },
     {
-      question: "What type of equipment do I need for my face-down recovery equipment in Boca Raton?",
-      answer: "The equipment you need for your face-down recovery equipment in Boca Raton depends on your specific surgery and doctor's instructions. We provide ergonomic equipment such as recovery chairs, face-down pillows, and other supportive gear designed to assist you in maintaining the required face-down position. If you're unsure, contact us for personalized recommendations tailored to your recovery needs."
+      question: "What type of equipment do I need for my face-down recovery equipment in {location(city_name)}?",
+      answer: "The equipment you need for your face-down recovery equipment in {location(city_name)} depends on your specific surgery and doctor's instructions. We provide ergonomic equipment such as recovery chairs, face-down pillows, and other supportive gear designed to assist you in maintaining the required face-down position. If you're unsure, contact us for personalized recommendations tailored to your recovery needs."
     },
     {
-      question: "What is the rental period for face-down recovery equipment in Boca Raton?",
+      question: "What is the rental period for face-down recovery equipment in {location(city_name)}?",
       answer: "{Our standard rental periods|We offer rental durations|Our typical rental timeframes} {range from|are typically|usually span} 7 to 14 days, {which covers|aligning with|matching} the {typical|average|standard} recovery period {prescribed by|recommended by|suggested by} most {doctors|physicians|ophthalmologists}. {However|That said|Nevertheless}, we {understand|recognize|know} that {each recovery|every healing journey|individual recovery} is {unique|different|personal}, so we offer {flexible|customizable|adjustable} rental {extensions|periods|timeframes} to {accommodate|meet|satisfy} your {specific|individual|particular} {needs|requirements|situation}."
     },
     {
       question: "How quickly can the equipment be delivered?",
-      answer: "{We pride ourselves|We specialize|We excel} in {rapid|quick|fast} {delivery|shipping|fulfillment}. {With our express shipping|Through our expedited delivery|Using our priority shipping} option, {equipment|recovery gear|your order} can {arrive|be delivered|reach you} within {24-48 hours|1-2 business days|two days} of your {order confirmation|approved order|completed reservation}. {For urgent cases|In emergency situations|When time is critical}, {same-day|immediate|expedited} delivery {may be available|can be arranged|is possible} in the {Boca Raton|South Florida} area."
+      answer: "{We pride ourselves|We specialize|We excel} in {rapid|quick|fast} {delivery|shipping|fulfillment}. {With our express shipping|Through our expedited delivery|Using our priority shipping} option, {equipment|recovery gear|your order} can {arrive|be delivered|reach you} within {24-48 hours|1-2 business days|two days} of your {order confirmation|approved order|completed reservation}. {For urgent cases|In emergency situations|When time is critical}, {same-day|immediate|expedited} delivery {may be available|can be arranged|is possible} in the {{location(city_name)}|{location(region_name)}} area."
     },
     {
       question: "Is the equipment sanitized between rentals?",
@@ -34,7 +34,7 @@ const FAQ: React.FC = () => {
     },
     {
       question: "Do you provide setup instructions?",
-      answer: "{Yes|Absolutely|Of course}! {All rentals|Every equipment rental|Each order} {includes|comes with|provides} {detailed|comprehensive|clear} {setup instructions|user guides|instruction manuals}. {Additionally|Furthermore|Moreover}, our {team|staff|technicians} is {available|ready|on call} to {provide|offer|give} {setup assistance|guidance|support} over the phone. {For customers|For clients|If needed} in the {Boca Raton|local} area, we can also {arrange|schedule|provide} {in-home setup|in-person assistance|home setup service} for an {additional fee|extra charge|supplemental cost}."
+      answer: "{Yes|Absolutely|Of course}! {All rentals|Every equipment rental|Each order} {includes|comes with|provides} {detailed|comprehensive|clear} {setup instructions|user guides|instruction manuals}. {Additionally|Furthermore|Moreover}, our {team|staff|technicians} is {available|ready|on call} to {provide|offer|give} {setup assistance|guidance|support} over the phone. {For customers|For clients|If needed} in the {{location(city_name)}|local} area, we can also {arrange|schedule|provide} {in-home setup|in-person assistance|home setup service} for an {additional fee|extra charge|supplemental cost}."
     }
   ];
 
@@ -44,7 +44,7 @@ const FAQ: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <SpintexHeading 
             options={[
-              "Your Rent face-down recovery equipment Questions Answered in Boca Raton",
+              "Your Rent face-down recovery equipment Questions Answered in {location(city_name)}",
               "Frequently Asked Questions About Face-Down Recovery Equipment",
               "Common Questions About Face-Down Recovery Rentals"
             ]}

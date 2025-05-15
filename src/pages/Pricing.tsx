@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -206,7 +205,7 @@ const Pricing: React.FC = () => {
                             <FormItem>
                               <FormLabel>Delivery Address</FormLabel>
                               <FormControl>
-                                <Input placeholder="123 Main St, Boca Raton, FL" {...field} />
+                                <Input placeholder="123 Main St, {location(city_name)}, {location(region_name)}" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

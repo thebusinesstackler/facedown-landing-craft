@@ -8,7 +8,8 @@ import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/h
 const TrustedPartnerSection: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false);
   
-  const cityName = "Boca Raton"; // Dynamically replace with {city_name}
+  // Replace fixed city name with dynamic variable
+  const cityName = "{location(city_name)}"; 
   
   return (
     <section className="py-20 bg-gradient-to-br from-white to-gray-50 text-medical-dark border-t border-b border-gray-100">
@@ -26,7 +27,7 @@ const TrustedPartnerSection: React.FC = () => {
               </p>
               <p className="mt-4">
                 Our {"{hassle-free|simple|convenient}"} rental process and {"{exceptional|outstanding|superior}"} support 
-                will ensure your recovery experience in {cityName} and Palm Beach County goes as 
+                will ensure your recovery experience in {cityName} and {"{location(region_name)}"} County goes as 
                 {"{smoothly|comfortably|seamlessly}"} as possible.
               </p>
             </div>
@@ -53,7 +54,7 @@ const TrustedPartnerSection: React.FC = () => {
                   </div>
                   <img 
                     src="https://facedownrecoveryequipment.com/wp-content/uploads/2024/12/facedown-positioning.jpg"
-                    alt="Face-down recovery positioning equipment in Boca Raton"
+                    alt="Face-down recovery positioning equipment in {location(city_name)}"
                     className={`w-full h-auto object-cover transition-transform duration-500 ${isHovering ? 'scale-110' : 'scale-100'}`}
                   />
                 </div>
