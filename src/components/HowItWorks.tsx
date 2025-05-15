@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { Card } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 
 const HowItWorks: React.FC = () => {
   const steps = [
@@ -35,38 +37,80 @@ const HowItWorks: React.FC = () => {
     }
   ];
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.3
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.6,
+        ease: "easeOut" 
+      }
+    }
+  };
+
   return (
-    <section id="how-it-works" className="py-20 bg-medical-light">
+    <section id="how-it-works" className="py-24 bg-gradient-to-b from-medical-light to-white">
       <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-medical-dark mb-4">How Our Rental Process Works</h2>
-          <p className="text-gray-600 text-lg">
-            We make the equipment rental process simple so you can focus on your recovery.
+        <motion.div 
+          className="text-center max-w-3xl mx-auto mb-20"
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-medical-dark mb-6 leading-tight">
+            How Our Rental Process Works
+          </h2>
+          <p className="text-gray-600 text-xl">
+            We make equipment rental simple so you can focus on recovery
           </p>
-        </div>
+        </motion.div>
         
-        <div className="relative">
-          {/* Timeline line (visible on medium screens and up) */}
-          <div className="hidden md:block absolute top-1/4 left-1/2 w-0.5 h-3/4 -translate-x-1/2 bg-medical-blue/30"></div>
-          
-          <div className="space-y-12 relative">
-            {steps.map((step, idx) => (
-              <div key={idx} className={`flex flex-col ${idx % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-8`}>
-                <div className={`md:w-1/2 ${idx % 2 === 0 ? 'md:text-right' : 'md:text-left'}`}>
-                  <div className="text-sm font-bold text-medical-green mb-2">STEP {step.number}</div>
+        <motion.div
+          className="grid md:grid-cols-5 gap-6 lg:gap-10 max-w-6xl mx-auto"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
+          {steps.map((step, idx) => (
+            <motion.div 
+              key={idx} 
+              className="relative"
+              variants={itemVariants}
+            >
+              <Card className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 h-full p-6 border-t-4 border-medical-green">
+                <div className="absolute -top-4 -left-4 bg-medical-green w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
+                  {step.number}
+                </div>
+                
+                <div className="text-center mt-4">
+                  <div className="text-4xl mb-4">{step.icon}</div>
                   <h3 className="text-2xl font-bold text-medical-dark mb-3">{step.title}</h3>
-                  <p className="text-gray-600">{step.description}</p>
+                  <p className="text-gray-600 leading-relaxed">{step.description}</p>
                 </div>
-                
-                <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-lg z-10 border-2 border-medical-blue text-2xl">
-                  {step.icon}
+              </Card>
+              
+              {idx < steps.length - 1 && (
+                <div className="hidden md:block absolute top-1/2 -right-5 lg:-right-7 w-10 lg:w-14 h-0.5 bg-medical-green/50">
+                  <div className="absolute -right-1 -top-1 w-3 h-3 border-t-2 border-r-2 border-medical-green/50 transform rotate-45"></div>
                 </div>
-                
-                <div className="md:w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        </div>
+              )}
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
