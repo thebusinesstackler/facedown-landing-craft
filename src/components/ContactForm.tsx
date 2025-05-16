@@ -51,7 +51,7 @@ const ContactForm: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          <Card className="bg-black border border-gray-800 p-6 rounded-xl overflow-hidden w-full shadow-md">
+          <Card className="p-6 rounded-xl overflow-hidden w-full shadow-lg bg-gradient-to-b from-black/80 to-black/90 border border-gray-700">
             <h3 className="text-xl font-medium text-white mb-6">Select Your Preferred Delivery Date</h3>
             <BookingCalendar onDateSelect={handleDateSelect} selectedDate={selectedDate} />
           </Card>

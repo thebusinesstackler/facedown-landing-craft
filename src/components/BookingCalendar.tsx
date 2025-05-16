@@ -4,7 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, addDays, isToday, isBefore, startOfDay, endOfDay, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ArrowRight } from "lucide-react";
+import { Clock, ArrowRight, TruckIcon } from "lucide-react";
 import { calculateDeliveryDate } from '@/utils/deliveryUtils';
 
 interface BookingCalendarProps {
@@ -96,9 +96,9 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ onDateSelect, selecte
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Card className="bg-black/50 border-gray-800">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Select Delivery Date</CardTitle>
+          <Card className="bg-white border border-gray-200">
+            <CardHeader className="pb-3 bg-gradient-to-r from-medical-green/10 to-medical-blue/10">
+              <CardTitle className="text-lg text-gray-800">Select Delivery Date</CardTitle>
             </CardHeader>
             <CardContent>
               <Calendar
@@ -106,10 +106,17 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ onDateSelect, selecte
                 selected={selectedDate}
                 onSelect={onDateSelect}
                 disabled={isDateUnavailable}
-                className={`bg-black/50 rounded-md pointer-events-auto`}
+                className="bg-white rounded-md pointer-events-auto"
                 classNames={{
-                  day_today: "bg-medical-green/20 text-medical-green",
+                  day_today: "bg-medical-green/20 text-medical-green font-bold",
                   day_selected: "bg-medical-green text-white hover:bg-medical-green hover:text-white",
+                  head_cell: "text-gray-500 font-medium",
+                  cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                  day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-gray-100 rounded-full transition-colors",
+                  caption: "flex justify-center pt-1 px-4 relative items-center",
+                  caption_label: "text-gray-800 font-bold text-base",
+                  nav_button: "absolute border rounded-full p-1 bg-white text-gray-700 hover:bg-gray-100",
+                  table: "w-full border-collapse space-y-1 text-gray-900",
                 }}
               />
             </CardContent>
@@ -118,50 +125,57 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ onDateSelect, selecte
         
         <div className="space-y-4">
           {/* Upcoming delivery dates */}
-          <Card className="bg-black/50 border-gray-800">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Next Available Delivery</CardTitle>
+          <Card className="bg-white border border-gray-200">
+            <CardHeader className="pb-3 bg-gradient-to-r from-medical-blue/10 to-medical-green/10">
+              <div className="flex items-center">
+                <TruckIcon className="mr-2 h-5 w-5 text-medical-blue" />
+                <CardTitle className="text-lg text-gray-800">Expected Delivery</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-300 mb-2">Standard delivery available on:</p>
-              <p className="text-xl font-medium text-white">{nextDeliveryDate}</p>
-              
-              {/* Date selected summary */}
-              {selectedDate && (
-                <div className="mt-4 pt-4 border-t border-gray-800">
-                  <p className="text-gray-300 mb-2">Your selected date:</p>
-                  <p className="text-xl font-medium text-white">{format(selectedDate, "EEEE, MMMM d, yyyy")}</p>
-                  
-                  {availableSlots[format(selectedDate, "yyyy-MM-dd")] !== undefined && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <Badge variant="outline" className="bg-medical-green/10 text-medical-green border-medical-green">
-                        {availableSlots[format(selectedDate, "yyyy-MM-dd")]} slots available
-                      </Badge>
-                    </div>
-                  )}
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <p className="text-gray-600 mb-1 text-sm">Standard delivery available:</p>
+                  <p className="text-xl font-medium text-gray-800">{nextDeliveryDate}</p>
                 </div>
-              )}
+                
+                {/* Date selected summary */}
+                {selectedDate && (
+                  <div className="bg-medical-green/5 p-4 rounded-lg border border-medical-green/20">
+                    <p className="text-gray-600 mb-1 text-sm">Your selected date:</p>
+                    <p className="text-xl font-medium text-medical-green">{format(selectedDate, "EEEE, MMMM d, yyyy")}</p>
+                    
+                    {availableSlots[format(selectedDate, "yyyy-MM-dd")] !== undefined && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <Badge variant="outline" className="bg-medical-green/10 text-medical-green border-medical-green">
+                          {availableSlots[format(selectedDate, "yyyy-MM-dd")]} slots available
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
           
           {/* Same day delivery counter */}
           {canGetSameDayDelivery && (
-            <Card className="bg-black/50 border-gray-800 border-2 border-medical-green">
+            <Card className="bg-white border-2 border-medical-green">
               <CardHeader className="pb-3 bg-medical-green/10">
                 <CardTitle className="text-lg flex items-center">
                   <Clock className="mr-2 h-5 w-5 text-medical-green" />
-                  Same Day Order Window
+                  <span className="text-gray-800">Same Day Order Window</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-gray-300">
-                    Order within the next:
+                  <p className="text-gray-600">
+                    Order within:
                   </p>
                   <div className="text-2xl font-mono font-bold text-medical-green">
                     {formatTimeRemaining()}
                   </div>
-                  <p className="text-gray-300 text-sm mt-2">
+                  <p className="text-gray-600 text-sm mt-1">
                     to qualify for {isToday(new Date(nextDeliveryDate)) ? "same day" : "expedited"} delivery
                   </p>
                 </div>
