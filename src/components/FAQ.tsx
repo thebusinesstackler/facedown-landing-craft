@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, PlusCircle, MinusCircle } from 'lucide-react';
 import SpintexHeading from './SpintexHeading';
 import { 
   Accordion, 
@@ -59,17 +59,22 @@ const FAQ: React.FC = () => {
         
         <div className="grid gap-6 max-w-4xl mx-auto">
           {faqs.map((faq, index) => (
-            <Card key={index} className="bg-gray-800/50 overflow-hidden backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
+            <Card key={index} className="bg-gray-800/50 overflow-hidden backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl transition-all duration-300 hover:shadow-medical-green/20 hover:border-medical-green/30">
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value={`item-${index}`} className="border-0">
-                  <AccordionTrigger className="py-6 px-6 text-xl font-medium text-left hover:no-underline group">
-                    <span className="text-white group-hover:text-medical-green transition-colors">
+                  <AccordionTrigger 
+                    className="py-6 px-6 text-xl font-medium text-left hover:no-underline group data-[state=open]:bg-medical-green/10 transition-all duration-300"
+                  >
+                    <span className="text-white group-hover:text-medical-green group-data-[state=open]:text-medical-green transition-colors">
                       {faq.question}
                     </span>
-                    <ChevronDown className="h-6 w-6 shrink-0 transition-transform duration-200 text-medical-green" />
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-700/50 group-hover:bg-medical-green/20 group-data-[state=open]:bg-medical-green/30 transition-all duration-200">
+                      <PlusCircle className="h-5 w-5 text-medical-green shrink-0 transition-all duration-300 group-data-[state=closed]:flex group-data-[state=open]:hidden" />
+                      <MinusCircle className="h-5 w-5 text-medical-green shrink-0 transition-all duration-300 group-data-[state=open]:flex group-data-[state=closed]:hidden" />
+                    </div>
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-300 px-6 pb-6">
-                    <div className="bg-black/30 p-4 rounded-lg border-l-4 border-medical-green">
+                  <AccordionContent className="text-gray-300 px-6 pb-6 data-[state=open]:animate-fadeIn">
+                    <div className="bg-medical-green/5 p-5 rounded-lg border-l-4 border-medical-green mt-2">
                       {faq.answer}
                     </div>
                   </AccordionContent>
