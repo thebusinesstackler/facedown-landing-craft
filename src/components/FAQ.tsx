@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, PlusCircle, MinusCircle } from 'lucide-react';
+import { PlusCircle, MinusCircle } from 'lucide-react';
 import SpintexHeading from './SpintexHeading';
 import { 
   Accordion, 
@@ -65,10 +65,10 @@ const FAQ: React.FC = () => {
                   <AccordionTrigger 
                     className="py-6 px-6 text-xl font-medium text-left hover:no-underline group data-[state=open]:bg-medical-green/10 transition-all duration-300"
                   >
-                    <span className="text-white group-hover:text-medical-green group-data-[state=open]:text-medical-green transition-colors">
+                    <span className="text-white group-hover:text-medical-green group-data-[state=open]:text-medical-green transition-colors flex-grow text-left">
                       {faq.question}
                     </span>
-                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-700/50 group-hover:bg-medical-green/20 group-data-[state=open]:bg-medical-green/30 transition-all duration-200">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-700/50 group-hover:bg-medical-green/20 group-data-[state=open]:bg-medical-green/30 transition-all duration-200 ml-4">
                       <PlusCircle className="h-5 w-5 text-medical-green shrink-0 transition-all duration-300 group-data-[state=closed]:flex group-data-[state=open]:hidden" />
                       <MinusCircle className="h-5 w-5 text-medical-green shrink-0 transition-all duration-300 group-data-[state=open]:flex group-data-[state=closed]:hidden" />
                     </div>
