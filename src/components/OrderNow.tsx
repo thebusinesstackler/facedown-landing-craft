@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { calculateDeliveryDate } from '@/utils/deliveryUtils';
+import { sendOrderConfirmationEmail } from '@/utils/emailUtils';
+import { useToast } from '@/hooks/use-toast';
 
 const OrderNow: React.FC = () => {
   const [step, setStep] = useState<number>(1);
@@ -21,9 +24,14 @@ const OrderNow: React.FC = () => {
     cardNumber: '',
     expiryDate: '',
     cvv: '',
-    cardName: ''
+    cardName: '',
+    wearsGlasses: 'no',
+    needsDelivery: 'yes'
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [deliveryDate, setDeliveryDate] = useState(calculateDeliveryDate());
+  const { toast } = useToast();
 
   const rentalOptions = [
     {
@@ -58,7 +66,21 @@ const OrderNow: React.FC = () => {
     setFormData(prev => ({ ...prev, rentalPeriod: value }));
   };
 
+  const handleGlassesSelection = (value: string) => {
+    setFormData(prev => ({ ...prev, wearsGlasses: value }));
+  };
+
   const nextStep = () => {
+    // Don't proceed if user wears glasses
+    if (step === 2 && formData.wearsGlasses === 'yes') {
+      toast({
+        title: "Equipment Compatibility Issue",
+        description: "Unfortunately, our equipment isn't compatible with glasses. Please contact us for alternative solutions.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setStep(prev => prev + 1);
   };
 
@@ -66,10 +88,42 @@ const OrderNow: React.FC = () => {
     setStep(prev => prev - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted with data:', formData);
-    setIsSubmitted(true);
+    setIsSending(true);
+    
+    try {
+      // Send confirmation email
+      const emailSent = await sendOrderConfirmationEmail({
+        name: formData.name,
+        email: formData.email,
+        rentalPeriod: rentalOptions.find(option => option.id === formData.rentalPeriod)?.title || '',
+        deliveryDate,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode
+      });
+      
+      if (emailSent) {
+        toast({
+          title: "Order Confirmation Sent",
+          description: "Check your email for order details.",
+        });
+      }
+      
+      console.log('Form submitted with data:', formData);
+      setIsSubmitted(true);
+    } catch (error) {
+      toast({
+        title: "Error Processing Order",
+        description: "There was a problem processing your order. Please try again.",
+        variant: "destructive"
+      });
+      console.error('Error:', error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const selectedRental = rentalOptions.find(option => option.id === formData.rentalPeriod);
@@ -115,15 +169,15 @@ const OrderNow: React.FC = () => {
                   <Check size={48} className="text-medical-green" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Order Placed Successfully!</h3>
-                <p className="text-gray-600 mb-8">
-                  Thank you for your order. We'll be in touch shortly to confirm delivery details.
+                <p className="text-gray-600 mb-4">
+                  Thank you for your order. We've sent a confirmation email with all the details.
                 </p>
-                <Button onClick={() => {
-                  setIsSubmitted(false);
-                  setStep(1);
-                }} className="bg-medical-green hover:bg-medical-green/90">
-                  Place Another Order
-                </Button>
+                <p className="text-gray-600 mb-6">
+                  <strong>Estimated Delivery Date:</strong> {deliveryDate}
+                </p>
+                <p className="text-gray-600 mb-8">
+                  Our team will be in touch shortly to confirm delivery details.
+                </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
@@ -163,8 +217,50 @@ const OrderNow: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 2: Personal Information */}
+                {/* Step 2: Compatibility Check */}
                 {step === 2 && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-6">Equipment Compatibility Check</h3>
+                    <div className="mb-6">
+                      <p className="text-gray-600 mb-4">
+                        Our recovery equipment works best for patients who don't wear glasses. Please let us know if you wear glasses.
+                      </p>
+                      
+                      <div className="mt-4">
+                        <Label className="text-base font-medium mb-3 block">Do you wear glasses?</Label>
+                        <RadioGroup value={formData.wearsGlasses} onValueChange={handleGlassesSelection} className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="glasses-no" />
+                            <Label htmlFor="glasses-no">No, I don't wear glasses</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="glasses-yes" />
+                            <Label htmlFor="glasses-yes">Yes, I wear glasses</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      
+                      {formData.wearsGlasses === 'yes' && (
+                        <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-md text-red-700">
+                          <p className="text-sm">
+                            Our standard equipment may not work well if you wear glasses. We recommend contacting our support team for alternative solutions.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-8 flex justify-between">
+                      <Button type="button" variant="outline" onClick={prevStep}>
+                        <ArrowLeft size={16} className="mr-2" /> Back
+                      </Button>
+                      <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
+                        Continue <ArrowRight size={16} className="ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Personal Information */}
+                {step === 3 && (
                   <div>
                     <h3 className="text-xl font-semibold mb-6">Your Information</h3>
                     <div className="space-y-4">
@@ -214,10 +310,13 @@ const OrderNow: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 3: Shipping Address */}
-                {step === 3 && (
+                {/* Step 4: Shipping Address */}
+                {step === 4 && (
                   <div>
-                    <h3 className="text-xl font-semibold mb-6">Delivery Address</h3>
+                    <h3 className="text-xl font-semibold mb-4">Delivery Address</h3>
+                    <p className="text-gray-600 mb-6">
+                      <strong>Estimated Delivery Date:</strong> {deliveryDate}
+                    </p>
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="address">Street Address</Label>
@@ -266,21 +365,9 @@ const OrderNow: React.FC = () => {
                         />
                       </div>
                     </div>
-                    <div className="mt-8 flex justify-between">
-                      <Button type="button" variant="outline" onClick={prevStep}>
-                        <ArrowLeft size={16} className="mr-2" /> Back
-                      </Button>
-                      <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
-                        Continue <ArrowRight size={16} className="ml-2" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 4: Payment Information */}
-                {step === 4 && (
-                  <div>
-                    <h3 className="text-xl font-semibold mb-6">Payment Information</h3>
+                    
+                    {/* Payment Information */}
+                    <h3 className="text-xl font-semibold mt-8 mb-4">Payment Information</h3>
                     <div className="mb-6 bg-green-50 rounded-lg p-4 border border-green-100">
                       <h4 className="font-medium text-gray-800 mb-2">Order Summary</h4>
                       <div className="flex justify-between mb-2">
@@ -344,8 +431,14 @@ const OrderNow: React.FC = () => {
                       <Button type="button" variant="outline" onClick={prevStep}>
                         <ArrowLeft size={16} className="mr-2" /> Back
                       </Button>
-                      <Button type="submit" className="bg-medical-green hover:bg-medical-green/90">
-                        Complete Order <Check size={16} className="ml-2" />
+                      <Button 
+                        type="submit" 
+                        className="bg-medical-green hover:bg-medical-green/90"
+                        disabled={isSending}
+                      >
+                        {isSending ? "Processing..." : (
+                          <>Complete Order <Check size={16} className="ml-2" /></>
+                        )}
                       </Button>
                     </div>
                   </div>
