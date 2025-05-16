@@ -13,10 +13,15 @@ const TrustedPartnerSection: React.FC = () => {
   const defaultRegion = "{location(region_name)}";
   
   return (
-    <section className="py-24 bg-gradient-to-br from-slate-50 to-blue-50/50 text-medical-dark border-t border-b border-gray-100">
-      <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
+    <section className="py-28 bg-gradient-to-br from-slate-50 via-blue-50/30 to-medical-blue/5 text-medical-dark border-t border-b border-gray-100 overflow-hidden">
+      <div 
+        className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMxNTQ4OTciIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0aDR2MWgtNHpNNDAgMzJoMXYyaC0xek0zMyAzM2gxdjJoLTF6TTM2IDMxaDF2MWgtMXpNMzQgMzFoMXYxaC0xek0zMiAzMGgxdjFoLTF6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-50"
+      />
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-center">
           <div className="space-y-8 animate-slide-up">
+            <span className="inline-block py-1 px-3 bg-medical-blue/10 text-medical-blue rounded-full text-sm font-medium">Comfortable Recovery Solutions</span>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               <span className="gradient-text">Your Trusted Partner</span>
               <span className="block mt-3 text-medical-dark">for {defaultCity} Rent Face-Down Recovery Equipment</span>
@@ -33,17 +38,22 @@ const TrustedPartnerSection: React.FC = () => {
                 {"{smoothly|comfortably|seamlessly}"} as possible.
               </p>
             </div>
-            <Link to="/pricing" className="inline-block">
-              <Button 
-                size="lg" 
-                className="bg-medical-green hover:bg-gradient-green text-white font-medium text-lg px-8 py-6 h-auto rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                PLACE YOUR ORDER <ArrowRight className="ml-2" />
-              </Button>
-            </Link>
+            <div className="pt-4">
+              <Link to="/pricing" className="inline-block">
+                <Button 
+                  size="lg" 
+                  className="bg-medical-green hover:bg-gradient-green text-white font-medium text-lg px-8 py-6 h-auto rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  PLACE YOUR ORDER <ArrowRight className="ml-2" />
+                </Button>
+              </Link>
+            </div>
           </div>
           
-          <div className="flex justify-center md:justify-end animate-slide-down">
+          <div className="flex justify-center md:justify-end animate-slide-down relative">
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-medical-blue/10 rounded-full blur-3xl"></div>
+            <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-medical-green/10 rounded-full blur-3xl"></div>
+            
             <HoverCard>
               <HoverCardTrigger asChild>
                 <div 
@@ -65,7 +75,7 @@ const TrustedPartnerSection: React.FC = () => {
                   </div>
                 </div>
               </HoverCardTrigger>
-              <HoverCardContent className="w-80 p-4 bg-white/90 backdrop-blur-md shadow-lg rounded-lg border border-medical-blue/20 animate-fade-in">
+              <HoverCardContent className="w-80 p-4 bg-white/95 backdrop-blur-md shadow-lg rounded-lg border border-medical-blue/20 animate-fade-in">
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold text-medical-blue">Face-Down Recovery Equipment</h3>
                   <p className="text-sm text-gray-600">Our specialized equipment is designed for maximum comfort and effectiveness during your face-down recovery period in {defaultCity}.</p>
