@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 
 const ContactCTA: React.FC = () => {
   return (
@@ -19,12 +20,12 @@ const ContactCTA: React.FC = () => {
               <Phone className="mr-2 h-4 w-4" />
               Call (786) 592-0040
             </Button>
-            <Link to="/pricing">
+            <HashLink smooth to="/#order-now">
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Order Now
               </Button>
-            </Link>
+            </HashLink>
           </div>
         </div>
         

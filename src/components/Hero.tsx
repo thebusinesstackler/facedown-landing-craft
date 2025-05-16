@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import SpintexHeading from './SpintexHeading';
 import { Card } from '@/components/ui/card';
 import { ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 
 const Hero: React.FC = () => {
   const headingSpintex = [
@@ -64,9 +66,11 @@ const Hero: React.FC = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center md:justify-start pt-4">
-              <Button size="lg" className="bg-medical-green hover:bg-medical-green/90 text-white text-sm md:text-base">
-                Order Equipment
-              </Button>
+              <HashLink smooth to="/#order-now">
+                <Button size="lg" className="bg-medical-green hover:bg-medical-green/90 text-white text-sm md:text-base">
+                  Order Equipment
+                </Button>
+              </HashLink>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 text-sm md:text-base mt-2 sm:mt-0">
                 Call For Support
               </Button>
@@ -93,9 +97,11 @@ const Hero: React.FC = () => {
                 <span>24/7 patient support available</span>
               </li>
             </ul>
-            <Button size="lg" className="w-full mt-4 md:mt-6 bg-medical-green hover:bg-medical-green/90 text-white text-sm md:text-base">
-              Reserve Equipment Now
-            </Button>
+            <HashLink smooth to="/#order-now">
+              <Button size="lg" className="w-full mt-4 md:mt-6 bg-medical-green hover:bg-medical-green/90 text-white text-sm md:text-base">
+                Reserve Equipment Now
+              </Button>
+            </HashLink>
           </Card>
         </div>
       </div>

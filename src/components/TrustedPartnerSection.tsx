@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ZoomIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 
 const TrustedPartnerSection: React.FC = () => {
@@ -39,14 +40,14 @@ const TrustedPartnerSection: React.FC = () => {
               </p>
             </div>
             <div className="pt-4">
-              <Link to="/pricing" className="inline-block">
+              <HashLink smooth to="/#order-now" className="inline-block">
                 <Button 
                   size="lg" 
                   className="bg-medical-green hover:bg-gradient-green text-white font-medium text-lg px-8 py-6 h-auto rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   PLACE YOUR ORDER <ArrowRight className="ml-2" />
                 </Button>
-              </Link>
+              </HashLink>
             </div>
           </div>
           
