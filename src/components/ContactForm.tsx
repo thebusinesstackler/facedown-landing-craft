@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Send, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import SpintexHeading from './SpintexHeading';
+import BookingCalendar from './BookingCalendar';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -27,6 +29,7 @@ const ContactForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [step, setStep] = useState(1);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
   
   // Define a default city name to use instead of the template variable
@@ -72,7 +75,20 @@ const ContactForm: React.FC = () => {
     setStep(step - 1);
   };
 
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+  };
+
   const onSubmit = async (data: FormValues) => {
+    if (!selectedDate) {
+      toast({
+        title: "Delivery Date Required",
+        description: "Please select a delivery date for your equipment.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -88,6 +104,7 @@ const ContactForm: React.FC = () => {
           message: data.message,
           subject: data.subject || 'Contact Form Submission',
           bestContactTime: data.bestContactTime || 'morning',
+          deliveryDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
           resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
         }),
       });
@@ -102,6 +119,7 @@ const ContactForm: React.FC = () => {
         description: "We'll get back to you as soon as possible.",
       });
       form.reset();
+      setSelectedDate(undefined);
       
     } catch (error) {
       toast({
@@ -142,7 +160,7 @@ const ContactForm: React.FC = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4">Thank You!</h3>
                 <p className="text-gray-300 mb-8">
-                  Your message has been received. We'll get back to you as soon as possible.
+                  Your order has been received. We'll prepare your equipment for delivery on your requested date.
                 </p>
                 <Button 
                   onClick={() => {
@@ -152,14 +170,14 @@ const ContactForm: React.FC = () => {
                   variant="outline" 
                   className="border-medical-green text-medical-green hover:bg-medical-green/10"
                 >
-                  Send Another Message
+                  Place Another Order
                 </Button>
               </div>
             ) : (
               <>
                 {/* Progress Steps */}
                 <div className="flex items-center justify-between mb-8">
-                  {[1, 2].map((num) => (
+                  {[1, 2, 3].map((num) => (
                     <div key={num} className="flex flex-col items-center">
                       <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
                         step >= num ? 'bg-medical-green text-white' : 'bg-gray-700 text-gray-300'
@@ -169,6 +187,7 @@ const ContactForm: React.FC = () => {
                       <span className={`text-sm mt-2 ${step >= num ? 'text-gray-200' : 'text-gray-400'}`}>
                         {num === 1 && 'Your Info'}
                         {num === 2 && 'Message'}
+                        {num === 3 && 'Schedule'}
                       </span>
                     </div>
                   ))}
@@ -342,19 +361,52 @@ const ContactForm: React.FC = () => {
                           </Button>
                           
                           <Button 
+                            type="button" 
+                            onClick={nextStep}
+                            className="bg-medical-green hover:bg-medical-green/90 text-white"
+                          >
+                            Continue <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Step 3: Booking Calendar */}
+                    {step === 3 && (
+                      <>
+                        <h3 className="text-xl font-medium text-white mb-4">Schedule Your Equipment Delivery</h3>
+                        <BookingCalendar onDateSelect={handleDateSelect} selectedDate={selectedDate} />
+                        
+                        <div className="mt-8 flex justify-between">
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={prevStep}
+                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                          >
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                          </Button>
+                          
+                          <Button 
                             type="submit" 
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || !selectedDate}
                             className="bg-medical-green hover:bg-medical-green/90 text-white"
                           >
                             {isSubmitting ? (
-                              "Sending Message..."
+                              "Placing Order..."
                             ) : (
                               <>
-                                Send Message <Send className="ml-2 h-4 w-4" />
+                                Place Order <Send className="ml-2 h-4 w-4" />
                               </>
                             )}
                           </Button>
                         </div>
+                        
+                        {!selectedDate && (
+                          <p className="text-yellow-400 text-sm mt-2 text-center">
+                            Please select a delivery date to continue
+                          </p>
+                        )}
                       </>
                     )}
                   </form>
