@@ -55,7 +55,7 @@ const TrustedPartnerSection: React.FC = () => {
                     <ZoomIn className="text-white h-12 w-12" />
                   </div>
                   <img 
-                    src="https://facedownrecoveryequipment.com/wp-content/uploads/2024/12/facedown-positioning.jpg"
+                    src="https://videos.openai.com/vg-assets/assets%2Ftask_01jvb41ft2fvrt1pey5b0cnaav%2F1747351366_img_3.webp?st=2025-05-15T21%3A55%3A28Z&se=2025-05-21T22%3A55%3A28Z&sks=b&skt=2025-05-15T21%3A55%3A28Z&ske=2025-05-21T22%3A55%3A28Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=8ebb0df1-a278-4e2e-9c20-f2d373479b3a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=DuVYi0DH89wLMwAAtkr%2BGcStNkyU2eYRcWdsCaXYjcY%3D&az=oaivgprodscus"
                     alt={`Face-down recovery positioning equipment in ${defaultCity}`}
                     className={`w-full h-auto object-cover transition-transform duration-700 ${isHovering ? 'scale-110' : 'scale-100'}`}
                   />
