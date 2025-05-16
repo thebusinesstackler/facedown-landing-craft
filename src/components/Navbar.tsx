@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, Menu, X } from 'lucide-react';
@@ -37,11 +38,11 @@ const Navbar: React.FC = () => {
       <div className="container flex h-20 items-center justify-between">
         <div className="flex items-center">
           <Link to="/" className="flex items-center">
-            <span className={`text-2xl font-bold transition-colors ${
-              scrolled ? 'text-medical-blue' : 'text-white'
-            }`}>
-              Face<span className="text-medical-green">Down</span> Recovery
-            </span>
+            <img 
+              src="https://sdmntprwestcentralus.oaiusercontent.com/files/00000000-65c8-61fb-ae77-d6e95cd45827/raw?se=2025-05-16T02%3A10%3A19Z&sp=r&sv=2024-08-04&sr=b&scid=00000000-0000-0000-0000-000000000000&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-05-15T21%3A19%3A40Z&ske=2025-05-16T21%3A19%3A40Z&sks=b&skv=2024-08-04&sig=uZKFhTdgPUyHMeBMuqgHu/7MiJuUTjtaxnMTh5XQ4gk%3D" 
+              alt="Face Down Recovery Logo" 
+              className="h-12 mr-2 transition-opacity hover:opacity-90"
+            />
           </Link>
         </div>
         
