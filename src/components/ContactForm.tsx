@@ -8,7 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Send, Check } from 'lucide-react';
+import { Send, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import SpintexHeading from './SpintexHeading';
 
@@ -17,6 +17,8 @@ const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
   phone: z.string().min(10, { message: "Please enter a valid phone number." }),
   message: z.string().min(10, { message: "Message must be at least 10 characters." }),
+  subject: z.string().min(2, { message: "Subject must be at least 2 characters." }).optional(),
+  bestContactTime: z.enum(['morning', 'afternoon', 'evening']).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -24,6 +26,7 @@ type FormValues = z.infer<typeof formSchema>;
 const ContactForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [step, setStep] = useState(1);
   const { toast } = useToast();
   
   // Define a default city name to use instead of the template variable
@@ -45,9 +48,29 @@ const ContactForm: React.FC = () => {
       name: "",
       email: "",
       phone: "",
-      message: ""
+      message: "",
+      subject: "",
+      bestContactTime: "morning",
     }
   });
+
+  const nextStep = () => {
+    if (step === 1) {
+      const nameValid = form.trigger("name");
+      const emailValid = form.trigger("email");
+      const phoneValid = form.trigger("phone");
+      
+      if (nameValid && emailValid && phoneValid) {
+        setStep(2);
+      }
+    } else {
+      setStep(step + 1);
+    }
+  };
+
+  const prevStep = () => {
+    setStep(step - 1);
+  };
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
@@ -63,6 +86,8 @@ const ContactForm: React.FC = () => {
           email: data.email,
           phone: data.phone,
           message: data.message,
+          subject: data.subject || 'Contact Form Submission',
+          bestContactTime: data.bestContactTime || 'morning',
           resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
         }),
       });
@@ -120,7 +145,10 @@ const ContactForm: React.FC = () => {
                   Your message has been received. We'll get back to you as soon as possible.
                 </p>
                 <Button 
-                  onClick={() => setIsSubmitted(false)}
+                  onClick={() => {
+                    setIsSubmitted(false);
+                    setStep(1);
+                  }}
                   variant="outline" 
                   className="border-medical-green text-medical-green hover:bg-medical-green/10"
                 >
@@ -128,98 +156,210 @@ const ContactForm: React.FC = () => {
                 </Button>
               </div>
             ) : (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">Name</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Your name" 
-                            className="bg-gray-900 border-gray-700 text-white" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Email</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="your.email@example.com" 
-                              type="email"
-                              className="bg-gray-900 border-gray-700 text-white" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-400" />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Phone</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="(555) 123-4567" 
-                              className="bg-gray-900 border-gray-700 text-white" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-400" />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">Message</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Tell us about your recovery needs..." 
-                            className="bg-gray-900 border-gray-700 text-white min-h-[120px]" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="bg-medical-green hover:bg-medical-green/90 text-white w-full py-6"
-                  >
-                    {isSubmitting ? (
-                      "Sending Message..."
-                    ) : (
+              <>
+                {/* Progress Steps */}
+                <div className="flex items-center justify-between mb-8">
+                  {[1, 2].map((num) => (
+                    <div key={num} className="flex flex-col items-center">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                        step >= num ? 'bg-medical-green text-white' : 'bg-gray-700 text-gray-300'
+                      }`}>
+                        {step > num ? <Check size={18} /> : num}
+                      </div>
+                      <span className={`text-sm mt-2 ${step >= num ? 'text-gray-200' : 'text-gray-400'}`}>
+                        {num === 1 && 'Your Info'}
+                        {num === 2 && 'Message'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {/* Step 1: Personal Information */}
+                    {step === 1 && (
                       <>
-                        Send Message <Send className="ml-2 h-4 w-4" />
+                        <h3 className="text-xl font-medium text-white mb-4">Your Information</h3>
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Name</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Your name" 
+                                  className="bg-gray-900 border-gray-700 text-white" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage className="text-red-400" />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-gray-300">Email</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="your.email@example.com" 
+                                    type="email"
+                                    className="bg-gray-900 border-gray-700 text-white" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage className="text-red-400" />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-gray-300">Phone</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="(555) 123-4567" 
+                                    className="bg-gray-900 border-gray-700 text-white" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage className="text-red-400" />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="bestContactTime"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Best time to contact you</FormLabel>
+                              <div className="grid grid-cols-3 gap-4 mt-2">
+                                <div 
+                                  className={`cursor-pointer border rounded-lg p-3 text-center transition-colors ${
+                                    field.value === 'morning' 
+                                      ? 'border-medical-green bg-medical-green/10 text-medical-green' 
+                                      : 'border-gray-700 text-gray-300 hover:border-gray-500'
+                                  }`}
+                                  onClick={() => form.setValue("bestContactTime", "morning")}
+                                >
+                                  Morning
+                                </div>
+                                <div 
+                                  className={`cursor-pointer border rounded-lg p-3 text-center transition-colors ${
+                                    field.value === 'afternoon' 
+                                      ? 'border-medical-green bg-medical-green/10 text-medical-green' 
+                                      : 'border-gray-700 text-gray-300 hover:border-gray-500'
+                                  }`}
+                                  onClick={() => form.setValue("bestContactTime", "afternoon")}
+                                >
+                                  Afternoon
+                                </div>
+                                <div 
+                                  className={`cursor-pointer border rounded-lg p-3 text-center transition-colors ${
+                                    field.value === 'evening' 
+                                      ? 'border-medical-green bg-medical-green/10 text-medical-green' 
+                                      : 'border-gray-700 text-gray-300 hover:border-gray-500'
+                                  }`}
+                                  onClick={() => form.setValue("bestContactTime", "evening")}
+                                >
+                                  Evening
+                                </div>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                                                
+                        <div className="mt-8 flex justify-end">
+                          <Button 
+                            type="button" 
+                            onClick={nextStep} 
+                            className="bg-medical-green hover:bg-medical-green/90 text-white"
+                          >
+                            Continue <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </div>
                       </>
                     )}
-                  </Button>
-                </form>
-              </Form>
+                    
+                    {/* Step 2: Message Information */}
+                    {step === 2 && (
+                      <>
+                        <h3 className="text-xl font-medium text-white mb-4">Your Message</h3>
+                        <FormField
+                          control={form.control}
+                          name="subject"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Subject</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="What is your inquiry about?" 
+                                  className="bg-gray-900 border-gray-700 text-white" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage className="text-red-400" />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="message"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Message</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Tell us about your recovery needs..." 
+                                  className="bg-gray-900 border-gray-700 text-white min-h-[120px]" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage className="text-red-400" />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="mt-8 flex justify-between">
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={prevStep}
+                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                          >
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                          </Button>
+                          
+                          <Button 
+                            type="submit" 
+                            disabled={isSubmitting}
+                            className="bg-medical-green hover:bg-medical-green/90 text-white"
+                          >
+                            {isSubmitting ? (
+                              "Sending Message..."
+                            ) : (
+                              <>
+                                Send Message <Send className="ml-2 h-4 w-4" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </form>
+                </Form>
+              </>
             )}
           </Card>
 
