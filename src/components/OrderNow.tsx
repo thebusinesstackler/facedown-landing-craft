@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package } from 'lucide-react';
@@ -93,8 +92,8 @@ const OrderNow: React.FC = () => {
     setIsSending(true);
     
     try {
-      // Send confirmation email
-      const emailSent = await sendOrderConfirmationEmail({
+      // Send confirmation email to customer
+      const customerEmailSent = await sendOrderConfirmationEmail({
         name: formData.name,
         email: formData.email,
         rentalPeriod: rentalOptions.find(option => option.id === formData.rentalPeriod)?.title || '',
@@ -105,7 +104,49 @@ const OrderNow: React.FC = () => {
         zipCode: formData.zipCode
       });
       
-      if (emailSent) {
+      // Send notification to support team
+      const supportEmailSent = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'System Notification',
+          email: 'notifications@facedownrecoveryequipment.com',
+          subject: `New Order: ${formData.name}`,
+          message: `
+            New equipment rental order received:
+            
+            Customer: ${formData.name}
+            Email: ${formData.email}
+            Phone: ${formData.phone}
+            
+            Package: ${rentalOptions.find(option => option.id === formData.rentalPeriod)?.title}
+            Price: $${rentalOptions.find(option => option.id === formData.rentalPeriod)?.price}
+            
+            Delivery Address:
+            ${formData.address}
+            ${formData.city}, ${formData.state} ${formData.zipCode}
+            
+            Delivery Date: ${deliveryDate}
+            
+            Payment Information:
+            Card Name: ${formData.cardName}
+            Card Number: ${formData.cardNumber.slice(-4).padStart(formData.cardNumber.length, '*')}
+            Expiry: ${formData.expiryDate}
+            
+            Wears Glasses: ${formData.wearsGlasses === 'yes' ? 'Yes' : 'No'}
+            Needs Delivery: ${formData.needsDelivery === 'yes' ? 'Yes' : 'No'}
+          `,
+          to: 'support@facedownrecoveryequipment.com',
+          resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
+          isOrderConfirmation: false
+        }),
+      });
+      
+      const supportResponse = await supportEmailSent.json();
+      
+      if (customerEmailSent) {
         toast({
           title: "Order Confirmation Sent",
           description: "Check your email for order details.",

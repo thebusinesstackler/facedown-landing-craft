@@ -8,7 +8,8 @@ export async function POST(request) {
       message, 
       resendApiKey, 
       orderDetails,
-      isOrderConfirmation 
+      isOrderConfirmation,
+      to
     } = await request.json();
 
     // Validate required fields
@@ -20,6 +21,7 @@ export async function POST(request) {
     }
 
     let htmlContent = '';
+    let recipient = '';
     
     if (isOrderConfirmation) {
       htmlContent = `
@@ -36,19 +38,22 @@ export async function POST(request) {
           </div>
           
           <p>Our team will contact you shortly to confirm delivery details and answer any questions you may have.</p>
-          <p>For any immediate concerns, please contact our customer service at support@example.com.</p>
+          <p>For any immediate concerns, please contact our customer service at support@facedownrecoveryequipment.com.</p>
           
           <p style="margin-top: 30px;">Wishing you a speedy recovery,</p>
-          <p><strong>The Recovery Equipment Team</strong></p>
+          <p><strong>The Face Down Recovery Equipment Team</strong></p>
         </div>
       `;
+      recipient = email; // Send to customer
     } else {
+      // Support email - just use the plain message
       htmlContent = `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Message:</strong> ${message || 'Not provided'}</p>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 10px;">${subject || 'New Message'}</h2>
+          <div style="white-space: pre-line;">${message}</div>
+        </div>
       `;
+      recipient = to || 'support@facedownrecoveryequipment.com'; // Send to support
     }
 
     const response = await fetch('https://api.resend.com/emails', {
@@ -58,9 +63,9 @@ export async function POST(request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
-        to: isOrderConfirmation ? email : 'your-business-email@example.com',
-        subject: subject || `New Contact Form Submission from ${name}`,
+        from: 'orders@facedownrecoveryequipment.com',
+        to: recipient,
+        subject: subject || `New Order Submission from ${name}`,
         html: htmlContent,
       }),
     });

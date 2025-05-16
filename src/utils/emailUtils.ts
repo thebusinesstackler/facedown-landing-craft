@@ -30,12 +30,13 @@ export const sendOrderConfirmationEmail = async ({
         name,
         email,
         message: `Order confirmation for ${rentalPeriod}`,
-        subject: 'Your Recovery Equipment Order Confirmation',
+        subject: 'New Face Down Recovery Equipment Order',
         orderDetails: {
           rentalPeriod,
           deliveryDate,
           address: `${address}, ${city}, ${state} ${zipCode}`
         },
+        supportEmail: 'support@facedownrecoveryequipment.com',
         resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
         isOrderConfirmation: true
       }),
