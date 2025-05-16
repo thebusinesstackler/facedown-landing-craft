@@ -1,13 +1,14 @@
 
 import React from 'react';
+import { Card } from '@/components/ui/card';
+import { ChevronDown } from 'lucide-react';
+import SpintexHeading from './SpintexHeading';
 import { 
   Accordion, 
   AccordionContent, 
   AccordionItem, 
   AccordionTrigger 
 } from '@/components/ui/accordion';
-import { ChevronDown } from 'lucide-react';
-import SpintexHeading from './SpintexHeading';
 
 const FAQ: React.FC = () => {
   // FAQ data with spintex content
@@ -39,8 +40,8 @@ const FAQ: React.FC = () => {
   ];
 
   return (
-    <section id="faq" className="py-20 bg-black text-white">
-      <div className="container mx-auto px-4">
+    <section id="faq" className="py-20 bg-gradient-to-b from-black to-gray-900 text-white">
+      <div className="container mx-auto px-4 md:px-8 max-w-6xl">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <SpintexHeading 
             options={[
@@ -48,24 +49,34 @@ const FAQ: React.FC = () => {
               "Frequently Asked Questions About Face-Down Recovery Equipment",
               "Common Questions About Face-Down Recovery Rentals"
             ]}
-            className="text-3xl md:text-5xl font-bold mb-6"
+            className="text-3xl md:text-5xl font-bold mb-6 text-gradient-medical"
             interval={5000}
           />
+          <p className="text-gray-300 text-lg mb-12">
+            Find answers to our most commonly asked questions below. Can't find what you're looking for? Contact us directly.
+          </p>
         </div>
         
-        <div className="max-w-3xl mx-auto">
-          <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="border-b border-white/20">
-                <AccordionTrigger className="py-6 text-xl font-medium text-left hover:no-underline">
-                  <span className="text-white">{faq.question}</span>
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-300 pb-6">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        <div className="grid gap-6 max-w-4xl mx-auto">
+          {faqs.map((faq, index) => (
+            <Card key={index} className="bg-gray-800/50 overflow-hidden backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value={`item-${index}`} className="border-0">
+                  <AccordionTrigger className="py-6 px-6 text-xl font-medium text-left hover:no-underline group">
+                    <span className="text-white group-hover:text-medical-green transition-colors">
+                      {faq.question}
+                    </span>
+                    <ChevronDown className="h-6 w-6 shrink-0 transition-transform duration-200 text-medical-green" />
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-300 px-6 pb-6">
+                    <div className="bg-black/30 p-4 rounded-lg border-l-4 border-medical-green">
+                      {faq.answer}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </Card>
+          ))}
         </div>
       </div>
     </section>
