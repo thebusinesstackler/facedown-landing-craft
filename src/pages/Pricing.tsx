@@ -12,6 +12,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required" }),
@@ -27,6 +29,8 @@ type FormValues = z.infer<typeof formSchema>;
 const Pricing: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string>('1week');
   const [additionalItems, setAdditionalItems] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -40,10 +44,93 @@ const Pricing: React.FC = () => {
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    console.log(values);
-    // Here you would typically send this data to your backend
-    alert("Your order has been placed! We'll contact you shortly to confirm the details.");
+  const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Get details about the selected plan
+      const planDetails = {
+        '1week': {title: '1 Week Rental', price: 259},
+        '2weeks': {title: '2 Week Rental', price: 320},
+        '3weeks': {title: '3 Week Rental', price: 380},
+      }[values.rentPeriod];
+      
+      // Format today's date to use as delivery date
+      const deliveryDate = format(new Date(), 'yyyy-MM-dd');
+      
+      const response = await fetch('/api/send-order-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          subject: 'New Face Down Recovery Equipment Order',
+          message: `New order received from pricing page: ${planDetails.title}`,
+          orderDetails: {
+            rentalPeriod: planDetails.title,
+            price: planDetails.price,
+            deliveryDate: deliveryDate,
+            address: values.address,
+            additionalItems: additionalItems.join(', ')
+          },
+          resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
+          isOrderConfirmation: true
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send order');
+      }
+      
+      toast({
+        title: "Order Submitted Successfully!",
+        description: "We've sent a confirmation to your email address.",
+      });
+      
+      // Also notify the support team
+      await fetch('/api/send-order-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'System Notification',
+          email: 'notifications@facedownrecoveryequipment.com',
+          subject: `New Order: ${values.fullName}`,
+          message: `
+            New equipment rental order received:
+            
+            Customer: ${values.fullName}
+            Email: ${values.email}
+            Phone: ${values.phone}
+            
+            Package: ${planDetails.title}
+            Price: $${planDetails.price}
+            
+            Delivery Address: ${values.address}
+            Additional Items: ${additionalItems.join(', ') || 'None'}
+          `,
+          resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
+          isOrderConfirmation: false
+        }),
+      });
+      
+      form.reset();
+      setAdditionalItems([]);
+    } catch (error) {
+      console.error('Order submission error:', error);
+      toast({
+        title: "Error Processing Order",
+        description: "There was a problem processing your order. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handlePlanSelection = (plan: string) => {
@@ -205,7 +292,7 @@ const Pricing: React.FC = () => {
                             <FormItem>
                               <FormLabel>Delivery Address</FormLabel>
                               <FormControl>
-                                <Input placeholder="123 Main St, {location(city_name)}, {location(region_name)}" {...field} />
+                                <Input placeholder="123 Main St, Boca Raton, FL" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -218,8 +305,11 @@ const Pricing: React.FC = () => {
                           type="submit" 
                           className="w-full md:w-auto bg-medical-green hover:bg-medical-green/90 text-white"
                           size="lg"
+                          disabled={isSubmitting}
                         >
-                          Complete Order <ArrowRight className="ml-2" />
+                          {isSubmitting ? "Processing..." : (
+                            <>Complete Order <ArrowRight className="ml-2" /></>
+                          )}
                         </Button>
                       </div>
                     </form>
