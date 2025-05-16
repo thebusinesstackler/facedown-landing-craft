@@ -1,25 +1,34 @@
 
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Send, Check } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import SpintexHeading from './SpintexHeading';
 
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z.string().min(10, { message: "Please enter a valid phone number." }),
+  message: z.string().min(10, { message: "Message must be at least 10 characters." }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 const ContactForm: React.FC = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { toast } = useToast();
+  
   // Define a default city name to use instead of the template variable
   const defaultCity = "Boca Raton";
   const defaultRegion = "Florida";
-
-  useEffect(() => {
-    // Load the form embed script
-    const script = document.createElement('script');
-    script.src = 'https://link.msgsndr.com/js/form_embed.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      // Cleanup
-      document.body.removeChild(script);
-    };
-  }, []);
 
   // List of cities serviced - could be dynamically loaded from a data source
   const servicedCities = [
@@ -29,6 +38,57 @@ const ContactForm: React.FC = () => {
     { city: "West Palm Beach", region: defaultRegion, latitude: 26.7153, longitude: -80.0534 },
     { city: "Delray Beach", region: defaultRegion, latitude: 26.4615, longitude: -80.0728 }
   ];
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      message: ""
+    }
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          message: data.message,
+          resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setIsSubmitted(true);
+      toast({
+        title: "Message Sent!",
+        description: "We'll get back to you as soon as possible.",
+      });
+      form.reset();
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send your message. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error sending email:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section id="contact" className="py-20 bg-[#1F1F1F] text-white">
@@ -49,30 +109,122 @@ const ContactForm: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          <Card className="bg-black border border-gray-800 p-1 rounded-xl overflow-hidden w-full">
-            <div className="w-full h-[721px]">
-              <iframe
-                src="https://api.leadconnectorhq.com/widget/form/StF1ENbPXhNOQkDE2cQW"
-                style={{ width: '100%', height: '100%', border: 'none', borderRadius: '4px' }}
-                id="inline-StF1ENbPXhNOQkDE2cQW" 
-                data-layout="{'id':'INLINE'}"
-                data-trigger-type="alwaysShow"
-                data-trigger-value=""
-                data-activation-type="alwaysActivated"
-                data-activation-value=""
-                data-deactivation-type="neverDeactivate"
-                data-deactivation-value=""
-                data-form-name="Facedown Recovery Equipment - pSEO Footer"
-                data-height="721"
-                data-layout-iframe-id="inline-StF1ENbPXhNOQkDE2cQW"
-                data-form-id="StF1ENbPXhNOQkDE2cQW"
-                title="Facedown Recovery Equipment - pSEO Footer"
-              />
-            </div>
+          <Card className="bg-black border border-gray-800 p-6 rounded-xl overflow-hidden w-full shadow-md">
+            {isSubmitted ? (
+              <div className="text-center py-16">
+                <div className="bg-medical-green/10 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Check className="h-10 w-10 text-medical-green" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">Thank You!</h3>
+                <p className="text-gray-300 mb-8">
+                  Your message has been received. We'll get back to you as soon as possible.
+                </p>
+                <Button 
+                  onClick={() => setIsSubmitted(false)}
+                  variant="outline" 
+                  className="border-medical-green text-medical-green hover:bg-medical-green/10"
+                >
+                  Send Another Message
+                </Button>
+              </div>
+            ) : (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-300">Name</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Your name" 
+                            className="bg-gray-900 border-gray-700 text-white" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="your.email@example.com" 
+                              type="email"
+                              className="bg-gray-900 border-gray-700 text-white" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage className="text-red-400" />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Phone</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="(555) 123-4567" 
+                              className="bg-gray-900 border-gray-700 text-white" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage className="text-red-400" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-300">Message</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Tell us about your recovery needs..." 
+                            className="bg-gray-900 border-gray-700 text-white min-h-[120px]" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="bg-medical-green hover:bg-medical-green/90 text-white w-full py-6"
+                  >
+                    {isSubmitting ? (
+                      "Sending Message..."
+                    ) : (
+                      <>
+                        Send Message <Send className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            )}
           </Card>
 
           <div className="flex flex-col space-y-6">
-            {/* Smaller Map */}
+            {/* Map */}
             <div className="relative rounded-xl overflow-hidden h-[350px]">
               <iframe 
                 src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d114304.40083200874!2d-80.17553029943376!3d26.368296151218453!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88d8e3c5a9dae6bd%3A0x77a929f150d7516e!2${defaultCity}%2C%20${defaultRegion}!5e0!3m2!1sen!2sus!4v1716644596117!5m2!1sen!2sus`}
@@ -87,8 +239,6 @@ const ContactForm: React.FC = () => {
             <div className="bg-black/30 p-6 rounded-xl border border-gray-800">
               <h3 className="text-xl font-bold mb-4">Cities We Service</h3>
               <div className="mb-4">
-                {/* Removed the dangerouslySetInnerHTML with problematic template variables */}
-                {/* Display a simple text instead */}
                 <p className="text-gray-300">We service {defaultCity} and surrounding areas in {defaultRegion}.</p>
               </div>
               
