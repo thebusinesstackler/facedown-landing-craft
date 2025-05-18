@@ -48,13 +48,13 @@ const LocationPage: React.FC = () => {
       </div>
       <main className="flex-grow">
         <HowItWorks />
-        <OrderNow />
+        <OrderNow locationData={locationData} />
         <Testimonials />
-        <TrustedPartnerSection />
-        <RecoveryImageGallery />
-        <ContactForm />
+        <TrustedPartnerSection locationData={locationData} />
+        <RecoveryImageGallery locationData={locationData} />
+        <ContactForm locationData={locationData} />
         <FAQ />
-        <ContactCTA />
+        <ContactCTA locationData={locationData} />
       </main>
       <Footer />
     </div>

@@ -8,8 +8,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { calculateDeliveryDate } from '@/utils/deliveryUtils';
 import { sendOrderConfirmationEmail } from '@/utils/emailUtils';
 import { useToast } from '@/hooks/use-toast';
+import { LocationData } from '@/utils/locationUtils';
 
-const OrderNow: React.FC = () => {
+interface OrderNowProps {
+  locationData?: LocationData;
+}
+
+const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState({
     rentalPeriod: '1week',
@@ -17,8 +22,8 @@ const OrderNow: React.FC = () => {
     email: '',
     phone: '',
     address: '',
-    city: '',
-    state: '',
+    city: locationData?.city_name || '',
+    state: locationData?.region_name || '',
     zipCode: '',
     cardNumber: '',
     expiryDate: '',

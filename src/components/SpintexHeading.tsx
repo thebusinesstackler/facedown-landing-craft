@@ -36,7 +36,7 @@ export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
   }, [currentOptionIndex, options, interval]);
 
   useEffect(() => {
-    // Update processed text when currentOptionIndex changes
+    // Update processed text when currentOptionIndex or locationData changes
     setProcessedText(processText(options[currentOptionIndex]));
   }, [currentOptionIndex, options, locationData]);
 

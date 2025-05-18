@@ -3,8 +3,13 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import SpintexHeading from './SpintexHeading';
 import { Bed, Table } from 'lucide-react';
+import { LocationData } from '@/utils/locationUtils';
 
-const RecoveryImageGallery: React.FC = () => {
+interface RecoveryImageGalleryProps {
+  locationData?: LocationData;
+}
+
+const RecoveryImageGallery: React.FC<RecoveryImageGalleryProps> = ({ locationData }) => {
   return (
     <section className="py-20 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4">
@@ -17,11 +22,13 @@ const RecoveryImageGallery: React.FC = () => {
             ]}
             className="text-3xl md:text-5xl font-bold mb-6 text-medical-dark"
             interval={5000}
+            locationData={locationData}
           />
           <p className="text-gray-600 text-lg">
             <SpintexHeading
               options={["{Discover|Explore|Experience} our specialized Tabletop {support system|recovery equipment|comfort solution} designed for both dining and sleeping during your recovery period."]}
               className="inline"
+              locationData={locationData}
             />
           </p>
         </div>
@@ -45,6 +52,7 @@ const RecoveryImageGallery: React.FC = () => {
                 <SpintexHeading
                   options={["Our innovative Tabletop Facedown Support provides exceptional comfort and versatility during your {vitrectomy|eye surgery|recovery} period, allowing you to {maintain proper healing position|stay comfortable|follow medical instructions} while enjoying everyday activities."]}
                   className="inline"
+                  locationData={locationData}
                 />
               </p>
               
@@ -83,6 +91,7 @@ const RecoveryImageGallery: React.FC = () => {
                 <SpintexHeading
                   options={["Our equipment is {fully adjustable|easily customizable|perfectly adaptable} to accommodate different {tables|surfaces|heights} and {sleeping arrangements|beds|recovery needs}, ensuring maximum comfort during your entire recovery period."]}
                   className="inline"
+                  locationData={locationData}
                 />
               </p>
             </div>

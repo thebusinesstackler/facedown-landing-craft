@@ -1,16 +1,18 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ZoomIn } from 'lucide-react';
 import { HashLink } from 'react-router-hash-link';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import SpintexHeading from './SpintexHeading';
+import { LocationData } from '@/utils/locationUtils';
 
-const TrustedPartnerSection: React.FC = () => {
+interface TrustedPartnerSectionProps {
+  locationData?: LocationData;
+}
+
+const TrustedPartnerSection: React.FC<TrustedPartnerSectionProps> = ({ locationData }) => {
   const [isHovering, setIsHovering] = useState(false);
-  
-  // Default location variables
-  const defaultCity = "{location(city_name)}";
-  const defaultRegion = "{location(region_name)}";
   
   return (
     <section className="py-28 bg-gradient-to-br from-slate-50 via-blue-50/30 to-medical-blue/5 text-medical-dark border-t border-b border-gray-100 overflow-hidden">
@@ -24,19 +26,21 @@ const TrustedPartnerSection: React.FC = () => {
             <span className="inline-block py-1 px-3 bg-medical-blue/10 text-medical-blue rounded-full text-sm font-medium">Comfortable Recovery Solutions</span>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               <span className="gradient-text">Your Trusted Partner</span>
-              <span className="block mt-3 text-medical-dark">for <SpintexHeading options={["{location(city_name)}"]} className="inline" /> Rent Face-Down Recovery Equipment</span>
+              <span className="block mt-3 text-medical-dark">for <SpintexHeading options={["{location(city_name)}"]} className="inline" locationData={locationData} /> Rent Face-Down Recovery Equipment</span>
             </h2>
             <div className="prose prose-lg text-gray-600 max-w-none">
               <p className="text-lg">
                 <SpintexHeading
                   options={["Whether {healing after eye surgery|recovering from retinal surgery|needing post-operative support} in {location(city_name)}, FaceDown Recovery Equipment provides the {necessary|essential|vital} recovery tools to help you heal {effectively|properly|comfortably}."]}
                   className="inline"
+                  locationData={locationData}
                 />
               </p>
               <p className="mt-4 text-lg">
                 <SpintexHeading
                   options={["Our {hassle-free|simple|convenient} rental process and {exceptional|outstanding|superior} support will ensure your recovery experience in {location(city_name)} and {location(region_name)} County goes as {smoothly|comfortably|seamlessly} as possible."]}
                   className="inline"
+                  locationData={locationData}
                 />
               </p>
             </div>
@@ -68,7 +72,7 @@ const TrustedPartnerSection: React.FC = () => {
                   </div>
                   <img 
                     src="https://videos.openai.com/vg-assets/assets%2Ftask_01jvb41ft2fvrt1pey5b0cnaav%2F1747351366_img_3.webp?st=2025-05-15T21%3A55%3A28Z&se=2025-05-21T22%3A55%3A28Z&sks=b&skt=2025-05-15T21%3A55%3A28Z&ske=2025-05-21T22%3A55%3A28Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=8ebb0df1-a278-4e2e-9c20-f2d373479b3a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=DuVYi0DH89wLMwAAtkr%2BGcStNkyU2eYRcWdsCaXYjcY%3D&az=oaivgprodscus"
-                    alt={`Face-down recovery positioning equipment in ${defaultCity}`}
+                    alt={`Face-down recovery positioning equipment in ${locationData?.city_name || "your area"}`}
                     className={`w-full h-auto object-cover transition-transform duration-700 ${isHovering ? 'scale-110' : 'scale-100'}`}
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -80,7 +84,7 @@ const TrustedPartnerSection: React.FC = () => {
               <HoverCardContent className="w-80 p-4 bg-white/95 backdrop-blur-md shadow-lg rounded-lg border border-medical-blue/20 animate-fade-in">
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold text-medical-blue">Face-Down Recovery Equipment</h3>
-                  <p className="text-sm text-gray-600">Our specialized equipment is designed for maximum comfort and effectiveness during your face-down recovery period in {defaultCity}.</p>
+                  <p className="text-sm text-gray-600">Our specialized equipment is designed for maximum comfort and effectiveness during your face-down recovery period in {locationData?.city_name || "your area"}.</p>
                 </div>
               </HoverCardContent>
             </HoverCard>

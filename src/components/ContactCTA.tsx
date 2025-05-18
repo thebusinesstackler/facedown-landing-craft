@@ -1,11 +1,15 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
+import { LocationData } from '@/utils/locationUtils';
 
-const ContactCTA: React.FC = () => {
+interface ContactCTAProps {
+  locationData?: LocationData;  
+}
+
+const ContactCTA: React.FC<ContactCTAProps> = ({ locationData }) => {
   return (
     <section id="contact" className="py-20 bg-gradient-to-br from-medical-blue to-blue-700 text-white">
       <div className="container mx-auto px-4">
