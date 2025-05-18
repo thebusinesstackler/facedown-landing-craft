@@ -11,6 +11,7 @@ interface SpintexHeadingProps {
     region_name?: string;
     keyword?: string;
   };
+  showRawSpintex?: boolean; // New prop to control whether to show raw spintex
 }
 
 export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
@@ -18,13 +19,18 @@ export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
   className,
   interval = 5000,
   locationData,
+  showRawSpintex = false, // Default to false to maintain backwards compatibility
 }) => {
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
   const [processedText, setProcessedText] = useState('');
 
   useEffect(() => {
-    // Process the text initially
-    setProcessedText(processText(options[currentOptionIndex]));
+    // Process the text initially or show raw spintex
+    if (showRawSpintex) {
+      setProcessedText(options[currentOptionIndex]);
+    } else {
+      setProcessedText(processText(options[currentOptionIndex]));
+    }
 
     // Set up interval if more than one option
     if (options.length > 1 && interval > 0) {
@@ -34,12 +40,16 @@ export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
       
       return () => clearInterval(timer);
     }
-  }, [currentOptionIndex, options, interval]);
+  }, [currentOptionIndex, options, interval, showRawSpintex]);
 
   useEffect(() => {
     // Update processed text when currentOptionIndex or locationData changes
-    setProcessedText(processText(options[currentOptionIndex]));
-  }, [currentOptionIndex, options, locationData]);
+    if (showRawSpintex) {
+      setProcessedText(options[currentOptionIndex]);
+    } else {
+      setProcessedText(processText(options[currentOptionIndex]));
+    }
+  }, [currentOptionIndex, options, locationData, showRawSpintex]);
 
   // Process all types of placeholders in the text
   const processText = (text: string) => {

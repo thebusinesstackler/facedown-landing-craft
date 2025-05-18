@@ -31,22 +31,22 @@ const Hero: React.FC<HeroProps> = ({ locationData }) => {
     "Recovering from eye surgery? Our specialized equipment {ensures|guarantees} proper positioning during your healing journey."
   ];
 
-  const defaultKeyword = "Face-Down Recovery Equipment Rentals";
+  const defaultKeyword = "{keyword}"; // Changed from "Face-Down Recovery Equipment Rentals" to "{keyword}"
   const pageTitle = locationData 
     ? `${locationData.keyword || defaultKeyword} in ${locationData.city_name}, ${locationData.region_name}`
     : defaultKeyword;
 
   return (
     <section className="relative min-h-screen flex items-center">
-      {/* Full-screen background image */}
+      {/* Full-screen background image with increased brightness */}
       <div 
         className="absolute inset-0 bg-[url('https://facedownrecoveryequipment.com/wp-content/uploads/2024/12/facedown-recovery-solutions.jpg')] bg-cover bg-center bg-no-repeat"
-        style={{ zIndex: -2 }}
+        style={{ zIndex: -2, filter: "brightness(1.5)" }} // Added brightness filter
       ></div>
       
-      {/* Overlay for better text readability */}
+      {/* Overlay with reduced opacity for better visibility */}
       <div 
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/40" // Reduced from 60% to 40% opacity
         style={{ zIndex: -1 }}
       ></div>
       
@@ -66,6 +66,7 @@ const Hero: React.FC<HeroProps> = ({ locationData }) => {
               className="text-xl md:text-2xl lg:text-3xl font-medium text-white bg-black/40 p-2 md:p-3 inline-block backdrop-blur-sm"
               interval={5000}
               locationData={locationData}
+              showRawSpintex={!locationData} // Show raw spintex when not on a location page
             />
             
             <p className="text-base md:text-lg lg:text-xl text-gray-200 max-w-xl backdrop-blur-sm bg-black/20 p-3 md:p-4 rounded-lg">
@@ -74,6 +75,7 @@ const Hero: React.FC<HeroProps> = ({ locationData }) => {
                 className="inline"
                 interval={6000}
                 locationData={locationData}
+                showRawSpintex={!locationData} // Show raw spintex when not on a location page
               />
             </p>
             
