@@ -6,8 +6,13 @@ import { Card } from '@/components/ui/card';
 import { ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
+import { LocationData } from '@/utils/locationUtils';
 
-const Hero: React.FC = () => {
+interface HeroProps {
+  locationData?: LocationData;
+}
+
+const Hero: React.FC<HeroProps> = ({ locationData }) => {
   const headingSpintex = [
     "Face-Down Recovery Equipment Rentals",
     "Nationwide Face-Down Recovery Gear Rentals",
@@ -25,6 +30,10 @@ const Hero: React.FC = () => {
     "{Need|Require} post-surgery equipment? We offer {convenient|flexible} 7-14 day rental periods with easy setup.",
     "Recovering from eye surgery? Our specialized equipment {ensures|guarantees} proper positioning during your healing journey."
   ];
+
+  const pageTitle = locationData 
+    ? `Face-Down Recovery Equipment in ${locationData.city_name}, ${locationData.region_name}`
+    : headingSpintex[0];
 
   return (
     <section className="relative min-h-screen flex items-center">
@@ -44,17 +53,18 @@ const Hero: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div className="text-center md:text-left space-y-4 md:space-y-6">
             <div className="inline-block bg-medical-green/30 px-4 py-1.5 rounded-full text-white font-medium text-xs md:text-sm mb-2 backdrop-blur-sm">
-              Medical Equipment for Post-Surgery Recovery
+              {locationData ? `Medical Equipment for ${locationData.city_name}` : "Medical Equipment for Post-Surgery Recovery"}
             </div>
             
             <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold leading-tight text-white">
-              Face-Down Recovery Equipment Rentals
+              {pageTitle}
             </h1>
             
             <SpintexHeading 
               options={subheadingSpintex}
               className="text-xl md:text-2xl lg:text-3xl font-medium text-white bg-black/40 p-2 md:p-3 inline-block backdrop-blur-sm"
               interval={5000}
+              locationData={locationData}
             />
             
             <p className="text-base md:text-lg lg:text-xl text-gray-200 max-w-xl backdrop-blur-sm bg-black/20 p-3 md:p-4 rounded-lg">
@@ -62,6 +72,7 @@ const Hero: React.FC = () => {
                 options={messageSpintex}
                 className="inline"
                 interval={6000}
+                locationData={locationData}
               />
             </p>
             

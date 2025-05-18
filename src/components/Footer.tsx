@@ -123,6 +123,7 @@ const Footer: React.FC = () => {
             <Link to="#" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="#" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link to="#" className="hover:text-white transition-colors">Accessibility</Link>
+            <Link to="/admin" className="hover:text-white transition-colors text-white/30">Admin</Link>
           </div>
         </div>
       </div>
