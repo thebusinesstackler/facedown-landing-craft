@@ -103,11 +103,11 @@ const AdminDashboard: React.FC = () => {
   };
 
   const nextPreview = () => {
-    setCurrentPreviewIndex(prev => (prev + 1) % 5); // Assuming 5 sections to preview
+    setCurrentPreviewIndex(prev => (prev + 1) % 5); // 5 pages to preview
   };
 
   const prevPreview = () => {
-    setCurrentPreviewIndex(prev => (prev - 1 + 5) % 5); // Assuming 5 sections to preview
+    setCurrentPreviewIndex(prev => (prev - 1 + 5) % 5); // 5 pages to preview
   };
 
   const closePreview = () => {
@@ -134,7 +134,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Preview Modal - Now fullscreen */}
+        {/* Preview Modal - Now fullscreen with page navigation */}
         {showPreview && selectedLocation && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
             <div className="w-full h-full flex flex-col">
@@ -149,11 +149,11 @@ const AdminDashboard: React.FC = () => {
                     className="flex items-center gap-2 bg-transparent border-white text-white hover:bg-white/10"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    Previous Section
+                    Previous Page
                   </Button>
                   
                   <div className="text-sm text-white px-4">
-                    Section {currentPreviewIndex + 1} of 5
+                    Page {currentPreviewIndex + 1} of 5
                   </div>
                   
                   <Button
@@ -161,7 +161,7 @@ const AdminDashboard: React.FC = () => {
                     variant="outline"
                     className="flex items-center gap-2 bg-transparent border-white text-white hover:bg-white/10"
                   >
-                    Next Section
+                    Next Page
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                   
@@ -179,7 +179,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex-1 overflow-hidden">
                 <PagePreview 
                   location={selectedLocation}
-                  sectionIndex={currentPreviewIndex}
+                  pageIndex={currentPreviewIndex}
                 />
               </div>
             </div>
