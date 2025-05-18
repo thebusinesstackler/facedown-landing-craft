@@ -13,8 +13,9 @@ import {
   LocationData,
   getLocationCounts 
 } from '@/utils/locationUtils';
-import { Trash2, MapPin, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, MapPin, Eye, ChevronDown, ChevronUp, ArrowLeft, ArrowRight } from 'lucide-react';
 import LocationSearchForm from '@/components/LocationSearchForm';
+import PagePreview from '@/components/PagePreview';
 
 const AdminDashboard: React.FC = () => {
   const [cityName, setCityName] = useState('');
@@ -24,6 +25,8 @@ const AdminDashboard: React.FC = () => {
   const [expandedBulk, setExpandedBulk] = useState(false);
   const [locationStats, setLocationStats] = useState({ total: 0, cities: 0, keywords: 0 });
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [currentPreviewIndex, setCurrentPreviewIndex] = useState(0);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -96,6 +99,21 @@ const AdminDashboard: React.FC = () => {
 
   const previewLocation = (location: LocationData) => {
     setSelectedLocation(location);
+    setShowPreview(true);
+    setCurrentPreviewIndex(0);
+  };
+
+  const nextPreview = () => {
+    setCurrentPreviewIndex(prev => (prev + 1) % 5); // Assuming 5 sections to preview
+  };
+
+  const prevPreview = () => {
+    setCurrentPreviewIndex(prev => (prev - 1 + 5) % 5); // Assuming 5 sections to preview
+  };
+
+  const closePreview = () => {
+    setShowPreview(false);
+    setSelectedLocation(null);
   };
 
   return (
@@ -116,6 +134,51 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Preview Modal */}
+        {showPreview && selectedLocation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-4 bg-medical-dark text-white flex items-center justify-between">
+                <h3 className="text-xl font-semibold">
+                  Preview: {selectedLocation.city_name}, {selectedLocation.region_name}
+                </h3>
+                <Button variant="ghost" size="icon" onClick={closePreview} className="text-white hover:text-white hover:bg-medical-dark/50">
+                  ×
+                </Button>
+              </div>
+              
+              <div className="flex-1 overflow-auto">
+                <PagePreview 
+                  location={selectedLocation}
+                  sectionIndex={currentPreviewIndex}
+                />
+              </div>
+              
+              <div className="p-4 border-t flex justify-between items-center">
+                <Button
+                  onClick={prevPreview}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Previous Section
+                </Button>
+                
+                <div className="text-sm text-gray-500">
+                  Section {currentPreviewIndex + 1} of 5
+                </div>
+                
+                <Button
+                  onClick={nextPreview}
+                  className="flex items-center gap-2"
+                >
+                  Next Section
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Bulk Location Generator (expandable) */}
         <div className="mb-6">
@@ -211,7 +274,8 @@ const AdminDashboard: React.FC = () => {
                         <Button 
                           variant="outline" 
                           size="icon"
-                          onClick={() => viewLocationPage(location.id)}
+                          onClick={() => previewLocation(location)}
+                          title="Preview Page"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -220,6 +284,7 @@ const AdminDashboard: React.FC = () => {
                           size="icon"
                           className="text-red-500 hover:text-red-700"
                           onClick={() => handleDeleteLocation(location.id)}
+                          title="Delete Location"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -231,34 +296,6 @@ const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Location Preview */}
-        {selectedLocation && (
-          <div className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Location Preview: {selectedLocation.city_name}, {selectedLocation.region_name}</CardTitle>
-                <CardDescription>Keyword: {selectedLocation.keyword}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <iframe 
-                  src={`/locations/${selectedLocation.id}`}
-                  className="w-full h-96 border rounded"
-                  title={`Preview of ${selectedLocation.city_name}`}
-                ></iframe>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setSelectedLocation(null)}
-                >
-                  Close Preview
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   );
