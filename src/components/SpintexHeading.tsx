@@ -9,6 +9,7 @@ interface SpintexHeadingProps {
   locationData?: {
     city_name?: string;
     region_name?: string;
+    keyword?: string;
   };
 }
 
@@ -54,10 +55,14 @@ export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
       if (locationData.region_name) {
         processed = processed.replace(/\{location\(region_name\)\}/g, locationData.region_name);
       }
+      if (locationData.keyword) {
+        processed = processed.replace(/\{keyword\}/g, locationData.keyword);
+      }
       
       // Handle direct references like {city_name}
       processed = processed.replace(/\{city_name\}/g, locationData.city_name || '{city_name}');
       processed = processed.replace(/\{region_name\}/g, locationData.region_name || '{region_name}');
+      processed = processed.replace(/\{keyword\}/g, locationData.keyword || '{keyword}');
     }
     
     // Handle spintex options like {discover|explore}

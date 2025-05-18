@@ -3,6 +3,7 @@ export interface LocationData {
   id: string;
   city_name: string;
   region_name: string;
+  keyword?: string;
 }
 
 // Save locations to localStorage

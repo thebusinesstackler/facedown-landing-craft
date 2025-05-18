@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 import { LocationData } from '@/utils/locationUtils';
+import SpintexHeading from './SpintexHeading';
 
 interface ContactCTAProps {
   locationData?: LocationData;  
@@ -16,7 +18,11 @@ const ContactCTA: React.FC<ContactCTAProps> = ({ locationData }) => {
         <div className="text-center max-w-3xl mx-auto mb-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Support Your Recovery?</h2>
           <p className="text-lg text-white/90 mb-8">
-            Contact us today to arrange for your {"{keyword}"} equipment. Our specialists are ready to help you through every step of the process.
+            <SpintexHeading 
+              options={["Contact us today to arrange for your {keyword} equipment. Our specialists are ready to help you through every step of the process."]}
+              locationData={locationData}
+              className="inline"
+            />
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

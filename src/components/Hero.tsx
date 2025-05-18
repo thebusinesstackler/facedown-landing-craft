@@ -14,8 +14,8 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ locationData }) => {
   const headingSpintex = [
-    "Face-Down Recovery Equipment Rentals",
-    "Nationwide Face-Down Recovery Gear Rentals",
+    "{keyword}",
+    "Nationwide {keyword}",
     "Post-Surgery Recovery Equipment Solutions"
   ];
 
@@ -31,9 +31,10 @@ const Hero: React.FC<HeroProps> = ({ locationData }) => {
     "Recovering from eye surgery? Our specialized equipment {ensures|guarantees} proper positioning during your healing journey."
   ];
 
+  const defaultKeyword = "Face-Down Recovery Equipment Rentals";
   const pageTitle = locationData 
-    ? `Face-Down Recovery Equipment in ${locationData.city_name}, ${locationData.region_name}`
-    : headingSpintex[0];
+    ? `${locationData.keyword || defaultKeyword} in ${locationData.city_name}, ${locationData.region_name}`
+    : defaultKeyword;
 
   return (
     <section className="relative min-h-screen flex items-center">
