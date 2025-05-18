@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -11,7 +10,7 @@ interface SpintexHeadingProps {
     region_name?: string;
     keyword?: string;
   };
-  showRawSpintex?: boolean; // New prop to control whether to show raw spintex
+  showRawSpintex?: boolean; // We'll keep this for backward compatibility
 }
 
 export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
@@ -19,18 +18,14 @@ export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
   className,
   interval = 5000,
   locationData,
-  showRawSpintex = false, // Default to false to maintain backwards compatibility
+  showRawSpintex = true, // Changed default to true to always show raw spintex
 }) => {
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
   const [processedText, setProcessedText] = useState('');
 
   useEffect(() => {
-    // Process the text initially or show raw spintex
-    if (showRawSpintex) {
-      setProcessedText(options[currentOptionIndex]);
-    } else {
-      setProcessedText(processText(options[currentOptionIndex]));
-    }
+    // Always show raw spintex as requested
+    setProcessedText(options[currentOptionIndex]);
 
     // Set up interval if more than one option
     if (options.length > 1 && interval > 0) {
@@ -40,18 +35,14 @@ export const SpintexHeading: React.FC<SpintexHeadingProps> = ({
       
       return () => clearInterval(timer);
     }
-  }, [currentOptionIndex, options, interval, showRawSpintex]);
+  }, [currentOptionIndex, options, interval]);
 
   useEffect(() => {
-    // Update processed text when currentOptionIndex or locationData changes
-    if (showRawSpintex) {
-      setProcessedText(options[currentOptionIndex]);
-    } else {
-      setProcessedText(processText(options[currentOptionIndex]));
-    }
-  }, [currentOptionIndex, options, locationData, showRawSpintex]);
+    // Always show raw spintex, don't process it
+    setProcessedText(options[currentOptionIndex]);
+  }, [currentOptionIndex, options]);
 
-  // Process all types of placeholders in the text
+  // We'll keep this function for backward compatibility
   const processText = (text: string) => {
     if (!text) return '';
     
