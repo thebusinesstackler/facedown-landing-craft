@@ -11,7 +11,7 @@ const RecoveryImageGallery: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <SpintexHeading 
             options={[
-              "Versatile Face-Down Recovery Support in {city_name}",
+              "Versatile Face-Down Recovery Support in {location(city_name)}",
               "Comfortable Face-Down Recovery Solutions for Daily Activities",
               "Professional Face-Down Recovery Support for Your Needs"
             ]}
@@ -19,7 +19,10 @@ const RecoveryImageGallery: React.FC = () => {
             interval={5000}
           />
           <p className="text-gray-600 text-lg">
-            {"{Discover|Explore|Experience}"} our specialized Tabletop {"{support system|recovery equipment|comfort solution}"} designed for both dining and sleeping during your recovery period.
+            <SpintexHeading
+              options={["{Discover|Explore|Experience} our specialized Tabletop {support system|recovery equipment|comfort solution} designed for both dining and sleeping during your recovery period."]}
+              className="inline"
+            />
           </p>
         </div>
 
@@ -39,7 +42,10 @@ const RecoveryImageGallery: React.FC = () => {
               </h2>
               
               <p className="text-gray-600 text-lg mb-8">
-                Our innovative Tabletop Facedown Support provides exceptional comfort and versatility during your {"{vitrectomy|eye surgery|recovery}"} period, allowing you to {"{maintain proper healing position|stay comfortable|follow medical instructions}"} while enjoying everyday activities.
+                <SpintexHeading
+                  options={["Our innovative Tabletop Facedown Support provides exceptional comfort and versatility during your {vitrectomy|eye surgery|recovery} period, allowing you to {maintain proper healing position|stay comfortable|follow medical instructions} while enjoying everyday activities."]}
+                  className="inline"
+                />
               </p>
               
               <div className="grid gap-6">
@@ -74,16 +80,27 @@ const RecoveryImageGallery: React.FC = () => {
                 Customized To Your Needs
               </h3>
               <p className="text-gray-600">
-                Our equipment is {"{fully adjustable|easily customizable|perfectly adaptable}"} to accommodate different {"{tables|surfaces|heights}"} and {"{sleeping arrangements|beds|recovery needs}"}, ensuring maximum comfort during your entire recovery period.
+                <SpintexHeading
+                  options={["Our equipment is {fully adjustable|easily customizable|perfectly adaptable} to accommodate different {tables|surfaces|heights} and {sleeping arrangements|beds|recovery needs}, ensuring maximum comfort during your entire recovery period."]}
+                  className="inline"
+                />
               </p>
             </div>
           </div>
         </div>
 
         <div className="mt-12 bg-white p-8 rounded-xl shadow-md">
-          <h2 className="text-2xl font-bold text-medical-dark mb-4">{"{Our Complete|This Comprehensive|The Ultimate}"} Facedown Comfort Kit features:</h2>
+          <h2 className="text-2xl font-bold text-medical-dark mb-4">
+            <SpintexHeading
+              options={["{Our Complete|This Comprehensive|The Ultimate} Facedown Comfort Kit features:"]}
+              className="inline"
+            />
+          </h2>
           <p className="text-gray-600 mb-4">
-            {"{Find|Discover|Experience}"} the <span className="font-semibold">{"{ultimate|perfect|complete}"} comfort solution</span> for your <span className="font-semibold">vitrectomy recovery</span> with our {"{comfort-focused|ergonomic|specially designed}"} support system. {"{Perfect|Ideal|Excellent}"} for daily activities like {"{dining with family|enjoying meals|eating comfortably}"}, {"{sleeping|resting|relaxing}"}, this equipment is engineered to {"{provide|deliver|ensure}"} superior support and {"{minimize|reduce|prevent}"} strain on your neck, shoulders, and back.
+            <SpintexHeading
+              options={["{Find|Discover|Experience} the <span className=\"font-semibold\">{ultimate|perfect|complete}</span> comfort solution for your <span className=\"font-semibold\">vitrectomy recovery</span> with our {comfort-focused|ergonomic|specially designed} support system. {Perfect|Ideal|Excellent} for daily activities like {dining with family|enjoying meals|eating comfortably}, {sleeping|resting|relaxing}, this equipment is engineered to {provide|deliver|ensure} superior support and {minimize|reduce|prevent} strain on your neck, shoulders, and back."]}
+              className="inline"
+            />
           </p>
           
           <div className="mt-6 border-t pt-4">

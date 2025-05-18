@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ZoomIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
+import SpintexHeading from './SpintexHeading';
 
 const TrustedPartnerSection: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false);
@@ -25,18 +24,20 @@ const TrustedPartnerSection: React.FC = () => {
             <span className="inline-block py-1 px-3 bg-medical-blue/10 text-medical-blue rounded-full text-sm font-medium">Comfortable Recovery Solutions</span>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               <span className="gradient-text">Your Trusted Partner</span>
-              <span className="block mt-3 text-medical-dark">for {defaultCity} Rent Face-Down Recovery Equipment</span>
+              <span className="block mt-3 text-medical-dark">for <SpintexHeading options={["{location(city_name)}"]} className="inline" /> Rent Face-Down Recovery Equipment</span>
             </h2>
             <div className="prose prose-lg text-gray-600 max-w-none">
               <p className="text-lg">
-                Whether {"{healing after eye surgery|recovering from retinal surgery|needing post-operative support}"} in {defaultCity}, 
-                FaceDown Recovery Equipment provides the {"{necessary|essential|vital}"} recovery tools to help you 
-                heal {"{effectively|properly|comfortably}"}.
+                <SpintexHeading
+                  options={["Whether {healing after eye surgery|recovering from retinal surgery|needing post-operative support} in {location(city_name)}, FaceDown Recovery Equipment provides the {necessary|essential|vital} recovery tools to help you heal {effectively|properly|comfortably}."]}
+                  className="inline"
+                />
               </p>
               <p className="mt-4 text-lg">
-                Our {"{hassle-free|simple|convenient}"} rental process and {"{exceptional|outstanding|superior}"} support 
-                will ensure your recovery experience in {defaultCity} and {defaultRegion} County goes as 
-                {"{smoothly|comfortably|seamlessly}"} as possible.
+                <SpintexHeading
+                  options={["Our {hassle-free|simple|convenient} rental process and {exceptional|outstanding|superior} support will ensure your recovery experience in {location(city_name)} and {location(region_name)} County goes as {smoothly|comfortably|seamlessly} as possible."]}
+                  className="inline"
+                />
               </p>
             </div>
             <div className="pt-4">
