@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -135,46 +134,53 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Preview Modal */}
+        {/* Preview Modal - Now fullscreen */}
         {showPreview && selectedLocation && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
+            <div className="w-full h-full flex flex-col">
               <div className="p-4 bg-medical-dark text-white flex items-center justify-between">
                 <h3 className="text-xl font-semibold">
                   Preview: {selectedLocation.city_name}, {selectedLocation.region_name}
                 </h3>
-                <Button variant="ghost" size="icon" onClick={closePreview} className="text-white hover:text-white hover:bg-medical-dark/50">
-                  ×
-                </Button>
+                <div className="flex items-center gap-4">
+                  <Button
+                    onClick={prevPreview}
+                    variant="outline"
+                    className="flex items-center gap-2 bg-transparent border-white text-white hover:bg-white/10"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Previous Section
+                  </Button>
+                  
+                  <div className="text-sm text-white px-4">
+                    Section {currentPreviewIndex + 1} of 5
+                  </div>
+                  
+                  <Button
+                    onClick={nextPreview}
+                    variant="outline"
+                    className="flex items-center gap-2 bg-transparent border-white text-white hover:bg-white/10"
+                  >
+                    Next Section
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={closePreview} 
+                    className="text-white hover:text-white hover:bg-medical-dark/50 ml-4"
+                  >
+                    ×
+                  </Button>
+                </div>
               </div>
               
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-hidden">
                 <PagePreview 
                   location={selectedLocation}
                   sectionIndex={currentPreviewIndex}
                 />
-              </div>
-              
-              <div className="p-4 border-t flex justify-between items-center">
-                <Button
-                  onClick={prevPreview}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Previous Section
-                </Button>
-                
-                <div className="text-sm text-gray-500">
-                  Section {currentPreviewIndex + 1} of 5
-                </div>
-                
-                <Button
-                  onClick={nextPreview}
-                  className="flex items-center gap-2"
-                >
-                  Next Section
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
               </div>
             </div>
           </div>

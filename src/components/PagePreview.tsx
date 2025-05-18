@@ -28,7 +28,7 @@ const PagePreview: React.FC<PagePreviewProps> = ({ location, sectionIndex }) => 
   ];
 
   const renderHeroSection = () => (
-    <section className="relative min-h-[500px] flex items-center">
+    <section className="relative min-h-[90vh] flex items-center">
       {/* Full-screen background image with increased brightness */}
       <div 
         className="absolute inset-0 bg-[url('https://facedownrecoveryequipment.com/wp-content/uploads/2024/12/facedown-recovery-solutions.jpg')] bg-cover bg-center bg-no-repeat"
@@ -40,7 +40,7 @@ const PagePreview: React.FC<PagePreviewProps> = ({ location, sectionIndex }) => 
       
       <div className="container relative z-10 mx-auto px-4 py-12">
         <div className="text-center space-y-6">
-          <h1 className="text-4xl font-bold leading-tight text-white">
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight text-white">
             {location.keyword} in {location.city_name}, {location.region_name}
           </h1>
           
@@ -234,11 +234,13 @@ const PagePreview: React.FC<PagePreviewProps> = ({ location, sectionIndex }) => 
   };
 
   return (
-    <div className="preview-container">
+    <div className="preview-container w-full">
       <div className="bg-green-50 px-4 py-2 text-sm font-medium border-b">
         Previewing: {sections[sectionIndex].name} for {location.city_name}, {location.region_name}
       </div>
-      {renderSection()}
+      <div className="w-full h-full overflow-auto">
+        {renderSection()}
+      </div>
     </div>
   );
 };
