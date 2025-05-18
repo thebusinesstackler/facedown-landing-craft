@@ -31,3 +31,55 @@ export const deleteLocation = (id: string): void => {
   const updatedLocations = locations.filter(location => location.id !== id);
   localStorage.setItem('fdr_locations', JSON.stringify(updatedLocations));
 };
+
+// Bulk save locations
+export const bulkSaveLocations = (locationsList: LocationData[]): void => {
+  const existingLocations = getLocations();
+  const mergedLocations = [...existingLocations, ...locationsList];
+  localStorage.setItem('fdr_locations', JSON.stringify(mergedLocations));
+};
+
+// Get counts of location pages
+export const getLocationCounts = (): { total: number, cities: number, keywords: number } => {
+  const locations = getLocations();
+  const uniqueCities = new Set(locations.map(loc => `${loc.city_name}-${loc.region_name}`));
+  const uniqueKeywords = new Set(locations.filter(loc => loc.keyword).map(loc => loc.keyword));
+  
+  return {
+    total: locations.length,
+    cities: uniqueCities.size,
+    keywords: uniqueKeywords.size
+  };
+};
+
+// Get unique keywords
+export const getUniqueKeywords = (): string[] => {
+  const locations = getLocations();
+  const keywordsSet = new Set<string>();
+  
+  locations.forEach(location => {
+    if (location.keyword) {
+      keywordsSet.add(location.keyword);
+    }
+  });
+  
+  return Array.from(keywordsSet);
+};
+
+// Generate a preview of locations
+export const generateLocationPreviews = (cities: {city_name: string, region_name: string}[], keywords: string[]): LocationData[] => {
+  const previews: LocationData[] = [];
+  
+  cities.forEach(city => {
+    keywords.forEach(keyword => {
+      previews.push({
+        id: `preview-${city.city_name}-${keyword.replace(/\s+/g, '-')}`,
+        city_name: city.city_name,
+        region_name: city.region_name,
+        keyword: keyword
+      });
+    });
+  });
+  
+  return previews;
+};

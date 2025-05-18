@@ -6,14 +6,24 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
-import { saveLocation, getLocations, deleteLocation } from '@/utils/locationUtils';
-import { Trash2, MapPin, Eye } from 'lucide-react';
+import { 
+  saveLocation, 
+  getLocations, 
+  deleteLocation, 
+  LocationData,
+  getLocationCounts 
+} from '@/utils/locationUtils';
+import { Trash2, MapPin, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import LocationSearchForm from '@/components/LocationSearchForm';
 
 const AdminDashboard: React.FC = () => {
   const [cityName, setCityName] = useState('');
   const [regionName, setRegionName] = useState('');
   const [keyword, setKeyword] = useState('Face-Down Recovery Equipment Rentals');
-  const [locations, setLocations] = useState<any[]>([]);
+  const [locations, setLocations] = useState<LocationData[]>([]);
+  const [expandedBulk, setExpandedBulk] = useState(false);
+  const [locationStats, setLocationStats] = useState({ total: 0, cities: 0, keywords: 0 });
+  const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -25,8 +35,13 @@ const AdminDashboard: React.FC = () => {
     }
 
     // Load saved locations
-    setLocations(getLocations());
+    loadLocations();
   }, [navigate]);
+
+  const loadLocations = () => {
+    setLocations(getLocations());
+    setLocationStats(getLocationCounts());
+  };
 
   const handleAddLocation = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +62,7 @@ const AdminDashboard: React.FC = () => {
     };
 
     saveLocation(newLocation);
-    setLocations(getLocations());
+    loadLocations();
     setCityName('');
     setRegionName('');
     toast({
@@ -58,7 +73,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleDeleteLocation = (id: string) => {
     deleteLocation(id);
-    setLocations(getLocations());
+    loadLocations();
     toast({
       title: "Location Deleted",
       description: "Location was removed successfully"
@@ -74,6 +89,15 @@ const AdminDashboard: React.FC = () => {
     navigate(`/locations/${id}`);
   };
 
+  const handleLocationGenerated = (newLocations: LocationData[]) => {
+    loadLocations();
+    setExpandedBulk(false);
+  };
+
+  const previewLocation = (location: LocationData) => {
+    setSelectedLocation(location);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-medical-dark text-white p-4">
@@ -84,7 +108,38 @@ const AdminDashboard: React.FC = () => {
       </header>
 
       <div className="container mx-auto py-8 px-4">
-        <h2 className="text-2xl font-bold mb-6">Location Management</h2>
+        <div className="bg-white rounded-lg p-4 mb-6 shadow">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Location Manager Dashboard</h2>
+            <div className="text-sm text-gray-500">
+              {locationStats.total} Pages • {locationStats.cities} Cities • {locationStats.keywords} Keywords
+            </div>
+          </div>
+        </div>
+
+        {/* Bulk Location Generator (expandable) */}
+        <div className="mb-6">
+          <div 
+            className="bg-blue-50 rounded-lg p-4 shadow flex justify-between items-center cursor-pointer"
+            onClick={() => setExpandedBulk(!expandedBulk)}
+          >
+            <div>
+              <h3 className="text-xl font-bold text-blue-700">Bulk Location Generator</h3>
+              <p className="text-sm text-gray-600">Search for cities by zip code and radius to generate multiple pages at once.</p>
+            </div>
+            {expandedBulk ? (
+              <ChevronUp className="text-blue-700 h-6 w-6" />
+            ) : (
+              <ChevronDown className="text-blue-700 h-6 w-6" />
+            )}
+          </div>
+          
+          {expandedBulk && (
+            <div className="mt-4">
+              <LocationSearchForm onGenerate={handleLocationGenerated} />
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Add New Location */}
@@ -176,6 +231,34 @@ const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Location Preview */}
+        {selectedLocation && (
+          <div className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Location Preview: {selectedLocation.city_name}, {selectedLocation.region_name}</CardTitle>
+                <CardDescription>Keyword: {selectedLocation.keyword}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <iframe 
+                  src={`/locations/${selectedLocation.id}`}
+                  className="w-full h-96 border rounded"
+                  title={`Preview of ${selectedLocation.city_name}`}
+                ></iframe>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setSelectedLocation(null)}
+                >
+                  Close Preview
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
