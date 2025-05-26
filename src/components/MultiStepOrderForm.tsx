@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package } from 'lucide-react';
@@ -74,11 +73,11 @@ const MultiStepOrderForm: React.FC = () => {
         },
         body: JSON.stringify({
           name: 'Admin Notification',
-          email: 'admin@facedownrecoveryequipment.com',
+          email: 'thebusinesstackler@gmail.com',
           phone: '',
           message: `You have a new order started by ${formData.firstName} ${formData.lastName}. Email: ${formData.email}, Phone: ${formData.phone}, Equipment needed by: ${formData.needDate}`,
           subject: 'New Order Started',
-          to: 'admin@facedownrecoveryequipment.com',
+          to: 'thebusinesstackler@gmail.com',
           resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
         }),
       });
@@ -138,11 +137,11 @@ const MultiStepOrderForm: React.FC = () => {
         },
         body: JSON.stringify({
           name: 'Admin Notification',
-          email: 'admin@facedownrecoveryequipment.com',
+          email: 'thebusinesstackler@gmail.com',
           phone: '',
           message: `Someone just completed an order! Customer: ${formData.firstName} ${formData.lastName}, Email: ${formData.email}, Phone: ${formData.phone}, Package: ${selectedPackage?.title}, Price: $${selectedPackage?.price}, Address: ${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
           subject: 'Order Completed',
-          to: 'admin@facedownrecoveryequipment.com',
+          to: 'thebusinesstackler@gmail.com',
           resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
         }),
       });

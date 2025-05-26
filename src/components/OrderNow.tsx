@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package } from 'lucide-react';
@@ -86,11 +85,11 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         },
         body: JSON.stringify({
           name: 'Admin Notification',
-          email: 'admin@facedownrecoveryequipment.com',
+          email: 'thebusinesstackler@gmail.com',
           phone: '',
           message: `You have a new order started by ${formData.name}. Email: ${formData.email}, Phone: ${formData.phone}`,
           subject: 'New Order Started',
-          to: 'admin@facedownrecoveryequipment.com',
+          to: 'thebusinesstackler@gmail.com',
           resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
         }),
       });
@@ -164,11 +163,11 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         },
         body: JSON.stringify({
           name: 'Admin Notification',
-          email: 'admin@facedownrecoveryequipment.com',
+          email: 'thebusinesstackler@gmail.com',
           phone: '',
           message: `Someone just completed an order! Customer: ${formData.name}, Email: ${formData.email}, Phone: ${formData.phone}, Package: ${selectedRental?.title}, Price: $${selectedRental?.price}, Address: ${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
           subject: 'Order Completed',
-          to: 'admin@facedownrecoveryequipment.com',
+          to: 'thebusinesstackler@gmail.com',
           resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
         }),
       });
