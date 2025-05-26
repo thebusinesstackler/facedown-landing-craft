@@ -43,21 +43,21 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
       title: 'Standard Recovery Package',
       period: '1 Week Rental',
       price: 259,
-      description: '{Ideal for|Perfect for|Best suited for} shorter recovery periods'
+      description: 'Ideal for shorter recovery periods'
     },
     {
       id: '2weeks',
       title: 'Extended Recovery Package',
       period: '2 Week Rental',
       price: 320,
-      description: '{Most popular option|Recommended choice|Preferred option} for typical recovery needs'
+      description: 'Most popular option for typical recovery needs'
     },
     {
       id: '3weeks',
       title: 'Complete Recovery Package',
       period: '3 Week Rental',
       price: 380,
-      description: '{Comprehensive support|Full recovery support|Maximum healing time} for longer recoveries'
+      description: 'Comprehensive support for longer recoveries'
     }
   ];
 
@@ -183,8 +183,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
             Order Your Recovery Equipment
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {"{All packages include|Every option includes|Each rental comes with}"} free delivery, setup instructions, 
-            and {"{24/7 support|round-the-clock assistance|continuous customer care}"} throughout your recovery journey.
+            Free delivery, setup instructions, and 24/7 support throughout your recovery journey.
           </p>
         </div>
 
@@ -317,7 +316,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           name="name" 
                           value={formData.name} 
                           onChange={handleInputChange} 
-                          placeholder="John Doe" 
+                          placeholder="Enter your full name" 
                           required 
                         />
                       </div>
@@ -329,7 +328,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           type="email" 
                           value={formData.email} 
                           onChange={handleInputChange} 
-                          placeholder="john@example.com" 
+                          placeholder="Enter your email address" 
                           required 
                         />
                       </div>
@@ -340,7 +339,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           name="phone" 
                           value={formData.phone} 
                           onChange={handleInputChange} 
-                          placeholder="(555) 123-4567" 
+                          placeholder="Enter your phone number" 
                           required 
                         />
                       </div>
@@ -371,7 +370,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           name="address" 
                           value={formData.address} 
                           onChange={handleInputChange} 
-                          placeholder="123 Recovery Lane" 
+                          placeholder="Enter your street address" 
                           required 
                         />
                       </div>
@@ -383,7 +382,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                             name="city" 
                             value={formData.city} 
                             onChange={handleInputChange} 
-                            placeholder="{location(city_name)}" 
+                            placeholder="Enter your city" 
                             required 
                           />
                         </div>
@@ -394,7 +393,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                             name="state" 
                             value={formData.state} 
                             onChange={handleInputChange} 
-                            placeholder="{location(region_name)}" 
+                            placeholder="Enter your state" 
                             required 
                           />
                         </div>
@@ -406,7 +405,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           name="zipCode" 
                           value={formData.zipCode} 
                           onChange={handleInputChange} 
-                          placeholder="12345" 
+                          placeholder="Enter your ZIP code" 
                           required 
                         />
                       </div>
@@ -433,7 +432,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           name="cardName" 
                           value={formData.cardName} 
                           onChange={handleInputChange} 
-                          placeholder="John Doe" 
+                          placeholder="Enter name on card" 
                           required 
                         />
                       </div>
