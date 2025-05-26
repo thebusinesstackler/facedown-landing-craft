@@ -195,6 +195,69 @@ export type Database = {
           },
         ]
       }
+      customer_orders: {
+        Row: {
+          address: string | null
+          card_name: string | null
+          card_number_masked: string | null
+          city: string | null
+          created_at: string
+          email: string
+          end_date: string | null
+          expiry_date: string | null
+          id: string
+          name: string
+          phone: string | null
+          price: number | null
+          rental_period: string | null
+          start_date: string | null
+          state: string | null
+          status: string | null
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          card_name?: string | null
+          card_number_masked?: string | null
+          city?: string | null
+          created_at?: string
+          email: string
+          end_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          price?: number | null
+          rental_period?: string | null
+          start_date?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          card_name?: string | null
+          card_number_masked?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string
+          end_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          price?: number | null
+          rental_period?: string | null
+          start_date?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           components: Json

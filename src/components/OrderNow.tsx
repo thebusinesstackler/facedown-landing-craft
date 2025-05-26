@@ -9,7 +9,7 @@ import { calculateDeliveryDate } from '@/utils/deliveryUtils';
 import { sendOrderConfirmationEmail } from '@/utils/emailUtils';
 import { useToast } from '@/hooks/use-toast';
 import { LocationData } from '@/utils/locationUtils';
-import { saveCustomerOrder, calculateEndDate } from '@/utils/customerUtils';
+import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
 
 interface OrderNowProps {
   locationData?: LocationData;
@@ -78,26 +78,14 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
 
   const sendStepOneEmail = async () => {
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: 'Admin Notification',
-          email: 'thebusinesstackler@gmail.com',
-          phone: '',
-          message: `You have a new order started by ${formData.name}. Email: ${formData.email}, Phone: ${formData.phone}`,
-          subject: 'New Order Started',
-          to: 'thebusinesstackler@gmail.com',
-          resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
-        }),
+      await sendOrderEmail('step1', {
+        customerName: formData.name,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
       });
-
-      if (response.ok) {
-        console.log('Step 1 email sent successfully');
-        setStep1EmailSent(true);
-      }
+      
+      setStep1EmailSent(true);
+      console.log('Step 1 email sent successfully');
     } catch (error) {
       console.error('Error sending step 1 email:', error);
     }
@@ -133,43 +121,37 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
     try {
       const selectedRental = rentalOptions.find(option => option.id === formData.rentalPeriod);
       
-      // Save customer order to localStorage for admin dashboard
-      const customerOrder = saveCustomerOrder({
+      // Mask the card number for storage
+      const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
+      
+      // Save to Supabase
+      const orderData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
         state: formData.state,
-        zipCode: formData.zipCode,
-        rentalPeriod: selectedRental?.period.replace(' Rental', '') as '1 week' | '2 weeks' | '3 weeks',
-        startDate: deliveryDate,
-        endDate: calculateEndDate(deliveryDate, selectedRental?.period || '1 Week Rental'),
-        price: selectedRental?.price || 259,
+        zip_code: formData.zipCode,
+        rental_period: selectedRental?.title,
+        start_date: deliveryDate,
+        price: selectedRental?.price,
         status: 'pending',
-        cardDetails: {
-          cardNumber: formData.cardNumber,
-          cardName: formData.cardName,
-          expiryDate: formData.expiryDate,
-          cvv: formData.cvv
-        }
-      });
+        card_number_masked: maskedCardNumber,
+        card_name: formData.cardName,
+        expiry_date: formData.expiryDate,
+      };
 
-      // Send order completion email
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: 'Admin Notification',
-          email: 'thebusinesstackler@gmail.com',
-          phone: '',
-          message: `Someone just completed an order! Customer: ${formData.name}, Email: ${formData.email}, Phone: ${formData.phone}, Package: ${selectedRental?.title}, Price: $${selectedRental?.price}, Address: ${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
-          subject: 'Order Completed',
-          to: 'thebusinesstackler@gmail.com',
-          resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
-        }),
+      await saveCustomerOrder(orderData);
+
+      // Send completion email
+      await sendOrderEmail('completed', {
+        customerName: formData.name,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        packageDetails: selectedRental?.title,
+        price: selectedRental?.price,
+        address: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
       });
 
       // Send confirmation email to customer
@@ -192,7 +174,6 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
       }
       
       console.log('Form submitted with data:', formData);
-      console.log('Customer order saved:', customerOrder);
       setIsSubmitted(true);
     } catch (error) {
       toast({

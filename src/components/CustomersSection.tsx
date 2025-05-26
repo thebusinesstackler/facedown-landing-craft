@@ -19,8 +19,29 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, Plus, Calendar, Eye, EyeOff } from 'lucide-react';
-import { getCustomerOrders, maskCardNumber, CustomerOrder } from '@/utils/customerUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { getCustomerOrders, updateCustomerOrderStatus } from '@/utils/supabaseOrderUtils';
+import { useToast } from '@/hooks/use-toast';
+
+interface CustomerOrder {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  rental_period: string;
+  start_date: string;
+  end_date: string;
+  price: number;
+  status: string;
+  card_number_masked: string;
+  card_name: string;
+  expiry_date: string;
+  created_at: string;
+}
 
 const CustomersSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,23 +50,46 @@ const CustomersSection: React.FC = () => {
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Load customers from localStorage
-    setCustomers(getCustomerOrders());
+    loadCustomers();
   }, []);
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const loadCustomers = async () => {
+    try {
+      setLoading(true);
+      const orders = await getCustomerOrders();
+      setCustomers(orders);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+      toast({
+        title: "Error loading customers",
+        description: "Failed to load customer data from database.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCustomers = customers.filter(customer => {
+    const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || customer.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const getPriceForPeriod = (period: string) => {
     switch (period) {
-      case '1 week': return '$259';
-      case '2 weeks': return '$320';
-      case '3 weeks': return '$380';
-      default: return '$259';
+      case '1 Week Rental': return '$259';
+      case '2 Week Rental': return '$320';
+      case '3 Week Rental': return '$380';
+      default: return `$${period}`;
     }
   };
 
@@ -64,7 +108,11 @@ const CustomersSection: React.FC = () => {
       setShowCardDetails(true);
       setPasswordInput('');
     } else {
-      alert('Incorrect password');
+      toast({
+        title: "Incorrect password",
+        description: "Please enter the correct password to view card details.",
+        variant: "destructive"
+      });
       setPasswordInput('');
     }
   };
@@ -75,6 +123,34 @@ const CustomersSection: React.FC = () => {
     setSelectedCustomer(null);
   };
 
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    try {
+      await updateCustomerOrderStatus(orderId, newStatus);
+      await loadCustomers(); // Reload the data
+      toast({
+        title: "Status updated",
+        description: "Customer order status has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error updating status",
+        description: "Failed to update customer order status.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center py-12">
+          <div className="text-lg">Loading customer data...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -82,9 +158,9 @@ const CustomersSection: React.FC = () => {
           <h2 className="text-2xl font-bold">Customer Management</h2>
           <p className="text-gray-600">Manage rental periods and customer information</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={loadCustomers}>
           <Plus className="h-4 w-4" />
-          New Customer
+          Refresh Data
         </Button>
       </div>
 
@@ -137,7 +213,7 @@ const CustomersSection: React.FC = () => {
                 className="pl-10"
               />
             </div>
-            <Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
@@ -155,8 +231,8 @@ const CustomersSection: React.FC = () => {
       {/* Customer Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Customer Rentals</CardTitle>
-          <CardDescription>Overview of all customer rental periods</CardDescription>
+          <CardTitle>Customer Orders ({filteredCustomers.length})</CardTitle>
+          <CardDescription>Overview of all customer rental orders from the website</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -166,7 +242,6 @@ const CustomersSection: React.FC = () => {
                 <TableHead>Contact</TableHead>
                 <TableHead>Rental Period</TableHead>
                 <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -175,7 +250,7 @@ const CustomersSection: React.FC = () => {
             <TableBody>
               {filteredCustomers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     No customer orders found. Orders will appear here when customers place them.
                   </TableCell>
                 </TableRow>
@@ -189,18 +264,23 @@ const CustomersSection: React.FC = () => {
                         <div className="text-gray-500">{customer.phone}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{customer.rentalPeriod}</TableCell>
-                    <TableCell>{customer.startDate}</TableCell>
-                    <TableCell>{customer.endDate}</TableCell>
+                    <TableCell>{customer.rental_period}</TableCell>
+                    <TableCell>{new Date(customer.start_date).toLocaleDateString()}</TableCell>
                     <TableCell className="font-semibold">${customer.price}</TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
-                        {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
-                      </span>
+                      <Select value={customer.status} onValueChange={(value) => handleStatusUpdate(customer.id, value)}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Edit</Button>
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button 
@@ -226,38 +306,27 @@ const CustomersSection: React.FC = () => {
                                 <h4 className="font-medium">Address</h4>
                                 <p className="text-sm text-gray-600">
                                   {customer.address}<br />
-                                  {customer.city}, {customer.state} {customer.zipCode}
+                                  {customer.city}, {customer.state} {customer.zip_code}
                                 </p>
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Order Details</h4>
+                                <p className="text-sm text-gray-600">Package: {customer.rental_period}</p>
+                                <p className="text-sm text-gray-600">Price: ${customer.price}</p>
+                                <p className="text-sm text-gray-600">Start Date: {new Date(customer.start_date).toLocaleDateString()}</p>
+                                <p className="text-sm text-gray-600">Status: {customer.status}</p>
                               </div>
                               <div>
                                 <h4 className="font-medium">Payment Information</h4>
                                 <p className="text-sm text-gray-600">
-                                  Card: {maskCardNumber(customer.cardDetails.cardNumber)}
+                                  Card: {customer.card_number_masked}
                                 </p>
-                                {!showCardDetails ? (
-                                  <div className="mt-2">
-                                    <Input
-                                      type="password"
-                                      placeholder="Enter password to reveal card details"
-                                      value={passwordInput}
-                                      onChange={(e) => setPasswordInput(e.target.value)}
-                                      className="mb-2"
-                                    />
-                                    <Button onClick={handleCardDetailsReveal} size="sm">
-                                      Reveal Card Details
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <div className="mt-2 p-3 bg-gray-50 rounded border">
-                                    <p className="text-sm"><strong>Card Number:</strong> {customer.cardDetails.cardNumber}</p>
-                                    <p className="text-sm"><strong>Card Holder:</strong> {customer.cardDetails.cardName}</p>
-                                    <p className="text-sm"><strong>Expiry:</strong> {customer.cardDetails.expiryDate}</p>
-                                    <p className="text-sm"><strong>CVV:</strong> {customer.cardDetails.cvv}</p>
-                                    <Button onClick={closeCardDetails} size="sm" variant="outline" className="mt-2">
-                                      Hide Details
-                                    </Button>
-                                  </div>
-                                )}
+                                <p className="text-sm text-gray-600">
+                                  Name: {customer.card_name}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Expires: {customer.expiry_date}
+                                </p>
                               </div>
                             </div>
                           </DialogContent>

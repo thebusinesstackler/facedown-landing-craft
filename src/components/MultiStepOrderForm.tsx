@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
+import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
 
 const MultiStepOrderForm: React.FC = () => {
   const [step, setStep] = useState<number>(1);
@@ -66,26 +67,15 @@ const MultiStepOrderForm: React.FC = () => {
 
   const sendStepOneEmail = async () => {
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: 'Admin Notification',
-          email: 'thebusinesstackler@gmail.com',
-          phone: '',
-          message: `You have a new order started by ${formData.firstName} ${formData.lastName}. Email: ${formData.email}, Phone: ${formData.phone}, Equipment needed by: ${formData.needDate}`,
-          subject: 'New Order Started',
-          to: 'thebusinesstackler@gmail.com',
-          resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
-        }),
+      await sendOrderEmail('step1', {
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        needDate: formData.needDate,
       });
-
-      if (response.ok) {
-        console.log('Step 1 email sent successfully');
-        setStep1EmailSent(true);
-      }
+      
+      setStep1EmailSent(true);
+      console.log('Step 1 email sent successfully');
     } catch (error) {
       console.error('Error sending step 1 email:', error);
     }
@@ -129,27 +119,37 @@ const MultiStepOrderForm: React.FC = () => {
     try {
       const selectedPackage = packages.find(pkg => pkg.id === formData.selectedPackage);
       
-      // Send order completion email
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: 'Admin Notification',
-          email: 'thebusinesstackler@gmail.com',
-          phone: '',
-          message: `Someone just completed an order! Customer: ${formData.firstName} ${formData.lastName}, Email: ${formData.email}, Phone: ${formData.phone}, Package: ${selectedPackage?.title}, Price: $${selectedPackage?.price}, Address: ${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
-          subject: 'Order Completed',
-          to: 'thebusinesstackler@gmail.com',
-          resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
-        }),
-      });
+      // Mask the card number for storage
+      const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
       
-      console.log('Order submitted:', {
-        ...formData,
-        package: selectedPackage,
-        totalPrice: selectedPackage?.price
+      // Save to Supabase
+      const orderData = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip_code: formData.zipCode,
+        rental_period: selectedPackage?.title,
+        start_date: formData.needDate,
+        price: selectedPackage?.price,
+        status: 'pending',
+        card_number_masked: maskedCardNumber,
+        card_name: formData.cardName,
+        expiry_date: formData.expiryDate,
+      };
+
+      await saveCustomerOrder(orderData);
+      
+      // Send completion email
+      await sendOrderEmail('completed', {
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        packageDetails: selectedPackage?.title,
+        price: selectedPackage?.price,
+        address: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
       });
       
       toast({
