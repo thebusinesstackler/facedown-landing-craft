@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Calendar, Eye, EyeOff } from 'lucide-react';
+import { Search, Plus, Eye, Package, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getCustomerOrders, updateCustomerOrderStatus } from '@/utils/supabaseOrderUtils';
 import { useToast } from '@/hooks/use-toast';
@@ -47,9 +47,6 @@ const CustomersSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [customers, setCustomers] = useState<CustomerOrder[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerOrder | null>(null);
-  const [showCardDetails, setShowCardDetails] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
@@ -62,7 +59,15 @@ const CustomersSection: React.FC = () => {
     try {
       setLoading(true);
       const orders = await getCustomerOrders();
-      setCustomers(orders);
+      // Filter out any test or invalid entries - only show orders with valid data
+      const validOrders = orders.filter(order => 
+        order.name && 
+        order.email && 
+        order.rental_period && 
+        order.price && 
+        order.start_date
+      );
+      setCustomers(validOrders);
     } catch (error) {
       console.error('Error loading customers:', error);
       toast({
@@ -84,44 +89,11 @@ const CustomersSection: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const getPriceForPeriod = (period: string) => {
-    switch (period) {
-      case '1 Week Rental': return '$259';
-      case '2 Week Rental': return '$320';
-      case '3 Week Rental': return '$380';
-      default: return `$${period}`;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'text-green-600 bg-green-100';
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'completed': return 'text-gray-600 bg-gray-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const handleCardDetailsReveal = () => {
-    if (passwordInput === '1234') {
-      setIsPasswordCorrect(true);
-      setShowCardDetails(true);
-      setPasswordInput('');
-    } else {
-      toast({
-        title: "Incorrect password",
-        description: "Please enter the correct password to view card details.",
-        variant: "destructive"
-      });
-      setPasswordInput('');
-    }
-  };
-
-  const closeCardDetails = () => {
-    setShowCardDetails(false);
-    setIsPasswordCorrect(false);
-    setSelectedCustomer(null);
-  };
+  // Calculate revenue metrics
+  const totalRevenue = customers.reduce((sum, customer) => sum + (customer.price || 0), 0);
+  const pendingRevenue = customers.filter(c => c.status === 'pending').reduce((sum, customer) => sum + (customer.price || 0), 0);
+  const activeRevenue = customers.filter(c => c.status === 'active').reduce((sum, customer) => sum + (customer.price || 0), 0);
+  const completedRevenue = customers.filter(c => c.status === 'completed').reduce((sum, customer) => sum + (customer.price || 0), 0);
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
@@ -136,6 +108,24 @@ const CustomersSection: React.FC = () => {
       toast({
         title: "Error updating status",
         description: "Failed to update customer order status.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleShipmentUpdate = async (orderId: string) => {
+    try {
+      await updateCustomerOrderStatus(orderId, 'shipped');
+      await loadCustomers();
+      toast({
+        title: "Equipment shipped",
+        description: "Order has been marked as shipped.",
+      });
+    } catch (error) {
+      console.error('Error updating shipment:', error);
+      toast({
+        title: "Error updating shipment",
+        description: "Failed to update shipment status.",
         variant: "destructive"
       });
     }
@@ -156,43 +146,53 @@ const CustomersSection: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Customer Management</h2>
-          <p className="text-gray-600">Manage rental periods and customer information</p>
+          <p className="text-gray-600">Manage orders and revenue tracking</p>
         </div>
         <Button className="flex items-center gap-2" onClick={loadCustomers}>
-          <Plus className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4" />
           Refresh Data
         </Button>
       </div>
 
-      {/* Rental Pricing Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Revenue Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">1 Week Rental</CardTitle>
-            <CardDescription>Standard recovery period</CardDescription>
+            <CardTitle className="text-lg">Total Revenue</CardTitle>
+            <CardDescription>All time earnings</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-medical-blue">$259</div>
+            <div className="text-2xl font-bold text-medical-blue">${totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">2 Week Rental</CardTitle>
-            <CardDescription>Extended recovery period</CardDescription>
+            <CardTitle className="text-lg">Pending Orders</CardTitle>
+            <CardDescription>Revenue from pending orders</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-medical-blue">$320</div>
+            <div className="text-2xl font-bold text-yellow-600">${pendingRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">3 Week Rental</CardTitle>
-            <CardDescription>Maximum recovery period</CardDescription>
+            <CardTitle className="text-lg">Active Rentals</CardTitle>
+            <CardDescription>Revenue from active rentals</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-medical-blue">$380</div>
+            <div className="text-2xl font-bold text-green-600">${activeRevenue.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Completed Orders</CardTitle>
+            <CardDescription>Revenue from completed orders</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-600">${completedRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
@@ -219,8 +219,9 @@ const CustomersSection: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="shipped">Shipped</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
@@ -232,7 +233,7 @@ const CustomersSection: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Customer Orders ({filteredCustomers.length})</CardTitle>
-          <CardDescription>Overview of all customer rental orders from the website</CardDescription>
+          <CardDescription>Orders submitted through the website forms</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -240,9 +241,8 @@ const CustomersSection: React.FC = () => {
               <TableRow>
                 <TableHead>Customer</TableHead>
                 <TableHead>Contact</TableHead>
-                <TableHead>Rental Period</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>Price</TableHead>
+                <TableHead>Rental Details</TableHead>
+                <TableHead>Revenue</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -250,8 +250,8 @@ const CustomersSection: React.FC = () => {
             <TableBody>
               {filteredCustomers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    No customer orders found. Orders will appear here when customers place them.
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    No customer orders found. Orders will appear here when customers submit the form.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -264,9 +264,20 @@ const CustomersSection: React.FC = () => {
                         <div className="text-gray-500">{customer.phone}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{customer.rental_period}</TableCell>
-                    <TableCell>{new Date(customer.start_date).toLocaleDateString()}</TableCell>
-                    <TableCell className="font-semibold">${customer.price}</TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div className="font-medium">{customer.rental_period}</div>
+                        <div className="text-gray-500">
+                          Start: {new Date(customer.start_date).toLocaleDateString()}
+                        </div>
+                        {customer.end_date && (
+                          <div className="text-gray-500">
+                            End: {new Date(customer.end_date).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-semibold text-green-600">${customer.price}</TableCell>
                     <TableCell>
                       <Select value={customer.status} onValueChange={(value) => handleStatusUpdate(customer.id, value)}>
                         <SelectTrigger className="w-32">
@@ -275,12 +286,24 @@ const CustomersSection: React.FC = () => {
                         <SelectContent>
                           <SelectItem value="pending">Pending</SelectItem>
                           <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        {customer.status !== 'shipped' && customer.status !== 'completed' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleShipmentUpdate(customer.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Package className="h-4 w-4" />
+                            Ship
+                          </Button>
+                        )}
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button 
@@ -312,9 +335,10 @@ const CustomersSection: React.FC = () => {
                               <div>
                                 <h4 className="font-medium">Order Details</h4>
                                 <p className="text-sm text-gray-600">Package: {customer.rental_period}</p>
-                                <p className="text-sm text-gray-600">Price: ${customer.price}</p>
+                                <p className="text-sm text-gray-600">Revenue: ${customer.price}</p>
                                 <p className="text-sm text-gray-600">Start Date: {new Date(customer.start_date).toLocaleDateString()}</p>
                                 <p className="text-sm text-gray-600">Status: {customer.status}</p>
+                                <p className="text-sm text-gray-600">Order Date: {new Date(customer.created_at).toLocaleDateString()}</p>
                               </div>
                               <div>
                                 <h4 className="font-medium">Payment Information</h4>
