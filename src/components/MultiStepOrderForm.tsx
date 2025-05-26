@@ -29,6 +29,7 @@ const MultiStepOrderForm: React.FC = () => {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [step1EmailSent, setStep1EmailSent] = useState(false);
   const { toast } = useToast();
 
   const packages = [
@@ -64,6 +65,33 @@ const MultiStepOrderForm: React.FC = () => {
     setFormData(prev => ({ ...prev, selectedPackage: value }));
   };
 
+  const sendStepOneEmail = async () => {
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Admin Notification',
+          email: 'admin@facedownrecoveryequipment.com',
+          phone: '',
+          message: `You have a new order started by ${formData.firstName} ${formData.lastName}. Email: ${formData.email}, Phone: ${formData.phone}, Equipment needed by: ${formData.needDate}`,
+          subject: 'New Order Started',
+          to: 'admin@facedownrecoveryequipment.com',
+          resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Step 1 email sent successfully');
+        setStep1EmailSent(true);
+      }
+    } catch (error) {
+      console.error('Error sending step 1 email:', error);
+    }
+  };
+
   const nextStep = () => {
     if (step === 1 && (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.needDate)) {
       toast({
@@ -72,6 +100,11 @@ const MultiStepOrderForm: React.FC = () => {
         variant: "destructive"
       });
       return;
+    }
+
+    // Send email when step 1 is completed (moving from step 1 to step 2)
+    if (step === 1 && !step1EmailSent) {
+      sendStepOneEmail();
     }
     
     if (step === 3 && (!formData.address || !formData.city || !formData.state || !formData.zipCode)) {
@@ -96,6 +129,23 @@ const MultiStepOrderForm: React.FC = () => {
     
     try {
       const selectedPackage = packages.find(pkg => pkg.id === formData.selectedPackage);
+      
+      // Send order completion email
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Admin Notification',
+          email: 'admin@facedownrecoveryequipment.com',
+          phone: '',
+          message: `Someone just completed an order! Customer: ${formData.firstName} ${formData.lastName}, Email: ${formData.email}, Phone: ${formData.phone}, Package: ${selectedPackage?.title}, Price: $${selectedPackage?.price}, Address: ${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
+          subject: 'Order Completed',
+          to: 'admin@facedownrecoveryequipment.com',
+          resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
+        }),
+      });
       
       console.log('Order submitted:', {
         ...formData,

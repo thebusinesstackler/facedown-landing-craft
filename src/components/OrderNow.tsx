@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package } from 'lucide-react';
@@ -35,6 +36,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [step1EmailSent, setStep1EmailSent] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState(calculateDeliveryDate());
   const { toast } = useToast();
 
@@ -75,6 +77,33 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
     setFormData(prev => ({ ...prev, wearsGlasses: value }));
   };
 
+  const sendStepOneEmail = async () => {
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Admin Notification',
+          email: 'admin@facedownrecoveryequipment.com',
+          phone: '',
+          message: `You have a new order started by ${formData.name}. Email: ${formData.email}, Phone: ${formData.phone}`,
+          subject: 'New Order Started',
+          to: 'admin@facedownrecoveryequipment.com',
+          resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Step 1 email sent successfully');
+        setStep1EmailSent(true);
+      }
+    } catch (error) {
+      console.error('Error sending step 1 email:', error);
+    }
+  };
+
   const nextStep = () => {
     // Don't proceed if user wears glasses
     if (step === 2 && formData.wearsGlasses === 'yes') {
@@ -84,6 +113,11 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         variant: "destructive"
       });
       return;
+    }
+
+    // Send email when moving from step 2 to step 3 (after personal info is completed)
+    if (step === 2 && !step1EmailSent) {
+      sendStepOneEmail();
     }
     
     setStep(prev => prev + 1);
@@ -122,6 +156,23 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         }
       });
 
+      // Send order completion email
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Admin Notification',
+          email: 'admin@facedownrecoveryequipment.com',
+          phone: '',
+          message: `Someone just completed an order! Customer: ${formData.name}, Email: ${formData.email}, Phone: ${formData.phone}, Package: ${selectedRental?.title}, Price: $${selectedRental?.price}, Address: ${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
+          subject: 'Order Completed',
+          to: 'admin@facedownrecoveryequipment.com',
+          resendApiKey: 're_5dGi9VAU_K9ruwEyo3xRjicQnr8EHsXGy'
+        }),
+      });
+
       // Send confirmation email to customer
       const customerEmailSent = await sendOrderConfirmationEmail({
         name: formData.name,
@@ -132,45 +183,6 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         city: formData.city,
         state: formData.state,
         zipCode: formData.zipCode
-      });
-      
-      // Send notification to support team - using the correct endpoint
-      const supportEmailSent = await fetch('/api/send-order-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: 'System Notification',
-          email: 'notifications@facedownrecoveryequipment.com',
-          subject: `New Order: ${formData.name}`,
-          message: `
-            New equipment rental order received:
-            
-            Customer: ${formData.name}
-            Email: ${formData.email}
-            Phone: ${formData.phone}
-            
-            Package: ${selectedRental?.title}
-            Price: $${selectedRental?.price}
-            
-            Delivery Address:
-            ${formData.address}
-            ${formData.city}, ${formData.state} ${formData.zipCode}
-            
-            Delivery Date: ${deliveryDate}
-            
-            Payment Information:
-            Card Name: ${formData.cardName}
-            Card Number: ${formData.cardNumber.slice(-4).padStart(formData.cardNumber.length, '*')}
-            Expiry: ${formData.expiryDate}
-            
-            Wears Glasses: ${formData.wearsGlasses === 'yes' ? 'Yes' : 'No'}
-            Needs Delivery: ${formData.needsDelivery === 'yes' ? 'Yes' : 'No'}
-          `,
-          resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
-          isOrderConfirmation: false
-        }),
       });
       
       if (customerEmailSent) {
