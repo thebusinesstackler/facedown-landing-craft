@@ -1,11 +1,25 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { hash, compare } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Simple hash function for passwords (in production, use proper bcrypt)
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + 'salt_for_fdr_admin');
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const computedHash = await hashPassword(password);
+  return computedHash === hash;
 }
 
 serve(async (req) => {
@@ -47,7 +61,7 @@ serve(async (req) => {
       if (user.password_hash === 'temp_hash') {
         // Set up the actual password hash
         const adminPassword = Deno.env.get('ADMIN_PASSWORD') || 'BlessedYear2026!'
-        const hashedPassword = await hash(adminPassword)
+        const hashedPassword = await hashPassword(adminPassword)
         
         const { error: updateError } = await supabase
           .from('admin_users')
@@ -84,7 +98,7 @@ serve(async (req) => {
         }
       } else {
         // Verify password against stored hash
-        const isValid = await compare(password, user.password_hash)
+        const isValid = await verifyPassword(password, user.password_hash)
         
         if (!isValid) {
           console.log('Password verification failed')
@@ -116,7 +130,7 @@ serve(async (req) => {
       
       // Hash the password and update the admin user
       const adminPassword = Deno.env.get('ADMIN_PASSWORD') || 'BlessedYear2026!'
-      const hashedPassword = await hash(adminPassword)
+      const hashedPassword = await hashPassword(adminPassword)
       
       const { error } = await supabase
         .from('admin_users')
