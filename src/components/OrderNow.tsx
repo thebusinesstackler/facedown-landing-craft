@@ -134,8 +134,8 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         zipCode: formData.zipCode
       });
       
-      // Send notification to support team
-      const supportEmailSent = await fetch('/api/send-email', {
+      // Send notification to support team - using the correct endpoint
+      const supportEmailSent = await fetch('/api/send-order-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -151,8 +151,8 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
             Email: ${formData.email}
             Phone: ${formData.phone}
             
-            Package: ${rentalOptions.find(option => option.id === formData.rentalPeriod)?.title}
-            Price: $${rentalOptions.find(option => option.id === formData.rentalPeriod)?.price}
+            Package: ${selectedRental?.title}
+            Price: $${selectedRental?.price}
             
             Delivery Address:
             ${formData.address}
@@ -168,13 +168,10 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
             Wears Glasses: ${formData.wearsGlasses === 'yes' ? 'Yes' : 'No'}
             Needs Delivery: ${formData.needsDelivery === 'yes' ? 'Yes' : 'No'}
           `,
-          to: 'support@facedownrecoveryequipment.com',
           resendApiKey: 're_VcM1Sk1a_6B9CNbs16KsuSWtcQzTY2Hzp',
           isOrderConfirmation: false
         }),
       });
-      
-      const supportResponse = await supportEmailSent.json();
       
       if (customerEmailSent) {
         toast({
