@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { LocationData } from '@/utils/locationUtils';
 
 interface SpintexHeadingProps {
   options: string[];
   className?: string;
   interval?: number;
-  locationData?: LocationData;
+  locationData?: {
+    city_name?: string;
+    region_name?: string;
+    keyword?: string;
+  };
   showRawSpintex?: boolean; // We'll keep this for backward compatibility
 }
 
