@@ -13,7 +13,8 @@ const MultiStepOrderForm: React.FC = () => {
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState({
     selectedPackage: '1week',
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     needDate: format(addDays(new Date(), 2), 'yyyy-MM-dd'),
@@ -64,7 +65,7 @@ const MultiStepOrderForm: React.FC = () => {
   };
 
   const nextStep = () => {
-    if (step === 1 && (!formData.name || !formData.email || !formData.phone || !formData.needDate)) {
+    if (step === 1 && (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.needDate)) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -73,7 +74,7 @@ const MultiStepOrderForm: React.FC = () => {
       return;
     }
     
-    if (step === 2 && (!formData.address || !formData.city || !formData.state || !formData.zipCode)) {
+    if (step === 3 && (!formData.address || !formData.city || !formData.state || !formData.zipCode)) {
       toast({
         title: "Missing Address",
         description: "Please fill in all address fields.",
@@ -127,7 +128,7 @@ const MultiStepOrderForm: React.FC = () => {
       <div className="container mx-auto max-w-4xl">
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-8">
-          {[1, 2, 3].map((num) => (
+          {[1, 2, 3, 4].map((num) => (
             <div key={num} className="flex flex-col items-center flex-1">
               <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
                 step >= num ? 'bg-medical-green text-white' : 'bg-gray-200 text-gray-500'
@@ -135,9 +136,10 @@ const MultiStepOrderForm: React.FC = () => {
                 {step > num ? <Check size={18} /> : num}
               </div>
               <span className={`text-sm mt-2 text-center ${step >= num ? 'text-gray-800' : 'text-gray-400'}`}>
-                {num === 1 && 'Package & Info'}
-                {num === 2 && 'Delivery Address'}
-                {num === 3 && 'Payment'}
+                {num === 1 && 'Your Info'}
+                {num === 2 && 'Select Package'}
+                {num === 3 && 'Delivery Address'}
+                {num === 4 && 'Payment'}
               </span>
             </div>
           ))}
@@ -160,8 +162,81 @@ const MultiStepOrderForm: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                {/* Step 1: Package Selection & Basic Info */}
+                {/* Step 1: Personal Information */}
                 {step === 1 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-semibold mb-4">Your Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="firstName">First Name *</Label>
+                          <Input 
+                            id="firstName" 
+                            name="firstName" 
+                            value={formData.firstName} 
+                            onChange={handleInputChange} 
+                            placeholder="Enter your first name" 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lastName">Last Name *</Label>
+                          <Input 
+                            id="lastName" 
+                            name="lastName" 
+                            value={formData.lastName} 
+                            onChange={handleInputChange} 
+                            placeholder="Enter your last name" 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="email">Email Address *</Label>
+                          <Input 
+                            id="email" 
+                            name="email" 
+                            type="email" 
+                            value={formData.email} 
+                            onChange={handleInputChange} 
+                            placeholder="you@example.com" 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Input 
+                            id="phone" 
+                            name="phone" 
+                            value={formData.phone} 
+                            onChange={handleInputChange} 
+                            placeholder="(123) 456-7890" 
+                            required 
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="needDate">When do you need the equipment? *</Label>
+                          <Input 
+                            id="needDate" 
+                            name="needDate" 
+                            type="date" 
+                            value={formData.needDate} 
+                            onChange={handleInputChange} 
+                            required 
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                      <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
+                        Continue <ArrowRight size={16} className="ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Package Selection */}
+                {step === 2 && (
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xl font-semibold mb-4">Select Your Recovery Package</h3>
@@ -200,58 +275,10 @@ const MultiStepOrderForm: React.FC = () => {
                       </RadioGroup>
                     </div>
 
-                    <div className="border-t pt-6">
-                      <h3 className="text-xl font-semibold mb-4">Your Information</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="name">Full Name *</Label>
-                          <Input 
-                            id="name" 
-                            name="name" 
-                            value={formData.name} 
-                            onChange={handleInputChange} 
-                            placeholder="Enter your full name" 
-                            required 
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="email">Email Address *</Label>
-                          <Input 
-                            id="email" 
-                            name="email" 
-                            type="email" 
-                            value={formData.email} 
-                            onChange={handleInputChange} 
-                            placeholder="you@example.com" 
-                            required 
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="phone">Phone Number *</Label>
-                          <Input 
-                            id="phone" 
-                            name="phone" 
-                            value={formData.phone} 
-                            onChange={handleInputChange} 
-                            placeholder="(123) 456-7890" 
-                            required 
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="needDate">When do you need the equipment? *</Label>
-                          <Input 
-                            id="needDate" 
-                            name="needDate" 
-                            type="date" 
-                            value={formData.needDate} 
-                            onChange={handleInputChange} 
-                            required 
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-4">
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={prevStep}>
+                        <ArrowLeft size={16} className="mr-2" /> Back
+                      </Button>
                       <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
                         Continue <ArrowRight size={16} className="ml-2" />
                       </Button>
@@ -259,8 +286,8 @@ const MultiStepOrderForm: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 2: Delivery Address */}
-                {step === 2 && (
+                {/* Step 3: Delivery Address */}
+                {step === 3 && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Delivery Address</h3>
                     <p className="text-gray-600">
@@ -327,8 +354,8 @@ const MultiStepOrderForm: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 3: Payment */}
-                {step === 3 && (
+                {/* Step 4: Payment */}
+                {step === 4 && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Payment Information</h3>
                     
