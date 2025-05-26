@@ -9,6 +9,7 @@ import { calculateDeliveryDate } from '@/utils/deliveryUtils';
 import { sendOrderConfirmationEmail } from '@/utils/emailUtils';
 import { useToast } from '@/hooks/use-toast';
 import { LocationData } from '@/utils/locationUtils';
+import { saveCustomerOrder, calculateEndDate } from '@/utils/customerUtils';
 
 interface OrderNowProps {
   locationData?: LocationData;
@@ -97,11 +98,35 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
     setIsSending(true);
     
     try {
+      const selectedRental = rentalOptions.find(option => option.id === formData.rentalPeriod);
+      
+      // Save customer order to localStorage for admin dashboard
+      const customerOrder = saveCustomerOrder({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        rentalPeriod: selectedRental?.period.replace(' Rental', '') as '1 week' | '2 weeks' | '3 weeks',
+        startDate: deliveryDate,
+        endDate: calculateEndDate(deliveryDate, selectedRental?.period || '1 Week Rental'),
+        price: selectedRental?.price || 259,
+        status: 'pending',
+        cardDetails: {
+          cardNumber: formData.cardNumber,
+          cardName: formData.cardName,
+          expiryDate: formData.expiryDate,
+          cvv: formData.cvv
+        }
+      });
+
       // Send confirmation email to customer
       const customerEmailSent = await sendOrderConfirmationEmail({
         name: formData.name,
         email: formData.email,
-        rentalPeriod: rentalOptions.find(option => option.id === formData.rentalPeriod)?.title || '',
+        rentalPeriod: selectedRental?.title || '',
         deliveryDate,
         address: formData.address,
         city: formData.city,
@@ -159,6 +184,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
       }
       
       console.log('Form submitted with data:', formData);
+      console.log('Customer order saved:', customerOrder);
       setIsSubmitted(true);
     } catch (error) {
       toast({

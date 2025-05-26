@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,46 +18,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Calendar } from 'lucide-react';
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  rentalPeriod: '1 week' | '3 weeks';
-  startDate: string;
-  endDate: string;
-  price: number;
-  status: 'active' | 'pending' | 'completed';
-}
+import { Search, Plus, Calendar, Eye, EyeOff } from 'lucide-react';
+import { getCustomerOrders, maskCardNumber, CustomerOrder } from '@/utils/customerUtils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const CustomersSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [customers] = useState<Customer[]>([
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'john@example.com',
-      phone: '(555) 123-4567',
-      rentalPeriod: '1 week',
-      startDate: '2024-01-15',
-      endDate: '2024-01-22',
-      price: 259,
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      phone: '(555) 234-5678',
-      rentalPeriod: '3 weeks',
-      startDate: '2024-01-10',
-      endDate: '2024-01-31',
-      price: 380,
-      status: 'completed'
-    }
-  ]);
+  const [customers, setCustomers] = useState<CustomerOrder[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerOrder | null>(null);
+  const [showCardDetails, setShowCardDetails] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
+
+  useEffect(() => {
+    // Load customers from localStorage
+    setCustomers(getCustomerOrders());
+  }, []);
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,6 +56,23 @@ const CustomersSection: React.FC = () => {
       case 'completed': return 'text-gray-600 bg-gray-100';
       default: return 'text-gray-600 bg-gray-100';
     }
+  };
+
+  const handleCardDetailsReveal = () => {
+    if (passwordInput === '1234') {
+      setIsPasswordCorrect(true);
+      setShowCardDetails(true);
+      setPasswordInput('');
+    } else {
+      alert('Incorrect password');
+      setPasswordInput('');
+    }
+  };
+
+  const closeCardDetails = () => {
+    setShowCardDetails(false);
+    setIsPasswordCorrect(false);
+    setSelectedCustomer(null);
   };
 
   return (
@@ -180,34 +173,100 @@ const CustomersSection: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCustomers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{customer.email}</div>
-                      <div className="text-gray-500">{customer.phone}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{customer.rentalPeriod}</TableCell>
-                  <TableCell>{customer.startDate}</TableCell>
-                  <TableCell>{customer.endDate}</TableCell>
-                  <TableCell className="font-semibold">${customer.price}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
-                      {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Edit</Button>
-                      <Button variant="outline" size="sm">
-                        <Calendar className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {filteredCustomers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                    No customer orders found. Orders will appear here when customers place them.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredCustomers.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell className="font-medium">{customer.name}</TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>{customer.email}</div>
+                        <div className="text-gray-500">{customer.phone}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{customer.rentalPeriod}</TableCell>
+                    <TableCell>{customer.startDate}</TableCell>
+                    <TableCell>{customer.endDate}</TableCell>
+                    <TableCell className="font-semibold">${customer.price}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
+                        {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">Edit</Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setSelectedCustomer(customer)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Customer Details</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-medium">Personal Information</h4>
+                                <p className="text-sm text-gray-600">{customer.name}</p>
+                                <p className="text-sm text-gray-600">{customer.email}</p>
+                                <p className="text-sm text-gray-600">{customer.phone}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Address</h4>
+                                <p className="text-sm text-gray-600">
+                                  {customer.address}<br />
+                                  {customer.city}, {customer.state} {customer.zipCode}
+                                </p>
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Payment Information</h4>
+                                <p className="text-sm text-gray-600">
+                                  Card: {maskCardNumber(customer.cardDetails.cardNumber)}
+                                </p>
+                                {!showCardDetails ? (
+                                  <div className="mt-2">
+                                    <Input
+                                      type="password"
+                                      placeholder="Enter password to reveal card details"
+                                      value={passwordInput}
+                                      onChange={(e) => setPasswordInput(e.target.value)}
+                                      className="mb-2"
+                                    />
+                                    <Button onClick={handleCardDetailsReveal} size="sm">
+                                      Reveal Card Details
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="mt-2 p-3 bg-gray-50 rounded border">
+                                    <p className="text-sm"><strong>Card Number:</strong> {customer.cardDetails.cardNumber}</p>
+                                    <p className="text-sm"><strong>Card Holder:</strong> {customer.cardDetails.cardName}</p>
+                                    <p className="text-sm"><strong>Expiry:</strong> {customer.cardDetails.expiryDate}</p>
+                                    <p className="text-sm"><strong>CVV:</strong> {customer.cardDetails.cvv}</p>
+                                    <Button onClick={closeCardDetails} size="sm" variant="outline" className="mt-2">
+                                      Hide Details
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
