@@ -177,16 +177,6 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
   return (
     <section id="order-now" className="py-20 bg-gradient-to-b from-background to-gray-100">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <span className="text-medical-green font-medium">Ready for Recovery</span>
-          <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-4">
-            Order Your Recovery Equipment
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Free delivery, setup instructions, and 24/7 support throughout your recovery journey.
-          </p>
-        </div>
-
         <div className="max-w-3xl mx-auto">
           {/* Progress Steps */}
           <div className="flex items-center justify-between mb-8">
