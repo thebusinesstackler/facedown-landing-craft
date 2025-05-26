@@ -8,6 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminLogin: React.FC = () => {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,10 +16,10 @@ const AdminLogin: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password.trim() === '') {
+    if (username.trim() === '' || password.trim() === '') {
       toast({
         title: "Login failed",
-        description: "Please enter a password",
+        description: "Please enter both username and password",
         variant: "destructive",
       });
       return;
@@ -27,27 +28,31 @@ const AdminLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      // Call the edge function to validate the password
-      const { data, error } = await supabase.functions.invoke('validate-admin-password', {
-        body: { password }
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
+        body: { 
+          action: 'login',
+          username: username,
+          password: password
+        }
       });
 
       if (error) {
         throw error;
       }
 
-      if (data.isValid) {
-        // Set auth flag in localStorage
+      if (data.success) {
         localStorage.setItem('fdr_admin_auth', 'true');
+        localStorage.setItem('fdr_admin_user', JSON.stringify(data.user));
+        
         toast({
           title: "Login successful",
-          description: "Welcome to the admin dashboard",
+          description: `Welcome ${data.user.username}!`,
         });
         navigate('/admin/dashboard');
       } else {
         toast({
           title: "Login failed",
-          description: "Invalid password",
+          description: data.error || "Invalid credentials",
           variant: "destructive",
         });
       }
@@ -71,13 +76,29 @@ const AdminLogin: React.FC = () => {
             Admin Login
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your admin password to access the admin panel
+            Enter your admin credentials to access the admin panel
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent>
             <div className="space-y-4">
               <div className="space-y-2">
+                <label htmlFor="username" className="text-sm font-medium text-gray-700">
+                  Username or Email
+                </label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Enter username or email"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </label>
                 <Input
                   id="password"
                   type="password"
