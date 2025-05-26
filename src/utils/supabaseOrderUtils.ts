@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CustomerOrderData {
@@ -81,12 +80,8 @@ export const updateCustomerOrderStatus = async (orderId: string, status: string)
 
 export const sendOrderEmail = async (type: 'step1' | 'completed', orderData: any) => {
   try {
-    const response = await fetch('/api/functions/v1/send-order-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('send-order-email', {
+      body: {
         type,
         customerName: orderData.customerName,
         customerEmail: orderData.customerEmail,
@@ -95,14 +90,15 @@ export const sendOrderEmail = async (type: 'step1' | 'completed', orderData: any
         price: orderData.price,
         address: orderData.address,
         needDate: orderData.needDate,
-      }),
+      },
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to send email');
+    if (error) {
+      console.error('Error sending email:', error);
+      throw error;
     }
 
-    return await response.json();
+    return data;
   } catch (error) {
     console.error('Error sending email:', error);
     throw error;
