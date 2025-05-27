@@ -1,19 +1,16 @@
 
 import React from 'react';
-import { 
+import { Calendar, Users, MapPin, LogOut } from 'lucide-react';
+import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
-  SidebarTrigger
-} from "@/components/ui/sidebar";
-import { Users, MapPin, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+} from '@/components/ui/sidebar';
 
 interface AdminSidebarProps {
   activeSection: string;
@@ -21,54 +18,61 @@ interface AdminSidebarProps {
   onLogout: () => void;
 }
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ 
-  activeSection, 
-  onSectionChange, 
-  onLogout 
+const AdminSidebar: React.FC<AdminSidebarProps> = ({
+  activeSection,
+  onSectionChange,
+  onLogout,
 }) => {
   const menuItems = [
-    { id: 'customers', title: 'Customers', icon: Users },
-    { id: 'locations', title: 'Locations', icon: MapPin },
+    {
+      id: 'customers',
+      label: 'Customer Orders',
+      icon: Users,
+    },
+    {
+      id: 'calendar',
+      label: 'Rental Calendar',
+      icon: Calendar,
+    },
+    {
+      id: 'locations',
+      label: 'Location Manager',
+      icon: MapPin,
+    },
   ];
 
   return (
-    <Sidebar className="w-64">
-      <SidebarHeader className="p-4">
-        <h1 className="text-lg font-bold text-medical-dark">FDR Rental Admin</h1>
-        <SidebarTrigger className="ml-auto" />
-      </SidebarHeader>
-      
+    <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton 
-                    isActive={activeSection === item.id}
+                  <SidebarMenuButton
                     onClick={() => onSectionChange(item.id)}
+                    isActive={activeSection === item.id}
                   >
                     <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <span>{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
-        <div className="mt-auto p-4">
-          <Button 
-            variant="outline" 
-            onClick={onLogout}
-            className="w-full flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
       </SidebarContent>
+      
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={onLogout}>
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 };
