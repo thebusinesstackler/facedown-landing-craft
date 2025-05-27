@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Eye, Package, RefreshCw } from 'lucide-react';
+import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getCustomerOrders, updateCustomerOrderStatus } from '@/utils/supabaseOrderUtils';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +49,11 @@ const CustomersSection: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showUnmaskDialog, setShowUnmaskDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [unmaskedCards, setUnmaskedCards] = useState<Set<string>>(new Set());
+  const [verifying, setVerifying] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -129,6 +134,81 @@ const CustomersSection: React.FC = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleUnmaskRequest = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setShowUnmaskDialog(true);
+    setAdminPassword('');
+  };
+
+  const verifyAdminPassword = async () => {
+    if (!adminPassword) {
+      toast({
+        title: "Password required",
+        description: "Please enter your admin password to unmask credit card details.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setVerifying(true);
+    
+    try {
+      const response = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'validate_password',
+          password: adminPassword
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUnmaskedCards(prev => new Set([...prev, selectedOrderId]));
+        setShowUnmaskDialog(false);
+        setAdminPassword('');
+        toast({
+          title: "Access granted",
+          description: "Credit card details have been unmasked.",
+        });
+      } else {
+        toast({
+          title: "Invalid password",
+          description: "The admin password you entered is incorrect.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      toast({
+        title: "Verification failed",
+        description: "Failed to verify admin password. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const maskCard = (orderId: string) => {
+    setUnmaskedCards(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(orderId);
+      return newSet;
+    });
+  };
+
+  const getCardDisplay = (customer: CustomerOrder) => {
+    if (unmaskedCards.has(customer.id)) {
+      // Show full card number (assuming it's stored in card_number_masked even when unmasked)
+      return customer.card_number_masked.replace(/\*/g, '');
+    }
+    return customer.card_number_masked;
   };
 
   if (loading) {
@@ -243,6 +323,7 @@ const CustomersSection: React.FC = () => {
                 <TableHead>Contact</TableHead>
                 <TableHead>Rental Details</TableHead>
                 <TableHead>Revenue</TableHead>
+                <TableHead>Payment Info</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -250,7 +331,7 @@ const CustomersSection: React.FC = () => {
             <TableBody>
               {filteredCustomers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     No customer orders found. Orders will appear here when customers submit the form.
                   </TableCell>
                 </TableRow>
@@ -278,6 +359,34 @@ const CustomersSection: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell className="font-semibold text-green-600">${customer.price}</TableCell>
+                    <TableCell>
+                      <div className="text-sm space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono">{getCardDisplay(customer)}</span>
+                          {unmaskedCards.has(customer.id) ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => maskCard(customer.id)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <EyeOff className="h-3 w-3" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUnmaskRequest(customer.id)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <CreditCard className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        <div className="text-gray-500">{customer.card_name}</div>
+                        <div className="text-gray-500">{customer.expiry_date}</div>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Select value={customer.status} onValueChange={(value) => handleStatusUpdate(customer.id, value)}>
                         <SelectTrigger className="w-32">
@@ -343,7 +452,7 @@ const CustomersSection: React.FC = () => {
                               <div>
                                 <h4 className="font-medium">Payment Information</h4>
                                 <p className="text-sm text-gray-600">
-                                  Card: {customer.card_number_masked}
+                                  Card: {getCardDisplay(customer)}
                                 </p>
                                 <p className="text-sm text-gray-600">
                                   Name: {customer.card_name}
@@ -364,6 +473,41 @@ const CustomersSection: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Admin Password Dialog */}
+      <Dialog open={showUnmaskDialog} onOpenChange={setShowUnmaskDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Admin Verification Required</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Enter your admin password to unmask credit card details.
+            </p>
+            <Input
+              type="password"
+              placeholder="Admin password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && verifyAdminPassword()}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowUnmaskDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={verifyAdminPassword}
+                disabled={verifying || !adminPassword}
+              >
+                {verifying ? 'Verifying...' : 'Verify'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
