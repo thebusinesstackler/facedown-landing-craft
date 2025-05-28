@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { format, addDays, isSameDay, parseISO } from 'date-fns';
-import { getCustomerOrders } from '@/utils/supabaseOrderUtils';
-import { Plus, Package, Calendar as CalendarIcon } from 'lucide-react';
+import { getCustomerOrders, updateCustomerOrderStatus } from '@/utils/supabaseOrderUtils';
+import { Plus, Package, Calendar as CalendarIcon, ArrowLeft, ArrowRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface Equipment {
   id: string;
@@ -21,7 +22,9 @@ interface RentalPeriod {
   customerName: string;
   startDate: Date;
   endDate: Date;
+  actualReturnDate?: Date;
   equipmentUsed: number;
+  status: string;
 }
 
 const CalendarSection: React.FC = () => {
@@ -34,6 +37,9 @@ const CalendarSection: React.FC = () => {
   const [showAddEquipment, setShowAddEquipment] = useState(false);
   const [rentalPeriods, setRentalPeriods] = useState<RentalPeriod[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRental, setSelectedRental] = useState<RentalPeriod | null>(null);
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+  const [returnDate, setReturnDate] = useState('');
 
   useEffect(() => {
     loadRentalData();
@@ -49,7 +55,8 @@ const CalendarSection: React.FC = () => {
           customerName: order.name,
           startDate: parseISO(order.start_date!),
           endDate: parseISO(order.end_date!),
-          equipmentUsed: 1 // Assuming 1 equipment per order
+          equipmentUsed: 1,
+          status: order.status || 'pending'
         }));
       
       setRentalPeriods(periods);
@@ -97,7 +104,7 @@ const CalendarSection: React.FC = () => {
     if (!equipmentItem) return 0;
 
     const usedOnDate = rentalPeriods.filter(period => {
-      return date >= period.startDate && date <= period.endDate;
+      return date >= period.startDate && date <= period.endDate && period.status !== 'completed';
     }).reduce((total, period) => total + period.equipmentUsed, 0);
 
     return Math.max(0, equipmentItem.totalCount - usedOnDate);
@@ -115,8 +122,48 @@ const CalendarSection: React.FC = () => {
     const rentals = getRentalsForDate(date);
     const deliveries = rentals.filter(rental => isSameDay(date, rental.startDate));
     const returns = rentals.filter(rental => isSameDay(date, rental.endDate));
+    const activeRentals = rentals.filter(rental => 
+      date >= rental.startDate && date <= rental.endDate && !isSameDay(date, rental.startDate) && !isSameDay(date, rental.endDate)
+    );
     
-    return { rentals, deliveries, returns };
+    return { rentals, deliveries, returns, activeRentals };
+  };
+
+  const handleReturnEquipment = async () => {
+    if (!selectedRental || !returnDate) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a return date",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await updateCustomerOrderStatus(selectedRental.orderId, 'completed');
+      await loadRentalData();
+      setShowReturnDialog(false);
+      setSelectedRental(null);
+      setReturnDate('');
+      
+      toast({
+        title: "Equipment Returned",
+        description: `Equipment returned for ${selectedRental.customerName}`,
+      });
+    } catch (error) {
+      console.error('Error updating return status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark equipment as returned",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openReturnDialog = (rental: RentalPeriod) => {
+    setSelectedRental(rental);
+    setReturnDate(format(new Date(), 'yyyy-MM-dd'));
+    setShowReturnDialog(true);
   };
 
   if (loading) {
@@ -230,12 +277,14 @@ const CalendarSection: React.FC = () => {
               modifiers={{
                 hasRentals: (date) => getRentalsForDate(date).length > 0,
                 hasDelivery: (date) => getDateStatus(date).deliveries.length > 0,
-                hasReturn: (date) => getDateStatus(date).returns.length > 0
+                hasReturn: (date) => getDateStatus(date).returns.length > 0,
+                hasActive: (date) => getDateStatus(date).activeRentals.length > 0
               }}
               modifiersClassNames={{
                 hasRentals: "bg-blue-100 text-blue-900",
                 hasDelivery: "bg-green-100 text-green-900 font-bold",
-                hasReturn: "bg-orange-100 text-orange-900 font-bold"
+                hasReturn: "bg-orange-100 text-orange-900 font-bold",
+                hasActive: "bg-blue-50 text-blue-700"
               }}
             />
             
@@ -265,9 +314,9 @@ const CalendarSection: React.FC = () => {
         </CardHeader>
         <CardContent>
           {(() => {
-            const { deliveries, returns, rentals } = getDateStatus(selectedDate);
+            const { deliveries, returns, activeRentals } = getDateStatus(selectedDate);
             
-            if (deliveries.length === 0 && returns.length === 0 && rentals.length === 0) {
+            if (deliveries.length === 0 && returns.length === 0 && activeRentals.length === 0) {
               return <p className="text-gray-500">No scheduled activities for this date.</p>;
             }
 
@@ -279,7 +328,12 @@ const CalendarSection: React.FC = () => {
                     <div className="space-y-2">
                       {deliveries.map(rental => (
                         <div key={rental.orderId} className="flex items-center justify-between p-2 bg-green-50 rounded">
-                          <span>{rental.customerName}</span>
+                          <div>
+                            <span className="font-medium">{rental.customerName}</span>
+                            <div className="text-xs text-gray-600">
+                              Rental Period: {format(rental.startDate, 'MMM d')} - {format(rental.endDate, 'MMM d, yyyy')}
+                            </div>
+                          </div>
                           <Badge variant="outline" className="bg-green-100">
                             Deliver
                           </Badge>
@@ -291,13 +345,50 @@ const CalendarSection: React.FC = () => {
 
                 {returns.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-orange-700 mb-2">Returns ({returns.length})</h4>
+                    <h4 className="font-semibold text-orange-700 mb-2">Expected Returns ({returns.length})</h4>
                     <div className="space-y-2">
                       {returns.map(rental => (
                         <div key={rental.orderId} className="flex items-center justify-between p-2 bg-orange-50 rounded">
-                          <span>{rental.customerName}</span>
-                          <Badge variant="outline" className="bg-orange-100">
-                            Return
+                          <div>
+                            <span className="font-medium">{rental.customerName}</span>
+                            <div className="text-xs text-gray-600">
+                              Started: {format(rental.startDate, 'MMM d, yyyy')}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-orange-100">
+                              Expected Return
+                            </Badge>
+                            {rental.status !== 'completed' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openReturnDialog(rental)}
+                              >
+                                Mark Returned
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeRentals.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-blue-700 mb-2">Active Rentals ({activeRentals.length})</h4>
+                    <div className="space-y-2">
+                      {activeRentals.map(rental => (
+                        <div key={rental.orderId} className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                          <div>
+                            <span className="font-medium">{rental.customerName}</span>
+                            <div className="text-xs text-gray-600">
+                              Started: {format(rental.startDate, 'MMM d')} | Returns: {format(rental.endDate, 'MMM d, yyyy')}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="bg-blue-100">
+                            Active
                           </Badge>
                         </div>
                       ))}
@@ -322,6 +413,41 @@ const CalendarSection: React.FC = () => {
           })()}
         </CardContent>
       </Card>
+
+      {/* Return Equipment Dialog */}
+      <Dialog open={showReturnDialog} onOpenChange={setShowReturnDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark Equipment as Returned</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedRental && (
+              <>
+                <div>
+                  <p><strong>Customer:</strong> {selectedRental.customerName}</p>
+                  <p><strong>Rental Period:</strong> {format(selectedRental.startDate, 'MMM d')} - {format(selectedRental.endDate, 'MMM d, yyyy')}</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">Actual Return Date</label>
+                  <Input
+                    type="date"
+                    value={returnDate}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setShowReturnDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleReturnEquipment}>
+                    Mark as Returned
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
