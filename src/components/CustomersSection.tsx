@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff, UserPlus, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { getCustomerOrders, updateCustomerOrderStatus, saveCustomerOrder } from '@/utils/supabaseOrderUtils';
+import { getCustomerOrders, updateCustomerOrderStatus, saveCustomerOrder, updateCustomerOrder } from '@/utils/supabaseOrderUtils';
 import { useToast } from '@/hooks/use-toast';
 
 interface CustomerOrder {
