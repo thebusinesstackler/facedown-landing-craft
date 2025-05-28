@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CustomerOrderData {
@@ -97,6 +96,25 @@ export const updateCustomerOrder = async (orderId: string, updateData: Partial<C
     return data;
   } catch (error) {
     console.error('Error in updateCustomerOrder:', error);
+    throw error;
+  }
+};
+
+export const deleteCustomerOrder = async (orderId: string) => {
+  try {
+    const { error } = await supabase
+      .from('customer_orders')
+      .delete()
+      .eq('id', orderId);
+
+    if (error) {
+      console.error('Error deleting customer order:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteCustomerOrder:', error);
     throw error;
   }
 };
