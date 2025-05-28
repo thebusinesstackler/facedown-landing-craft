@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,9 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff, UserPlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { getCustomerOrders, updateCustomerOrderStatus } from '@/utils/supabaseOrderUtils';
+import { getCustomerOrders, updateCustomerOrderStatus, saveCustomerOrder } from '@/utils/supabaseOrderUtils';
 import { useToast } from '@/hooks/use-toast';
 
 interface CustomerOrder {
@@ -54,6 +54,25 @@ const CustomersSection: React.FC = () => {
   const [unmaskedCards, setUnmaskedCards] = useState<Set<string>>(new Set());
   const [verifying, setVerifying] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string>('');
+  
+  // Add Customer form state
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    rental_period: '',
+    start_date: '',
+    price: '',
+    card_number_masked: '',
+    card_name: '',
+    expiry_date: ''
+  });
+  const [addingCustomer, setAddingCustomer] = useState(false);
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -82,6 +101,70 @@ const CustomersSection: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newCustomer.name || !newCustomer.email || !newCustomer.rental_period || !newCustomer.start_date || !newCustomer.price) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields (Name, Email, Rental Period, Start Date, Price).",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setAddingCustomer(true);
+      
+      // Calculate end date (1 week from start date)
+      const startDate = new Date(newCustomer.start_date);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 7);
+      
+      const customerData = {
+        ...newCustomer,
+        price: parseFloat(newCustomer.price),
+        end_date: endDate.toISOString().split('T')[0],
+        status: 'pending',
+        card_number_masked: newCustomer.card_number_masked || '****-****-****-0000'
+      };
+
+      await saveCustomerOrder(customerData);
+      await loadCustomers();
+      
+      // Reset form
+      setNewCustomer({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        rental_period: '',
+        start_date: '',
+        price: '',
+        card_number_masked: '',
+        card_name: '',
+        expiry_date: ''
+      });
+
+      toast({
+        title: "Customer Added",
+        description: "Customer has been successfully added to the system.",
+      });
+    } catch (error) {
+      console.error('Error adding customer:', error);
+      toast({
+        title: "Error adding customer",
+        description: "Failed to add customer to database.",
+        variant: "destructive"
+      });
+    } finally {
+      setAddingCustomer(false);
     }
   };
 
@@ -226,7 +309,7 @@ const CustomersSection: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Customer Management</h2>
-          <p className="text-gray-600">Manage orders and revenue tracking</p>
+          <p className="text-gray-600">Manage orders and customer information</p>
         </div>
         <Button className="flex items-center gap-2" onClick={loadCustomers}>
           <RefreshCw className="h-4 w-4" />
@@ -277,201 +360,371 @@ const CustomersSection: React.FC = () => {
         </Card>
       </div>
 
-      {/* Search and Filters */}
+      {/* Tabs for Customer Orders and Add Customer */}
       <Card>
-        <CardHeader>
-          <CardTitle>Customer Search</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search customers by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+        <Tabs defaultValue="orders" className="w-full">
+          <CardHeader>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="orders">Customer Orders</TabsTrigger>
+              <TabsTrigger value="add-customer">Add Customer</TabsTrigger>
+            </TabsList>
+          </CardHeader>
+          
+          <TabsContent value="orders">
+            <CardContent>
+              {/* Search and Filters */}
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search customers by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full md:w-48">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="shipped">Shipped</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {/* Customer Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer Orders ({filteredCustomers.length})</CardTitle>
-          <CardDescription>Orders submitted through the website forms</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Rental Details</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>Payment Info</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    No customer orders found. Orders will appear here when customers submit the form.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCustomers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>{customer.email}</div>
-                        <div className="text-gray-500">{customer.phone}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div className="font-medium">{customer.rental_period}</div>
-                        <div className="text-gray-500">
-                          Start: {new Date(customer.start_date).toLocaleDateString()}
-                        </div>
-                        {customer.end_date && (
-                          <div className="text-gray-500">
-                            End: {new Date(customer.end_date).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-semibold text-green-600">${customer.price}</TableCell>
-                    <TableCell>
-                      <div className="text-sm space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono">{getCardDisplay(customer)}</span>
-                          {unmaskedCards.has(customer.id) ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => maskCard(customer.id)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <EyeOff className="h-3 w-3" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleUnmaskRequest(customer.id)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <CreditCard className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                        <div className="text-gray-500">{customer.card_name}</div>
-                        <div className="text-gray-500">{customer.expiry_date}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Select value={customer.status} onValueChange={(value) => handleStatusUpdate(customer.id, value)}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="shipped">Shipped</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {customer.status !== 'shipped' && customer.status !== 'completed' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleShipmentUpdate(customer.id)}
-                            className="flex items-center gap-1"
-                          >
-                            <Package className="h-4 w-4" />
-                            Ship
-                          </Button>
-                        )}
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setSelectedCustomer(customer)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Customer Details</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <h4 className="font-medium">Personal Information</h4>
-                                <p className="text-sm text-gray-600">{customer.name}</p>
-                                <p className="text-sm text-gray-600">{customer.email}</p>
-                                <p className="text-sm text-gray-600">{customer.phone}</p>
-                              </div>
-                              <div>
-                                <h4 className="font-medium">Address</h4>
-                                <p className="text-sm text-gray-600">
-                                  {customer.address}<br />
-                                  {customer.city}, {customer.state} {customer.zip_code}
-                                </p>
-                              </div>
-                              <div>
-                                <h4 className="font-medium">Order Details</h4>
-                                <p className="text-sm text-gray-600">Package: {customer.rental_period}</p>
-                                <p className="text-sm text-gray-600">Revenue: ${customer.price}</p>
-                                <p className="text-sm text-gray-600">Start Date: {new Date(customer.start_date).toLocaleDateString()}</p>
-                                <p className="text-sm text-gray-600">Status: {customer.status}</p>
-                                <p className="text-sm text-gray-600">Order Date: {new Date(customer.created_at).toLocaleDateString()}</p>
-                              </div>
-                              <div>
-                                <h4 className="font-medium">Payment Information</h4>
-                                <p className="text-sm text-gray-600">
-                                  Card: {getCardDisplay(customer)}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  Name: {customer.card_name}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  Expires: {customer.expiry_date}
-                                </p>
-                              </div>
+              {/* Customer Table */}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Rental Details</TableHead>
+                      <TableHead>Revenue</TableHead>
+                      <TableHead>Payment Info</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCustomers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                          No customer orders found. Orders will appear here when customers submit the form or you add them manually.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredCustomers.map((customer) => (
+                        <TableRow key={customer.id}>
+                          <TableCell className="font-medium">{customer.name}</TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div>{customer.email}</div>
+                              <div className="text-gray-500">{customer.phone}</div>
                             </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div className="font-medium">{customer.rental_period}</div>
+                              <div className="text-gray-500">
+                                Start: {new Date(customer.start_date).toLocaleDateString()}
+                              </div>
+                              {customer.end_date && (
+                                <div className="text-gray-500">
+                                  End: {new Date(customer.end_date).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-semibold text-green-600">${customer.price}</TableCell>
+                          <TableCell>
+                            <div className="text-sm space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono">{getCardDisplay(customer)}</span>
+                                {unmaskedCards.has(customer.id) ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => maskCard(customer.id)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <EyeOff className="h-3 w-3" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleUnmaskRequest(customer.id)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <CreditCard className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                              <div className="text-gray-500">{customer.card_name}</div>
+                              <div className="text-gray-500">{customer.expiry_date}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Select value={customer.status} onValueChange={(value) => handleStatusUpdate(customer.id, value)}>
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="shipped">Shipped</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              {customer.status !== 'shipped' && customer.status !== 'completed' && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleShipmentUpdate(customer.id)}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Package className="h-4 w-4" />
+                                  Ship
+                                </Button>
+                              )}
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setSelectedCustomer(customer)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-md">
+                                  <DialogHeader>
+                                    <DialogTitle>Customer Details</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <h4 className="font-medium">Personal Information</h4>
+                                      <p className="text-sm text-gray-600">{customer.name}</p>
+                                      <p className="text-sm text-gray-600">{customer.email}</p>
+                                      <p className="text-sm text-gray-600">{customer.phone}</p>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium">Address</h4>
+                                      <p className="text-sm text-gray-600">
+                                        {customer.address}<br />
+                                        {customer.city}, {customer.state} {customer.zip_code}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium">Order Details</h4>
+                                      <p className="text-sm text-gray-600">Package: {customer.rental_period}</p>
+                                      <p className="text-sm text-gray-600">Revenue: ${customer.price}</p>
+                                      <p className="text-sm text-gray-600">Start Date: {new Date(customer.start_date).toLocaleDateString()}</p>
+                                      <p className="text-sm text-gray-600">Status: {customer.status}</p>
+                                      <p className="text-sm text-gray-600">Order Date: {new Date(customer.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium">Payment Information</h4>
+                                      <p className="text-sm text-gray-600">
+                                        Card: {getCardDisplay(customer)}
+                                      </p>
+                                      <p className="text-sm text-gray-600">
+                                        Name: {customer.card_name}
+                                      </p>
+                                      <p className="text-sm text-gray-600">
+                                        Expires: {customer.expiry_date}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </TabsContent>
+
+          <TabsContent value="add-customer">
+            <CardContent>
+              <form onSubmit={handleAddCustomer} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="name" className="text-sm font-medium">Name *</label>
+                    <Input
+                      id="name"
+                      placeholder="Customer name"
+                      value={newCustomer.name}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium">Email *</label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="customer@email.com"
+                      value={newCustomer.email}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="phone" className="text-sm font-medium">Phone</label>
+                    <Input
+                      id="phone"
+                      placeholder="(555) 123-4567"
+                      value={newCustomer.phone}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="rental_period" className="text-sm font-medium">Rental Period *</label>
+                    <Select value={newCustomer.rental_period} onValueChange={(value) => setNewCustomer(prev => ({ ...prev, rental_period: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select rental period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1 Week Face-Down Recovery Kit">1 Week Face-Down Recovery Kit</SelectItem>
+                        <SelectItem value="2 Week Face-Down Recovery Kit">2 Week Face-Down Recovery Kit</SelectItem>
+                        <SelectItem value="Face-Down Chair Only">Face-Down Chair Only</SelectItem>
+                        <SelectItem value="Face-Down Table Only">Face-Down Table Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="start_date" className="text-sm font-medium">Start Date *</label>
+                    <Input
+                      id="start_date"
+                      type="date"
+                      value={newCustomer.start_date}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, start_date: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="price" className="text-sm font-medium">Price *</label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={newCustomer.price}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, price: e.target.value }))}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Address Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 md:col-span-2">
+                      <label htmlFor="address" className="text-sm font-medium">Address</label>
+                      <Input
+                        id="address"
+                        placeholder="123 Main Street"
+                        value={newCustomer.address}
+                        onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="city" className="text-sm font-medium">City</label>
+                      <Input
+                        id="city"
+                        placeholder="City"
+                        value={newCustomer.city}
+                        onChange={(e) => setNewCustomer(prev => ({ ...prev, city: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="state" className="text-sm font-medium">State</label>
+                      <Input
+                        id="state"
+                        placeholder="State"
+                        value={newCustomer.state}
+                        onChange={(e) => setNewCustomer(prev => ({ ...prev, state: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="zip_code" className="text-sm font-medium">Zip Code</label>
+                      <Input
+                        id="zip_code"
+                        placeholder="12345"
+                        value={newCustomer.zip_code}
+                        onChange={(e) => setNewCustomer(prev => ({ ...prev, zip_code: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Payment Information (Optional)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="card_number_masked" className="text-sm font-medium">Card Number (Masked)</label>
+                      <Input
+                        id="card_number_masked"
+                        placeholder="****-****-****-1234"
+                        value={newCustomer.card_number_masked}
+                        onChange={(e) => setNewCustomer(prev => ({ ...prev, card_number_masked: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="card_name" className="text-sm font-medium">Cardholder Name</label>
+                      <Input
+                        id="card_name"
+                        placeholder="John Doe"
+                        value={newCustomer.card_name}
+                        onChange={(e) => setNewCustomer(prev => ({ ...prev, card_name: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="expiry_date" className="text-sm font-medium">Expiry Date</label>
+                      <Input
+                        id="expiry_date"
+                        placeholder="MM/YY"
+                        value={newCustomer.expiry_date}
+                        onChange={(e) => setNewCustomer(prev => ({ ...prev, expiry_date: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={addingCustomer} className="flex items-center gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    {addingCustomer ? 'Adding Customer...' : 'Add Customer'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </TabsContent>
+        </Tabs>
       </Card>
 
       {/* Admin Password Dialog */}
