@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Table, 
   TableBody, 
@@ -18,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff, UserPlus } from 'lucide-react';
+import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff, UserPlus, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getCustomerOrders, updateCustomerOrderStatus, saveCustomerOrder } from '@/utils/supabaseOrderUtils';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +42,7 @@ interface CustomerOrder {
   card_name: string;
   expiry_date: string;
   created_at: string;
+  notes?: string;
 }
 
 const CustomersSection: React.FC = () => {
@@ -54,6 +56,9 @@ const CustomersSection: React.FC = () => {
   const [unmaskedCards, setUnmaskedCards] = useState<Set<string>>(new Set());
   const [verifying, setVerifying] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string>('');
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<CustomerOrder | null>(null);
+  const [updating, setUpdating] = useState(false);
   
   // Add Customer form state
   const [newCustomer, setNewCustomer] = useState({
@@ -101,6 +106,46 @@ const CustomersSection: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditCustomer = (customer: CustomerOrder) => {
+    setEditingCustomer({ ...customer });
+    setShowEditDialog(true);
+  };
+
+  const handleSaveCustomerEdit = async () => {
+    if (!editingCustomer) return;
+
+    try {
+      setUpdating(true);
+      
+      // Update the customer in the database
+      await updateCustomerOrder(editingCustomer.id, {
+        address: editingCustomer.address,
+        city: editingCustomer.city,
+        state: editingCustomer.state,
+        zip_code: editingCustomer.zip_code,
+        notes: editingCustomer.notes || ''
+      });
+
+      await loadCustomers();
+      setShowEditDialog(false);
+      setEditingCustomer(null);
+
+      toast({
+        title: "Customer Updated",
+        description: "Customer information has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error updating customer:', error);
+      toast({
+        title: "Error updating customer",
+        description: "Failed to update customer information.",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -485,6 +530,15 @@ const CustomersSection: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEditCustomer(customer)}
+                                className="flex items-center gap-1"
+                              >
+                                <Edit className="h-4 w-4" />
+                                Edit
+                              </Button>
                               {customer.status !== 'shipped' && customer.status !== 'completed' && (
                                 <Button 
                                   variant="outline" 
@@ -544,6 +598,12 @@ const CustomersSection: React.FC = () => {
                                         Expires: {customer.expiry_date}
                                       </p>
                                     </div>
+                                    {customer.notes && (
+                                      <div>
+                                        <h4 className="font-medium">Notes</h4>
+                                        <p className="text-sm text-gray-600">{customer.notes}</p>
+                                      </div>
+                                    )}
                                   </div>
                                 </DialogContent>
                               </Dialog>
@@ -726,6 +786,87 @@ const CustomersSection: React.FC = () => {
           </TabsContent>
         </Tabs>
       </Card>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Customer Information</DialogTitle>
+          </DialogHeader>
+          {editingCustomer && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Customer: {editingCustomer.name}</h4>
+                <p className="text-sm text-gray-600">{editingCustomer.email}</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Address</label>
+                  <Input
+                    placeholder="123 Main Street"
+                    value={editingCustomer.address || ''}
+                    onChange={(e) => setEditingCustomer(prev => prev ? { ...prev, address: e.target.value } : null)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">City</label>
+                    <Input
+                      placeholder="City"
+                      value={editingCustomer.city || ''}
+                      onChange={(e) => setEditingCustomer(prev => prev ? { ...prev, city: e.target.value } : null)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">State</label>
+                    <Input
+                      placeholder="State"
+                      value={editingCustomer.state || ''}
+                      onChange={(e) => setEditingCustomer(prev => prev ? { ...prev, state: e.target.value } : null)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Zip Code</label>
+                  <Input
+                    placeholder="12345"
+                    value={editingCustomer.zip_code || ''}
+                    onChange={(e) => setEditingCustomer(prev => prev ? { ...prev, zip_code: e.target.value } : null)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Notes</label>
+                  <Textarea
+                    placeholder="Add any notes about this customer..."
+                    rows={3}
+                    value={editingCustomer.notes || ''}
+                    onChange={(e) => setEditingCustomer(prev => prev ? { ...prev, notes: e.target.value } : null)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowEditDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveCustomerEdit}
+                  disabled={updating}
+                >
+                  {updating ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Admin Password Dialog */}
       <Dialog open={showUnmaskDialog} onOpenChange={setShowUnmaskDialog}>

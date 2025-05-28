@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CustomerOrderData {
@@ -16,6 +17,7 @@ export interface CustomerOrderData {
   card_number_masked?: string;
   card_name?: string;
   expiry_date?: string;
+  notes?: string;
 }
 
 export const saveCustomerOrder = async (orderData: CustomerOrderData) => {
@@ -74,6 +76,27 @@ export const updateCustomerOrderStatus = async (orderId: string, status: string)
     return data;
   } catch (error) {
     console.error('Error in updateCustomerOrderStatus:', error);
+    throw error;
+  }
+};
+
+export const updateCustomerOrder = async (orderId: string, updateData: Partial<CustomerOrderData>) => {
+  try {
+    const { data, error } = await supabase
+      .from('customer_orders')
+      .update(updateData)
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating customer order:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateCustomerOrder:', error);
     throw error;
   }
 };
