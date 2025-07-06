@@ -211,6 +211,13 @@ const MultiStepOrderForm: React.FC = () => {
       if (!formData.zipCode.trim()) errors.zipCode = 'Please enter your ZIP code';
     }
     
+    if (stepNumber === 5) {
+      if (!formData.cardName.trim()) errors.cardName = 'Please enter the name on card';
+      if (!formData.cardNumber.trim()) errors.cardNumber = 'Please enter your card number';
+      if (!formData.expiryDate.trim()) errors.expiryDate = 'Please enter the expiry date';
+      if (!formData.cvv.trim()) errors.cvv = 'Please enter the CVV';
+    }
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -689,7 +696,7 @@ const MultiStepOrderForm: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 4: Delivery Address & Payment */}
+                {/* Step 4: Delivery Address */}
                 {step === 4 && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Delivery Address</h3>
@@ -759,8 +766,31 @@ const MultiStepOrderForm: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Payment Information */}
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={prevStep} className="hover:bg-medical-green hover:text-white">
+                        <ArrowLeft size={16} className="mr-2" /> Back
+                      </Button>
+                      <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
+                        Continue <ArrowRight size={16} className="ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 5: Payment Information */}
+                {step === 5 && (
+                  <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Payment Information</h3>
+                    
+                    {/* Chair Image */}
+                    <div className="text-center mb-6">
+                      <img 
+                        src="/lovable-uploads/c215917e-0b30-4620-961b-6301c351f2ad.png" 
+                        alt="Complete Facedown Recovery Equipment Set" 
+                        className="mx-auto max-w-full h-auto rounded-lg shadow-md"
+                      />
+                      <p className="text-sm text-gray-600 mt-2">Complete 4-piece comfort set including chair, table support, mirror, and headrest covers</p>
+                    </div>
                     
                     {/* Order Summary */}
                     <div className="bg-green-50 rounded-lg p-4 border border-green-100">
@@ -833,8 +863,12 @@ const MultiStepOrderForm: React.FC = () => {
                           onChange={handleInputChange} 
                           placeholder="John Doe" 
                           required 
-                          className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
+                          className={cn(
+                            "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                            validationErrors.cardName && 'border-red-300 focus:border-red-400'
+                          )}
                         />
+                        {validationErrors.cardName && <ValidationMessage error={validationErrors.cardName} />}
                       </div>
                       <div>
                         <Label htmlFor="cardNumber">Card Number *</Label>
@@ -845,8 +879,12 @@ const MultiStepOrderForm: React.FC = () => {
                           onChange={handleInputChange} 
                           placeholder="1234 5678 9012 3456" 
                           required 
-                          className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
+                          className={cn(
+                            "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                            validationErrors.cardNumber && 'border-red-300 focus:border-red-400'
+                          )}
                         />
+                        {validationErrors.cardNumber && <ValidationMessage error={validationErrors.cardNumber} />}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -858,8 +896,12 @@ const MultiStepOrderForm: React.FC = () => {
                             onChange={handleInputChange} 
                             placeholder="MM/YY" 
                             required 
-                            className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.expiryDate && 'border-red-300 focus:border-red-400'
+                            )}
                           />
+                          {validationErrors.expiryDate && <ValidationMessage error={validationErrors.expiryDate} />}
                         </div>
                         <div>
                           <Label htmlFor="cvv">CVV *</Label>
@@ -870,8 +912,12 @@ const MultiStepOrderForm: React.FC = () => {
                             onChange={handleInputChange} 
                             placeholder="123" 
                             required 
-                            className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.cvv && 'border-red-300 focus:border-red-400'
+                            )}
                           />
+                          {validationErrors.cvv && <ValidationMessage error={validationErrors.cvv} />}
                         </div>
                       </div>
                     </div>
