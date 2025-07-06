@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Check, Package } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Package, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -11,6 +12,7 @@ import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
 
 const MultiStepOrderForm: React.FC = () => {
   const [step, setStep] = useState<number>(1);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   
   // Calculate next available delivery date based on current day/time
   const getNextDeliveryDate = () => {
@@ -46,13 +48,12 @@ const MultiStepOrderForm: React.FC = () => {
   };
 
   const [formData, setFormData] = useState({
-    selectedPackage: '1week',
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    needDate: getNextDeliveryDate(),
-    expeditedDelivery: 'no',
+    deliveryDate: getNextDeliveryDate(),
+    rentalDuration: '1week',
     address: '',
     city: '',
     state: '',
@@ -67,7 +68,7 @@ const MultiStepOrderForm: React.FC = () => {
   const [step1EmailSent, setStep1EmailSent] = useState(false);
   const { toast } = useToast();
 
-  const packages = [
+  const rentalOptions = [
     {
       id: '1week',
       title: '1 Week Rental',
@@ -97,14 +98,14 @@ const MultiStepOrderForm: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear validation error when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
-  const handlePackageSelection = (value: string) => {
-    setFormData(prev => ({ ...prev, selectedPackage: value }));
-  };
-
-  const handleExpeditedDeliverySelection = (value: string) => {
-    setFormData(prev => ({ ...prev, expeditedDelivery: value }));
+  const handleRentalDurationSelection = (value: string) => {
+    setFormData(prev => ({ ...prev, rentalDuration: value }));
   };
 
   const getExpeditedDeliveryDate = () => {
@@ -119,13 +120,35 @@ const MultiStepOrderForm: React.FC = () => {
     return currentDay === 0;
   };
 
+  const validateStep = (stepNumber: number) => {
+    const errors: {[key: string]: string} = {};
+    
+    if (stepNumber === 1) {
+      if (!formData.firstName.trim()) errors.firstName = 'Please enter your first name';
+      if (!formData.lastName.trim()) errors.lastName = 'Please enter your last name';
+      if (!formData.email.trim()) errors.email = 'Please enter your email address';
+      if (!formData.phone.trim()) errors.phone = 'Please enter your phone number';
+      if (!formData.deliveryDate) errors.deliveryDate = 'Please select a delivery date';
+    }
+    
+    if (stepNumber === 3) {
+      if (!formData.address.trim()) errors.address = 'Please enter your street address';
+      if (!formData.city.trim()) errors.city = 'Please enter your city';
+      if (!formData.state.trim()) errors.state = 'Please enter your state';
+      if (!formData.zipCode.trim()) errors.zipCode = 'Please enter your ZIP code';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const sendStepOneEmail = async () => {
     try {
       await sendOrderEmail('step1', {
         customerName: `${formData.firstName} ${formData.lastName}`,
         customerEmail: formData.email,
         customerPhone: formData.phone,
-        needDate: formData.needDate,
+        needDate: formData.deliveryDate,
       });
       
       setStep1EmailSent(true);
@@ -136,12 +159,7 @@ const MultiStepOrderForm: React.FC = () => {
   };
 
   const nextStep = () => {
-    if (step === 1 && (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.needDate)) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
+    if (!validateStep(step)) {
       return;
     }
 
@@ -150,20 +168,12 @@ const MultiStepOrderForm: React.FC = () => {
       sendStepOneEmail();
     }
     
-    if (step === 3 && (!formData.address || !formData.city || !formData.state || !formData.zipCode)) {
-      toast({
-        title: "Missing Address",
-        description: "Please fill in all address fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setStep(prev => prev + 1);
   };
 
   const prevStep = () => {
     setStep(prev => prev - 1);
+    setValidationErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,14 +181,14 @@ const MultiStepOrderForm: React.FC = () => {
     setIsSending(true);
     
     try {
-      const selectedPackage = packages.find(pkg => pkg.id === formData.selectedPackage);
+      const selectedRental = rentalOptions.find(option => option.id === formData.rentalDuration);
       
       // Mask the card number for storage
       const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
       
       // Calculate total with shipping and expedited delivery
       const expeditedCharge = formData.expeditedDelivery === 'yes' ? expeditedFee : 0;
-      const totalPrice = (selectedPackage?.price || 0) + shippingFee + expeditedCharge;
+      const totalPrice = (selectedRental?.price || 0) + shippingFee + expeditedCharge;
       
       // Save to Supabase
       const orderData = {
@@ -189,8 +199,8 @@ const MultiStepOrderForm: React.FC = () => {
         city: formData.city,
         state: formData.state,
         zip_code: formData.zipCode,
-        rental_period: selectedPackage?.title,
-        start_date: formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.needDate,
+        rental_period: selectedRental?.title,
+        start_date: formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.deliveryDate,
         price: totalPrice,
         status: 'pending',
         card_number_masked: maskedCardNumber,
@@ -205,7 +215,7 @@ const MultiStepOrderForm: React.FC = () => {
         customerName: `${formData.firstName} ${formData.lastName}`,
         customerEmail: formData.email,
         customerPhone: formData.phone,
-        packageDetails: selectedPackage?.title,
+        packageDetails: selectedRental?.title,
         price: totalPrice,
         address: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
       });
@@ -228,7 +238,14 @@ const MultiStepOrderForm: React.FC = () => {
     }
   };
 
-  const selectedPackage = packages.find(pkg => pkg.id === formData.selectedPackage);
+  const selectedRental = rentalOptions.find(option => option.id === formData.rentalDuration);
+
+  const ValidationMessage = ({ error }: { error: string }) => (
+    <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+      <AlertCircle size={14} />
+      <span>{error}</span>
+    </div>
+  );
 
   return (
     <section className="w-full">
@@ -245,7 +262,7 @@ const MultiStepOrderForm: React.FC = () => {
                   Thank you for your order. We'll contact you shortly to confirm delivery details.
                 </p>
                 <p className="text-gray-600">
-                  <strong>Equipment delivery date:</strong> {format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.needDate), 'PPP')}
+                  <strong>Equipment delivery date:</strong> {format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.deliveryDate), 'PPP')}
                 </p>
               </div>
             ) : (
@@ -263,9 +280,10 @@ const MultiStepOrderForm: React.FC = () => {
                             name="firstName" 
                             value={formData.firstName} 
                             onChange={handleInputChange} 
-                            placeholder="Enter your first name" 
-                            required 
+                            placeholder="Enter your first name"
+                            className={validationErrors.firstName ? 'border-red-300 focus:border-red-400' : ''}
                           />
+                          {validationErrors.firstName && <ValidationMessage error={validationErrors.firstName} />}
                         </div>
                         <div>
                           <Label htmlFor="lastName">Last Name *</Label>
@@ -274,9 +292,10 @@ const MultiStepOrderForm: React.FC = () => {
                             name="lastName" 
                             value={formData.lastName} 
                             onChange={handleInputChange} 
-                            placeholder="Enter your last name" 
-                            required 
+                            placeholder="Enter your last name"
+                            className={validationErrors.lastName ? 'border-red-300 focus:border-red-400' : ''}
                           />
+                          {validationErrors.lastName && <ValidationMessage error={validationErrors.lastName} />}
                         </div>
                         <div>
                           <Label htmlFor="email">Email Address *</Label>
@@ -286,9 +305,10 @@ const MultiStepOrderForm: React.FC = () => {
                             type="email" 
                             value={formData.email} 
                             onChange={handleInputChange} 
-                            placeholder="you@example.com" 
-                            required 
+                            placeholder="you@example.com"
+                            className={validationErrors.email ? 'border-red-300 focus:border-red-400' : ''}
                           />
+                          {validationErrors.email && <ValidationMessage error={validationErrors.email} />}
                         </div>
                         <div>
                           <Label htmlFor="phone">Phone Number *</Label>
@@ -297,20 +317,39 @@ const MultiStepOrderForm: React.FC = () => {
                             name="phone" 
                             value={formData.phone} 
                             onChange={handleInputChange} 
-                            placeholder="(123) 456-7890" 
-                            required 
+                            placeholder="(123) 456-7890"
+                            className={validationErrors.phone ? 'border-red-300 focus:border-red-400' : ''}
                           />
+                          {validationErrors.phone && <ValidationMessage error={validationErrors.phone} />}
                         </div>
-                        <div className="md:col-span-2">
-                          <Label htmlFor="needDate">Delivery Date *</Label>
+                        <div>
+                          <Label htmlFor="deliveryDate">When would you like the equipment delivered? *</Label>
                           <Input 
-                            id="needDate" 
-                            name="needDate" 
+                            id="deliveryDate" 
+                            name="deliveryDate" 
                             type="date" 
-                            value={formData.needDate} 
-                            onChange={handleInputChange} 
-                            required 
+                            value={formData.deliveryDate} 
+                            onChange={handleInputChange}
+                            className={validationErrors.deliveryDate ? 'border-red-300 focus:border-red-400' : ''}
                           />
+                          {validationErrors.deliveryDate && <ValidationMessage error={validationErrors.deliveryDate} />}
+                        </div>
+                        <div>
+                          <Label htmlFor="rentalDuration">How long do you need the equipment? *</Label>
+                          <RadioGroup value={formData.rentalDuration} onValueChange={handleRentalDurationSelection} className="mt-2">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="1week" id="duration-1week" />
+                              <Label htmlFor="duration-1week">1 Week ($259)</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="2weeks" id="duration-2weeks" />
+                              <Label htmlFor="duration-2weeks">2 Weeks ($320)</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="3weeks" id="duration-3weeks" />
+                              <Label htmlFor="duration-3weeks">3 Weeks ($380)</Label>
+                            </div>
+                          </RadioGroup>
                         </div>
                       </div>
                     </div>
@@ -323,44 +362,35 @@ const MultiStepOrderForm: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 2: Package Selection */}
+                {/* Step 2: Package Details */}
                 {step === 2 && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-xl font-semibold mb-4">Select Your Recovery Package</h3>
-                      <RadioGroup value={formData.selectedPackage} onValueChange={handlePackageSelection} className="space-y-4">
-                        {packages.map((pkg) => (
-                          <div
-                            key={pkg.id}
-                            className={`border rounded-lg p-4 transition-colors ${
-                              formData.selectedPackage === pkg.id ? 'border-medical-green bg-green-50' : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                          >
-                            <div className="flex items-start">
-                              <RadioGroupItem value={pkg.id} id={pkg.id} className="mt-1" />
-                              <Label htmlFor={pkg.id} className="flex-1 ml-3 cursor-pointer">
-                                <div className="flex flex-col sm:flex-row sm:justify-between">
-                                  <div className="flex-1">
-                                    <h4 className="font-medium text-lg">{pkg.title}</h4>
-                                    <p className="text-gray-500 text-sm mb-2">{pkg.description}</p>
-                                    <ul className="text-sm space-y-1">
-                                      {pkg.features.map((feature, idx) => (
-                                        <li key={idx} className="flex items-center">
-                                          <Check size={14} className="text-medical-green mr-2" />
-                                          {feature}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                  <div className="text-2xl font-bold text-medical-green mt-2 sm:mt-0">
-                                    ${pkg.price}
-                                  </div>
-                                </div>
-                              </Label>
-                            </div>
+                      <h3 className="text-xl font-semibold mb-4">Your Selected Package</h3>
+                      <div className="border rounded-lg p-4 bg-green-50 border-medical-green">
+                        <div className="flex flex-col sm:flex-row sm:justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-lg">{selectedRental?.title}</h4>
+                            <p className="text-gray-500 text-sm mb-2">{selectedRental?.description}</p>
+                            <ul className="text-sm space-y-1">
+                              {selectedRental?.features.map((feature, idx) => (
+                                <li key={idx} className="flex items-center">
+                                  <Check size={14} className="text-medical-green mr-2" />
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
                           </div>
-                        ))}
-                      </RadioGroup>
+                          <div className="text-2xl font-bold text-medical-green mt-2 sm:mt-0">
+                            ${selectedRental?.price}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
+                        <p className="text-sm text-blue-700">
+                          <strong>Delivery Date:</strong> {format(new Date(formData.deliveryDate), 'PPP')}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="flex justify-between pt-4">
@@ -378,9 +408,6 @@ const MultiStepOrderForm: React.FC = () => {
                 {step === 3 && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Delivery Address</h3>
-                    <p className="text-gray-600">
-                      Equipment will be delivered on: <strong>{format(new Date(formData.needDate), 'PPP')}</strong>
-                    </p>
                     
                     <div className="space-y-4">
                       <div>
@@ -390,9 +417,10 @@ const MultiStepOrderForm: React.FC = () => {
                           name="address" 
                           value={formData.address} 
                           onChange={handleInputChange} 
-                          placeholder="123 Main Street" 
-                          required 
+                          placeholder="123 Main Street"
+                          className={validationErrors.address ? 'border-red-300 focus:border-red-400' : ''}
                         />
+                        {validationErrors.address && <ValidationMessage error={validationErrors.address} />}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
@@ -402,9 +430,10 @@ const MultiStepOrderForm: React.FC = () => {
                             name="city" 
                             value={formData.city} 
                             onChange={handleInputChange} 
-                            placeholder="Boca Raton" 
-                            required 
+                            placeholder="Boca Raton"
+                            className={validationErrors.city ? 'border-red-300 focus:border-red-400' : ''}
                           />
+                          {validationErrors.city && <ValidationMessage error={validationErrors.city} />}
                         </div>
                         <div>
                           <Label htmlFor="state">State *</Label>
@@ -413,9 +442,10 @@ const MultiStepOrderForm: React.FC = () => {
                             name="state" 
                             value={formData.state} 
                             onChange={handleInputChange} 
-                            placeholder="FL" 
-                            required 
+                            placeholder="FL"
+                            className={validationErrors.state ? 'border-red-300 focus:border-red-400' : ''}
                           />
+                          {validationErrors.state && <ValidationMessage error={validationErrors.state} />}
                         </div>
                         <div>
                           <Label htmlFor="zipCode">ZIP Code *</Label>
@@ -424,9 +454,10 @@ const MultiStepOrderForm: React.FC = () => {
                             name="zipCode" 
                             value={formData.zipCode} 
                             onChange={handleInputChange} 
-                            placeholder="33431" 
-                            required 
+                            placeholder="33431"
+                            className={validationErrors.zipCode ? 'border-red-300 focus:border-red-400' : ''}
                           />
+                          {validationErrors.zipCode && <ValidationMessage error={validationErrors.zipCode} />}
                         </div>
                       </div>
                     </div>
@@ -458,7 +489,7 @@ const MultiStepOrderForm: React.FC = () => {
                               <div>
                                 <div className="font-medium">Standard Delivery</div>
                                 <div className="text-sm text-gray-500">
-                                  Delivered {format(new Date(formData.needDate), 'MMMM d, yyyy')}
+                                  Delivered {format(new Date(formData.deliveryDate), 'MMMM d, yyyy')}
                                 </div>
                               </div>
                             </Label>
@@ -484,11 +515,11 @@ const MultiStepOrderForm: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span>Package:</span>
-                          <span>{selectedPackage?.title}</span>
+                          <span>{selectedRental?.title}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Package Price:</span>
-                          <span>${selectedPackage?.price}.00</span>
+                          <span>${selectedRental?.price}.00</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Shipping Fee:</span>
@@ -502,11 +533,11 @@ const MultiStepOrderForm: React.FC = () => {
                         )}
                         <div className="flex justify-between">
                           <span>Delivery Date:</span>
-                          <span>{format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.needDate), 'MMM d, yyyy')}</span>
+                          <span>{format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.deliveryDate), 'MMM d, yyyy')}</span>
                         </div>
                         <div className="flex justify-between font-bold text-medical-green text-lg border-t pt-2">
                           <span>Total:</span>
-                          <span>${(selectedPackage?.price || 0) + shippingFee + (formData.expeditedDelivery === 'yes' ? expeditedFee : 0)}.00</span>
+                          <span>${(selectedRental?.price || 0) + shippingFee + (formData.expeditedDelivery === 'yes' ? expeditedFee : 0)}.00</span>
                         </div>
                       </div>
                     </div>
