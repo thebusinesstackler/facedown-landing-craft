@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon, ChevronDown } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, getDay } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -80,7 +78,6 @@ const MultiStepOrderForm: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [step1EmailSent, setStep1EmailSent] = useState(false);
-  const [surgeryDateOpen, setSurgeryDateOpen] = useState(false);
   const { toast } = useToast();
 
   const rentalOptions = [
@@ -188,13 +185,6 @@ const MultiStepOrderForm: React.FC = () => {
 
   const handleGlassesSelection = (value: string) => {
     setFormData(prev => ({ ...prev, wearsGlasses: value }));
-  };
-
-  const handleSurgeryDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setFormData(prev => ({ ...prev, surgeryDate: format(date, 'yyyy-MM-dd') }));
-      setSurgeryDateOpen(false);
-    }
   };
 
   const validateStep = (stepNumber: number) => {
@@ -531,65 +521,18 @@ const MultiStepOrderForm: React.FC = () => {
                       <h3 className="text-xl font-semibold mb-6">Equipment Compatibility & Surgery Information</h3>
                       <div className="space-y-4">
                         <div>
-                          <Label>Date of Your Surgery *</Label>
-                          <Popover open={surgeryDateOpen} onOpenChange={setSurgeryDateOpen}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal hover:bg-medical-green hover:text-white hover:border-medical-green focus:ring-medical-green focus:border-medical-green",
-                                  !formData.surgeryDate && "text-muted-foreground",
-                                  validationErrors.surgeryDate && 'border-red-300 focus:border-red-400'
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {formData.surgeryDate ? format(new Date(formData.surgeryDate), "PPP") : "Pick a date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={formData.surgeryDate ? new Date(formData.surgeryDate) : undefined}
-                                onSelect={handleSurgeryDateSelect}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                                classNames={{
-                                  months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                                  month: "space-y-4",
-                                  caption: "flex justify-center pt-1 relative items-center",
-                                  caption_label: "text-sm font-medium",
-                                  nav: "space-x-1 flex items-center",
-                                  nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-medical-green hover:text-white",
-                                  nav_button_previous: "absolute left-1",
-                                  nav_button_next: "absolute right-1",
-                                  table: "w-full border-collapse space-y-1",
-                                  head_row: "flex",
-                                  head_cell: "text-medical-green rounded-md w-9 font-medium text-[0.8rem]",
-                                  row: "flex w-full mt-2",
-                                  cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                                  day: "h-9 w-9 p-0 font-normal hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white rounded-md",
-                                  day_range_end: "day-range-end",
-                                  day_selected: "bg-medical-green text-white hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white",
-                                  day_today: "bg-medical-green text-white font-bold",
-                                  day_outside: "text-muted-foreground opacity-50",
-                                  day_disabled: "text-muted-foreground opacity-50",
-                                  day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                                  day_hidden: "invisible",
-                                }}
-                                modifiers={{
-                                  earliestDelivery: getEarliestDeliveryDate()
-                                }}
-                                modifiersStyles={{
-                                  earliestDelivery: {
-                                    backgroundColor: '#10b981',
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    border: '2px solid #059669'
-                                  }
-                                }}
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <Label htmlFor="surgeryDate">Date of Your Surgery *</Label>
+                          <Input 
+                            id="surgeryDate" 
+                            name="surgeryDate" 
+                            type="date"
+                            value={formData.surgeryDate} 
+                            onChange={handleInputChange} 
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.surgeryDate && 'border-red-300 focus:border-red-400'
+                            )}
+                          />
                           {validationErrors.surgeryDate && <ValidationMessage error={validationErrors.surgeryDate} />}
                         </div>
 
