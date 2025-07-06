@@ -58,6 +58,7 @@ const MultiStepOrderForm: React.FC = () => {
     rentalDuration: '1week',
     surgeryDate: '',
     doctorOffice: '',
+    doctorName: '',
     wearsGlasses: '',
     deliveryDate: getExpectedDeliveryDate(),
     address: '',
@@ -67,7 +68,8 @@ const MultiStepOrderForm: React.FC = () => {
     cardNumber: '',
     expiryDate: '',
     cvv: '',
-    cardName: ''
+    cardName: '',
+    domain: 'facedownrecoveryequipment'
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -170,7 +172,6 @@ const MultiStepOrderForm: React.FC = () => {
     
     if (stepNumber === 3) {
       if (!formData.surgeryDate) errors.surgeryDate = 'Please enter your surgery date';
-      if (!formData.doctorOffice.trim()) errors.doctorOffice = 'Please enter your doctor\'s office name';
       if (!formData.wearsGlasses) errors.wearsGlasses = 'Please let us know if you wear glasses';
     }
     
@@ -303,6 +304,9 @@ const MultiStepOrderForm: React.FC = () => {
       <div className="w-full max-w-none">
         <Card className="w-full border-0 shadow-none bg-transparent">
           <CardContent className="p-6">
+            {/* Hidden domain field */}
+            <input type="hidden" name="domain" value={formData.domain} />
+            
             {isSubmitted ? (
               <div className="text-center py-12">
                 <div className="bg-green-100 rounded-full h-24 w-24 flex items-center justify-center mx-auto mb-6">
@@ -504,20 +508,30 @@ const MultiStepOrderForm: React.FC = () => {
                         </div>
 
                         <div>
-                          <Label htmlFor="doctorOffice">Doctor's Office Name *</Label>
+                          <Label htmlFor="doctorOffice">Doctor's Office Name</Label>
                           <Input 
                             id="doctorOffice" 
                             name="doctorOffice" 
                             value={formData.doctorOffice} 
                             onChange={handleInputChange} 
-                            placeholder="Enter your doctor's office name"
-                            className={cn(
-                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
-                              validationErrors.doctorOffice && 'border-red-300 focus:border-red-400'
-                            )}
+                            placeholder="Enter your doctor's office name (optional)"
+                            className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
                           />
-                          {validationErrors.doctorOffice && <ValidationMessage error={validationErrors.doctorOffice} />}
                         </div>
+
+                        {formData.doctorOffice.trim() && (
+                          <div>
+                            <Label htmlFor="doctorName">Doctor's Name</Label>
+                            <Input 
+                              id="doctorName" 
+                              name="doctorName" 
+                              value={formData.doctorName} 
+                              onChange={handleInputChange} 
+                              placeholder="Enter your doctor's name"
+                              className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
+                            />
+                          </div>
+                        )}
 
                         <div>
                           <Label>Do you wear glasses? *</Label>
