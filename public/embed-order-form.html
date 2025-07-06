@@ -1,0 +1,644 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recovery Equipment Order Form</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/date-fns@3.6.0/index.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'medical-blue': '#154897',
+                        'medical-green': '#159764',
+                        'medical-burgundy': '#971548',
+                        'medical-amber': '#976415'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f8fafc;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            align-items: center;
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        .step-circle.active {
+            background-color: #159764;
+            color: white;
+        }
+        .step-circle.inactive {
+            background-color: #e5e7eb;
+            color: #6b7280;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #159764;
+            box-shadow: 0 0 0 3px rgba(21, 151, 100, 0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background-color: #159764;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0f7552;
+        }
+        .btn-secondary {
+            background-color: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+        .package-option {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .package-option:hover {
+            border-color: #d1d5db;
+        }
+        .package-option.selected {
+            border-color: #159764;
+            background-color: #f0fdf4;
+        }
+        .package-option input[type="radio"] {
+            margin-right: 12px;
+        }
+        .package-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .package-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #159764;
+        }
+        .grid {
+            display: grid;
+            gap: 16px;
+        }
+        .grid-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+        .grid-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .step {
+                font-size: 12px;
+            }
+            .package-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+        .success-screen {
+            text-align: center;
+            padding: 48px 24px;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background-color: #dcfce7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .order-summary {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="order-form-root"></div>
+
+    <script>
+        const { useState, useEffect } = React;
+        
+        // Initialize Supabase
+        const supabase = supabase.createClient(
+            'https://qeqljbfnfubqfnsvicce.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlcWxqYmZuZnVicWZuc3ZpY2NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMjg4MDcsImV4cCI6MjA2MTgwNDgwN30.NzPY_T3qE8pXJdONDAznj5wHT_ZR2fxukiTsAYVgLzA'
+        );
+
+        const packages = [
+            {
+                id: '1week',
+                title: '1 Week Rental',
+                price: 259,
+                description: 'Perfect for shorter recovery periods',
+                features: ['Complete equipment set', 'Free delivery & setup', '24/7 support', 'Pickup included']
+            },
+            {
+                id: '2weeks',
+                title: '2 Week Rental',
+                price: 320,
+                description: 'Most popular choice for recovery',
+                features: ['Complete equipment set', 'Free delivery & setup', '24/7 support', 'Pickup included', 'Extended rental discount']
+            },
+            {
+                id: '3weeks',
+                title: '3 Week Rental',
+                price: 380,
+                description: 'Comprehensive recovery support',
+                features: ['Complete equipment set', 'Free delivery & setup', '24/7 support', 'Pickup included', 'Maximum rental discount']
+            }
+        ];
+
+        function OrderForm() {
+            const [step, setStep] = useState(1);
+            const [isSubmitted, setIsSubmitted] = useState(false);
+            const [isSending, setIsSending] = useState(false);
+            const [formData, setFormData] = useState({
+                selectedPackage: '1week',
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: '',
+                needDate: (() => {
+                    const date = new Date();
+                    date.setDate(date.getDate() + 2);
+                    return date.toISOString().split('T')[0];
+                })(),
+                address: '',
+                city: '',
+                state: '',
+                zipCode: '',
+                cardNumber: '',
+                expiryDate: '',
+                cvv: '',
+                cardName: ''
+            });
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: value }));
+            };
+
+            const handlePackageSelection = (packageId) => {
+                setFormData(prev => ({ ...prev, selectedPackage: packageId }));
+            };
+
+            const nextStep = () => {
+                if (step === 1 && (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.needDate)) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+                
+                if (step === 3 && (!formData.address || !formData.city || !formData.state || !formData.zipCode)) {
+                    alert('Please fill in all address fields.');
+                    return;
+                }
+                
+                setStep(prev => prev + 1);
+            };
+
+            const prevStep = () => {
+                setStep(prev => prev - 1);
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setIsSending(true);
+                
+                try {
+                    const selectedPackage = packages.find(pkg => pkg.id === formData.selectedPackage);
+                    const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
+                    
+                    const orderData = {
+                        name: `${formData.firstName} ${formData.lastName}`,
+                        email: formData.email,
+                        phone: formData.phone,
+                        address: formData.address,
+                        city: formData.city,
+                        state: formData.state,
+                        zip_code: formData.zipCode,
+                        rental_period: selectedPackage?.title,
+                        start_date: formData.needDate,
+                        price: selectedPackage?.price,
+                        status: 'pending',
+                        card_number_masked: maskedCardNumber,
+                        card_name: formData.cardName,
+                        expiry_date: formData.expiryDate,
+                    };
+
+                    const { error } = await supabase
+                        .from('customer_orders')
+                        .insert([orderData]);
+
+                    if (error) throw error;
+                    
+                    setIsSubmitted(true);
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('There was a problem processing your order. Please try again.');
+                } finally {
+                    setIsSending(false);
+                }
+            };
+
+            const selectedPackage = packages.find(pkg => pkg.id === formData.selectedPackage);
+
+            if (isSubmitted) {
+                return React.createElement('div', { className: 'success-screen' },
+                    React.createElement('div', { className: 'success-icon' },
+                        React.createElement('div', { style: { fontSize: '40px', color: '#159764' } }, '✓')
+                    ),
+                    React.createElement('h2', { style: { fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' } }, 'Order Placed Successfully!'),
+                    React.createElement('p', { style: { color: '#6b7280', marginBottom: '16px' } }, 'Thank you for your order. We\'ll contact you shortly to confirm delivery details.'),
+                    React.createElement('p', { style: { color: '#6b7280' } }, 
+                        React.createElement('strong', null, 'Equipment needed by: '), 
+                        new Date(formData.needDate).toLocaleDateString()
+                    )
+                );
+            }
+
+            return React.createElement('form', { onSubmit: handleSubmit },
+                // Step indicator
+                React.createElement('div', { className: 'step-indicator' },
+                    [1, 2, 3, 4].map(num => 
+                        React.createElement('div', { key: num, className: 'step' },
+                            React.createElement('div', { 
+                                className: `step-circle ${step >= num ? 'active' : 'inactive'}` 
+                            }, step > num ? '✓' : num),
+                            React.createElement('span', { style: { fontSize: '12px', marginTop: '4px' } },
+                                num === 1 ? 'Your Info' :
+                                num === 2 ? 'Select Package' :
+                                num === 3 ? 'Delivery Address' : 'Payment'
+                            )
+                        )
+                    )
+                ),
+
+                // Step 1: Personal Information
+                step === 1 && React.createElement('div', null,
+                    React.createElement('h3', { style: { fontSize: '20px', fontWeight: '600', marginBottom: '24px' } }, 'Your Information'),
+                    React.createElement('div', { className: 'grid grid-2' },
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'First Name *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'firstName',
+                                value: formData.firstName,
+                                onChange: handleInputChange,
+                                placeholder: 'Enter your first name',
+                                required: true
+                            })
+                        ),
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'Last Name *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'lastName',
+                                value: formData.lastName,
+                                onChange: handleInputChange,
+                                placeholder: 'Enter your last name',
+                                required: true
+                            })
+                        ),
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'Email Address *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'email',
+                                type: 'email',
+                                value: formData.email,
+                                onChange: handleInputChange,
+                                placeholder: 'you@example.com',
+                                required: true
+                            })
+                        ),
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'Phone Number *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'phone',
+                                value: formData.phone,
+                                onChange: handleInputChange,
+                                placeholder: '(123) 456-7890',
+                                required: true
+                            })
+                        )
+                    ),
+                    React.createElement('div', { className: 'form-group' },
+                        React.createElement('label', { className: 'form-label' }, 'When do you need the equipment? *'),
+                        React.createElement('input', {
+                            className: 'form-input',
+                            name: 'needDate',
+                            type: 'date',
+                            value: formData.needDate,
+                            onChange: handleInputChange,
+                            required: true
+                        })
+                    ),
+                    React.createElement('div', { style: { display: 'flex', justifyContent: 'flex-end', paddingTop: '16px' } },
+                        React.createElement('button', {
+                            type: 'button',
+                            className: 'btn btn-primary',
+                            onClick: nextStep
+                        }, 'Continue →')
+                    )
+                ),
+
+                // Step 2: Package Selection
+                step === 2 && React.createElement('div', null,
+                    React.createElement('h3', { style: { fontSize: '20px', fontWeight: '600', marginBottom: '24px' } }, 'Select Your Recovery Package'),
+                    ...packages.map(pkg =>
+                        React.createElement('div', {
+                            key: pkg.id,
+                            className: `package-option ${formData.selectedPackage === pkg.id ? 'selected' : ''}`,
+                            onClick: () => handlePackageSelection(pkg.id)
+                        },
+                            React.createElement('input', {
+                                type: 'radio',
+                                name: 'package',
+                                value: pkg.id,
+                                checked: formData.selectedPackage === pkg.id,
+                                onChange: () => handlePackageSelection(pkg.id)
+                            }),
+                            React.createElement('div', { style: { flex: 1 } },
+                                React.createElement('div', { className: 'package-header' },
+                                    React.createElement('div', null,
+                                        React.createElement('h4', { style: { fontSize: '18px', fontWeight: '500', marginBottom: '4px' } }, pkg.title),
+                                        React.createElement('p', { style: { color: '#6b7280', fontSize: '14px', marginBottom: '8px' } }, pkg.description)
+                                    ),
+                                    React.createElement('div', { className: 'package-price' }, `$${pkg.price}`)
+                                ),
+                                React.createElement('ul', { style: { fontSize: '14px', listStyle: 'none', padding: 0 } },
+                                    ...pkg.features.map((feature, idx) =>
+                                        React.createElement('li', { key: idx, style: { marginBottom: '4px' } },
+                                            React.createElement('span', { style: { color: '#159764', marginRight: '8px' } }, '✓'),
+                                            feature
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', paddingTop: '16px' } },
+                        React.createElement('button', {
+                            type: 'button',
+                            className: 'btn btn-secondary',
+                            onClick: prevStep
+                        }, '← Back'),
+                        React.createElement('button', {
+                            type: 'button',
+                            className: 'btn btn-primary',
+                            onClick: nextStep
+                        }, 'Continue →')
+                    )
+                ),
+
+                // Step 3: Delivery Address
+                step === 3 && React.createElement('div', null,
+                    React.createElement('h3', { style: { fontSize: '20px', fontWeight: '600', marginBottom: '16px' } }, 'Delivery Address'),
+                    React.createElement('p', { style: { color: '#6b7280', marginBottom: '24px' } },
+                        'Equipment will be delivered on: ',
+                        React.createElement('strong', null, new Date(formData.needDate).toLocaleDateString())
+                    ),
+                    React.createElement('div', { className: 'form-group' },
+                        React.createElement('label', { className: 'form-label' }, 'Street Address *'),
+                        React.createElement('input', {
+                            className: 'form-input',
+                            name: 'address',
+                            value: formData.address,
+                            onChange: handleInputChange,
+                            placeholder: '123 Main Street',
+                            required: true
+                        })
+                    ),
+                    React.createElement('div', { className: 'grid grid-3' },
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'City *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'city',
+                                value: formData.city,
+                                onChange: handleInputChange,
+                                placeholder: 'Boca Raton',
+                                required: true
+                            })
+                        ),
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'State *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'state',
+                                value: formData.state,
+                                onChange: handleInputChange,
+                                placeholder: 'FL',
+                                required: true
+                            })
+                        ),
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'ZIP Code *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'zipCode',
+                                value: formData.zipCode,
+                                onChange: handleInputChange,
+                                placeholder: '33431',
+                                required: true
+                            })
+                        )
+                    ),
+                    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', paddingTop: '16px' } },
+                        React.createElement('button', {
+                            type: 'button',
+                            className: 'btn btn-secondary',
+                            onClick: prevStep
+                        }, '← Back'),
+                        React.createElement('button', {
+                            type: 'button',
+                            className: 'btn btn-primary',
+                            onClick: nextStep
+                        }, 'Continue →')
+                    )
+                ),
+
+                // Step 4: Payment
+                step === 4 && React.createElement('div', null,
+                    React.createElement('h3', { style: { fontSize: '20px', fontWeight: '600', marginBottom: '24px' } }, 'Payment Information'),
+                    
+                    // Order Summary
+                    React.createElement('div', { className: 'order-summary' },
+                        React.createElement('h4', { style: { fontWeight: '500', color: '#374151', marginBottom: '8px' } }, 'Order Summary'),
+                        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' } },
+                            React.createElement('span', null, 'Package:'),
+                            React.createElement('span', null, selectedPackage?.title)
+                        ),
+                        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' } },
+                            React.createElement('span', null, 'Delivery Date:'),
+                            React.createElement('span', null, new Date(formData.needDate).toLocaleDateString())
+                        ),
+                        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: '#159764', fontSize: '18px', borderTop: '1px solid #bbf7d0', paddingTop: '8px' } },
+                            React.createElement('span', null, 'Total:'),
+                            React.createElement('span', null, `$${selectedPackage?.price}.00`)
+                        )
+                    ),
+
+                    React.createElement('div', { className: 'form-group' },
+                        React.createElement('label', { className: 'form-label' }, 'Name on Card *'),
+                        React.createElement('input', {
+                            className: 'form-input',
+                            name: 'cardName',
+                            value: formData.cardName,
+                            onChange: handleInputChange,
+                            placeholder: 'John Doe',
+                            required: true
+                        })
+                    ),
+                    React.createElement('div', { className: 'form-group' },
+                        React.createElement('label', { className: 'form-label' }, 'Card Number *'),
+                        React.createElement('input', {
+                            className: 'form-input',
+                            name: 'cardNumber',
+                            value: formData.cardNumber,
+                            onChange: handleInputChange,
+                            placeholder: '1234 5678 9012 3456',
+                            required: true
+                        })
+                    ),
+                    React.createElement('div', { className: 'grid grid-2' },
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'Expiry Date *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'expiryDate',
+                                value: formData.expiryDate,
+                                onChange: handleInputChange,
+                                placeholder: 'MM/YY',
+                                required: true
+                            })
+                        ),
+                        React.createElement('div', { className: 'form-group' },
+                            React.createElement('label', { className: 'form-label' }, 'CVV *'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                name: 'cvv',
+                                value: formData.cvv,
+                                onChange: handleInputChange,
+                                placeholder: '123',
+                                required: true
+                            })
+                        )
+                    ),
+                    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', paddingTop: '16px' } },
+                        React.createElement('button', {
+                            type: 'button',
+                            className: 'btn btn-secondary',
+                            onClick: prevStep
+                        }, '← Back'),
+                        React.createElement('button', {
+                            type: 'submit',
+                            className: 'btn btn-primary',
+                            disabled: isSending
+                        }, isSending ? 'Processing...' : 'Complete Order ✓')
+                    )
+                )
+            );
+        }
+
+        function App() {
+            return React.createElement('div', { className: 'container' },
+                React.createElement('div', { className: 'form-card' },
+                    React.createElement(OrderForm)
+                ),
+                React.createElement('div', { style: { marginTop: '24px', textAlign: 'center' } },
+                    React.createElement('p', { style: { fontSize: '14px', color: '#6b7280' } }, 
+                        'Secure payment processing. Your information is protected.'
+                    )
+                )
+            );
+        }
+
+        ReactDOM.render(React.createElement(App), document.getElementById('order-form-root'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Form Embed Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recovery Equipment Order Form - Embed Example</h1>
+        
+        <div class="instructions">
+            <h2>How to Embed This Form</h2>
+            <p>To embed this order form on your website, follow these simple steps:</p>
+            
+            <h3>Step 1: Add the container div</h3>
+            <div class="code-block">
+&lt;div id="recovery-order-form"&gt;&lt;/div&gt;
+            </div>
+            
+            <h3>Step 2: Include the embed script</h3>
+            <div class="code-block">
+&lt;script src="https://yourdomain.com/embed-script.js"&gt;&lt;/script&gt;
+            </div>
+            
+            <h3>Complete Example:</h3>
+            <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;My Website&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Order Your Recovery Equipment&lt;/h1&gt;
+    
+    &lt;!-- Order form will appear here --&gt;
+    &lt;div id="recovery-order-form"&gt;&lt;/div&gt;
+    
+    &lt;!-- Include the embed script --&gt;
+    &lt;script src="https://yourdomain.com/embed-script.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </div>
+            
+            <h3>Custom Options (Optional):</h3>
+            <p>You can customize the form by calling the embed function with options:</p>
+            <div class="code-block">
+&lt;script&gt;
+    embedRecoveryOrderForm({
+        containerId: 'my-custom-container',
+        width: '100%',
+        height: '900px'
+    });
+&lt;/script&gt;
+            </div>
+        </div>
+        
+        <h2>Live Preview:</h2>
+        <!-- This is where the form will be embedded -->
+        <div id="recovery-order-form"></div>
+    </div>
+
+    <!-- Include the embed script -->
+    <script src="./embed-script.js"></script>
+</body>
+</html>
