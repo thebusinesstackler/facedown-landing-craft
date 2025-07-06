@@ -80,21 +80,21 @@ const MultiStepOrderForm: React.FC = () => {
       title: '1 Week Rental',
       price: 259,
       description: 'Perfect for shorter recovery periods',
-      features: ['Complete equipment set', 'Free delivery & setup', '24/7 support', 'Pickup included']
+      features: ['Complete equipment set']
     },
     {
       id: '2weeks',
       title: '2 Week Rental',
       price: 320,
       description: 'Most popular choice for recovery',
-      features: ['Complete equipment set', 'Free delivery & setup', '24/7 support', 'Pickup included', 'Extended rental discount']
+      features: ['Complete equipment set']
     },
     {
       id: '3weeks',
       title: '3 Week Rental',
       price: 380,
       description: 'Comprehensive recovery support',
-      features: ['Complete equipment set', 'Free delivery & setup', '24/7 support', 'Pickup included', 'Maximum rental discount']
+      features: ['Complete equipment set']
     }
   ];
 
