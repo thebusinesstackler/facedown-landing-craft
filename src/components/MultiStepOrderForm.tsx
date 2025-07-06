@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, getDay } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
 
 const MultiStepOrderForm: React.FC = () => {
@@ -67,6 +71,7 @@ const MultiStepOrderForm: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [step1EmailSent, setStep1EmailSent] = useState(false);
+  const [surgeryDateOpen, setSurgeryDateOpen] = useState(false);
   const { toast } = useToast();
 
   const rentalOptions = [
@@ -95,9 +100,33 @@ const MultiStepOrderForm: React.FC = () => {
 
   const shippingFee = 25;
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-numeric characters
+    const numbers = value.replace(/\D/g, '');
+    
+    // Limit to 10 digits
+    const limited = numbers.slice(0, 10);
+    
+    // Format as (555) 555-5555
+    if (limited.length >= 6) {
+      return `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6)}`;
+    } else if (limited.length >= 3) {
+      return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
+    } else {
+      return limited;
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    let processedValue = value;
+    
+    // Format phone number
+    if (name === 'phone') {
+      processedValue = formatPhoneNumber(value);
+    }
+    
+    setFormData(prev => ({ ...prev, [name]: processedValue }));
     // Clear validation error when user starts typing
     if (validationErrors[name]) {
       setValidationErrors(prev => ({ ...prev, [name]: '' }));
@@ -110,6 +139,13 @@ const MultiStepOrderForm: React.FC = () => {
 
   const handleGlassesSelection = (value: string) => {
     setFormData(prev => ({ ...prev, wearsGlasses: value }));
+  };
+
+  const handleSurgeryDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setFormData(prev => ({ ...prev, surgeryDate: format(date, 'yyyy-MM-dd') }));
+      setSurgeryDateOpen(false);
+    }
   };
 
   const validateStep = (stepNumber: number) => {
@@ -319,7 +355,6 @@ const MultiStepOrderForm: React.FC = () => {
                             type="email" 
                             value={formData.email} 
                             onChange={handleInputChange} 
-                            placeholder="you@example.com"
                             className={validationErrors.email ? 'border-red-300 focus:border-red-400' : ''}
                           />
                           {validationErrors.email && <ValidationMessage error={validationErrors.email} />}
@@ -331,35 +366,49 @@ const MultiStepOrderForm: React.FC = () => {
                             name="phone" 
                             value={formData.phone} 
                             onChange={handleInputChange} 
-                            placeholder="(123) 456-7890"
                             className={validationErrors.phone ? 'border-red-300 focus:border-red-400' : ''}
                           />
                           {validationErrors.phone && <ValidationMessage error={validationErrors.phone} />}
                         </div>
                         <div>
-                          <Label htmlFor="surgeryDate">Date of Your Surgery *</Label>
-                          <Input 
-                            id="surgeryDate" 
-                            name="surgeryDate" 
-                            type="date" 
-                            value={formData.surgeryDate} 
-                            onChange={handleInputChange}
-                            className={validationErrors.surgeryDate ? 'border-red-300 focus:border-red-400' : ''}
-                          />
+                          <Label>Date of Your Surgery *</Label>
+                          <Popover open={surgeryDateOpen} onOpenChange={setSurgeryDateOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !formData.surgeryDate && "text-muted-foreground",
+                                  validationErrors.surgeryDate && 'border-red-300 focus:border-red-400'
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {formData.surgeryDate ? format(new Date(formData.surgeryDate), "PPP") : "Pick a date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={formData.surgeryDate ? new Date(formData.surgeryDate) : undefined}
+                                onSelect={handleSurgeryDateSelect}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
                           {validationErrors.surgeryDate && <ValidationMessage error={validationErrors.surgeryDate} />}
                         </div>
                         <div>
-                          <Label className="text-base font-medium mb-3 block">Do you wear glasses? *</Label>
-                          <RadioGroup value={formData.wearsGlasses} onValueChange={handleGlassesSelection} className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="no" id="glasses-no" />
-                              <Label htmlFor="glasses-no">No, I don't wear glasses</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="yes" id="glasses-yes" />
-                              <Label htmlFor="glasses-yes">Yes, I wear glasses</Label>
-                            </div>
-                          </RadioGroup>
+                          <Label>Do you wear glasses? *</Label>
+                          <Select value={formData.wearsGlasses} onValueChange={handleGlassesSelection}>
+                            <SelectTrigger className={validationErrors.wearsGlasses ? 'border-red-300 focus:border-red-400' : ''}>
+                              <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="no">No, I don't wear glasses</SelectItem>
+                              <SelectItem value="yes">Yes, I wear glasses</SelectItem>
+                            </SelectContent>
+                          </Select>
                           {validationErrors.wearsGlasses && <ValidationMessage error={validationErrors.wearsGlasses} />}
                           
                           {formData.wearsGlasses === 'yes' && (
