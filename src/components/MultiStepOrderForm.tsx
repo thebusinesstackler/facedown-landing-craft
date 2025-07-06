@@ -311,46 +311,7 @@ const MultiStepOrderForm: React.FC = () => {
                             onChange={handleInputChange} 
                             required 
                           />
-                          <p className="text-sm text-gray-500 mt-1">
-                            Next available delivery: {format(new Date(getNextDeliveryDate()), 'EEEE, MMMM d, yyyy')}
-                            {getDay(new Date()) === 0 && (
-                              <span className="block mt-1 text-blue-600">
-                                Sunday orders are shipped Monday and delivered Wednesday
-                              </span>
-                            )}
-                          </p>
                         </div>
-                        
-                        {/* Expedited Delivery Option - Only show on Sunday */}
-                        {canOfferExpeditedDelivery() && (
-                          <div className="md:col-span-2">
-                            <Label className="text-base font-medium mb-3 block">Delivery Speed</Label>
-                            <RadioGroup value={formData.expeditedDelivery} onValueChange={handleExpeditedDeliverySelection} className="space-y-3">
-                              <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                                <RadioGroupItem value="no" id="standard-delivery" />
-                                <Label htmlFor="standard-delivery" className="flex-1">
-                                  <div>
-                                    <div className="font-medium">Standard Delivery - FREE</div>
-                                    <div className="text-sm text-gray-500">
-                                      Shipped Monday, delivered Wednesday ({format(new Date(getNextDeliveryDate()), 'MMMM d, yyyy')})
-                                    </div>
-                                  </div>
-                                </Label>
-                              </div>
-                              <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                                <RadioGroupItem value="yes" id="expedited-delivery" />
-                                <Label htmlFor="expedited-delivery" className="flex-1">
-                                  <div>
-                                    <div className="font-medium">Expedited Next-Day Delivery - +$350</div>
-                                    <div className="text-sm text-gray-500">
-                                      Delivered tomorrow ({format(new Date(getExpeditedDeliveryDate()), 'MMMM d, yyyy')})
-                                    </div>
-                                  </div>
-                                </Label>
-                              </div>
-                            </RadioGroup>
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -418,10 +379,7 @@ const MultiStepOrderForm: React.FC = () => {
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Delivery Address</h3>
                     <p className="text-gray-600">
-                      Equipment will be delivered on: <strong>{format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.needDate), 'PPP')}</strong>
-                      {formData.expeditedDelivery === 'yes' && (
-                        <span className="block text-blue-600 font-medium">Expedited Next-Day Delivery</span>
-                      )}
+                      Equipment will be delivered on: <strong>{format(new Date(formData.needDate), 'PPP')}</strong>
                     </p>
                     
                     <div className="space-y-4">
@@ -488,6 +446,37 @@ const MultiStepOrderForm: React.FC = () => {
                 {step === 4 && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Payment Information</h3>
+                    
+                    {/* Expedited Delivery Option - Only show on Sunday */}
+                    {canOfferExpeditedDelivery() && (
+                      <div className="space-y-4 mb-6">
+                        <Label className="text-base font-medium mb-3 block">Delivery Speed</Label>
+                        <RadioGroup value={formData.expeditedDelivery} onValueChange={handleExpeditedDeliverySelection} className="space-y-3">
+                          <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                            <RadioGroupItem value="no" id="standard-delivery" />
+                            <Label htmlFor="standard-delivery" className="flex-1">
+                              <div>
+                                <div className="font-medium">Standard Delivery</div>
+                                <div className="text-sm text-gray-500">
+                                  Delivered {format(new Date(formData.needDate), 'MMMM d, yyyy')}
+                                </div>
+                              </div>
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                            <RadioGroupItem value="yes" id="expedited-delivery" />
+                            <Label htmlFor="expedited-delivery" className="flex-1">
+                              <div>
+                                <div className="font-medium">Expedited Next-Day Delivery - +$350</div>
+                                <div className="text-sm text-gray-500">
+                                  Delivered tomorrow ({format(new Date(getExpeditedDeliveryDate()), 'MMMM d, yyyy')})
+                                </div>
+                              </div>
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    )}
                     
                     {/* Order Summary */}
                     <div className="bg-green-50 rounded-lg p-4 border border-green-100">
