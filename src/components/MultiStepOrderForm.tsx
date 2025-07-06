@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package } from 'lucide-react';
@@ -173,9 +174,9 @@ const MultiStepOrderForm: React.FC = () => {
   const selectedPackage = packages.find(pkg => pkg.id === formData.selectedPackage);
 
   return (
-    <section className="py-8 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <Card className="w-full">
+    <section className="w-full">
+      <div className="w-full max-w-none">
+        <Card className="w-full border-0 shadow-none bg-transparent">
           <CardContent className="p-6">
             {isSubmitted ? (
               <div className="text-center py-12">
