@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon } from 'lucide-react';
@@ -100,6 +99,15 @@ const MultiStepOrderForm: React.FC = () => {
   ];
 
   const shippingFee = 25;
+
+  // Included items list for all packages
+  const includedItems = [
+    'Vitrectomy Chair',
+    'Facedown Table Support', 
+    'Mirror and 4 headrest face covers',
+    'Instructions',
+    'Pickup included'
+  ];
 
   const formatPhoneNumber = (value: string) => {
     // Remove all non-numeric characters
@@ -394,7 +402,7 @@ const MultiStepOrderForm: React.FC = () => {
                           <div
                             key={option.id}
                             className={`border rounded-lg p-4 transition-colors ${
-                              formData.rentalDuration === option.id ? 'border-medical-green bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                              formData.rentalDuration === option.id ? 'border-medical-green bg-green-50' : 'border-gray-200 hover:border-medical-green hover:bg-green-50'
                             }`}
                           >
                             <div className="flex items-start">
@@ -403,10 +411,23 @@ const MultiStepOrderForm: React.FC = () => {
                                 <div className="flex justify-between">
                                   <div className="flex-1">
                                     <h4 className="font-medium text-lg">{option.title}</h4>
-                                    <p className="text-gray-500 text-sm mb-2">{option.description}</p>
+                                    <p className="text-gray-500 text-sm mb-3">{option.description}</p>
+                                    
+                                    <div className="mb-3">
+                                      <p className="font-medium text-sm text-gray-700 mb-2">Included:</p>
+                                      <ul className="text-sm space-y-1">
+                                        {includedItems.map((item, idx) => (
+                                          <li key={idx} className="flex items-center text-gray-600">
+                                            <Check size={14} className="text-medical-green mr-2 flex-shrink-0" />
+                                            {item}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    
                                     <ul className="text-sm space-y-1">
                                       {option.features.map((feature, idx) => (
-                                        <li key={idx} className="flex items-center">
+                                        <li key={idx} className="flex items-center text-gray-600">
                                           <Check size={14} className="text-medical-green mr-2" />
                                           {feature}
                                         </li>
