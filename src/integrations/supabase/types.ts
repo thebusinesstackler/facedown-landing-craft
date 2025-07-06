@@ -231,13 +231,17 @@ export type Database = {
       customer_orders: {
         Row: {
           address: string | null
+          body_build: string | null
           card_name: string | null
           card_number_masked: string | null
           city: string | null
           created_at: string
+          doctor_name: string | null
+          doctor_office: string | null
           email: string
           end_date: string | null
           expiry_date: string | null
+          height: string | null
           id: string
           name: string
           phone: string | null
@@ -246,18 +250,25 @@ export type Database = {
           start_date: string | null
           state: string | null
           status: string | null
+          surgery_date: string | null
           updated_at: string
+          wears_glasses: string | null
+          weight: string | null
           zip_code: string | null
         }
         Insert: {
           address?: string | null
+          body_build?: string | null
           card_name?: string | null
           card_number_masked?: string | null
           city?: string | null
           created_at?: string
+          doctor_name?: string | null
+          doctor_office?: string | null
           email: string
           end_date?: string | null
           expiry_date?: string | null
+          height?: string | null
           id?: string
           name: string
           phone?: string | null
@@ -266,18 +277,25 @@ export type Database = {
           start_date?: string | null
           state?: string | null
           status?: string | null
+          surgery_date?: string | null
           updated_at?: string
+          wears_glasses?: string | null
+          weight?: string | null
           zip_code?: string | null
         }
         Update: {
           address?: string | null
+          body_build?: string | null
           card_name?: string | null
           card_number_masked?: string | null
           city?: string | null
           created_at?: string
+          doctor_name?: string | null
+          doctor_office?: string | null
           email?: string
           end_date?: string | null
           expiry_date?: string | null
+          height?: string | null
           id?: string
           name?: string
           phone?: string | null
@@ -286,7 +304,10 @@ export type Database = {
           start_date?: string | null
           state?: string | null
           status?: string | null
+          surgery_date?: string | null
           updated_at?: string
+          wears_glasses?: string | null
+          weight?: string | null
           zip_code?: string | null
         }
         Relationships: []
