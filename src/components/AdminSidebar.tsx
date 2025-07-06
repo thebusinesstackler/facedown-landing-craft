@@ -42,19 +42,27 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   ];
 
   return (
-    <Sidebar>
-      <SidebarContent>
+    <Sidebar className="bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700">
+      <SidebarContent className="bg-transparent">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-2 p-4">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     onClick={() => onSectionChange(item.id)}
                     isActive={activeSection === item.id}
+                    className={`
+                      w-full justify-start px-4 py-3 rounded-lg transition-all duration-200
+                      ${
+                        activeSection === item.id
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                      }
+                    `}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
+                    <item.icon className="h-5 w-5 mr-3" />
+                    <span className="font-medium">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -63,12 +71,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter>
+      <SidebarFooter className="bg-transparent border-t border-slate-700 p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={onLogout}>
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
+            <SidebarMenuButton 
+              onClick={onLogout}
+              className="w-full justify-start px-4 py-3 rounded-lg text-slate-300 hover:bg-red-600 hover:text-white transition-all duration-200"
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              <span className="font-medium">Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

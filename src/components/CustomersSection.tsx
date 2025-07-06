@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff, UserPlus, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff, UserPlus, Edit, Trash2, Ship } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { getCustomerOrders, updateCustomerOrderStatus, saveCustomerOrder, updateCustomerOrder, deleteCustomerOrder } from '@/utils/supabaseOrderUtils';
@@ -55,7 +54,6 @@ const CustomersSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [showUnmaskDialog, setShowUnmaskDialog] = useState(false);
-  const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [unmaskedCards, setUnmaskedCards] = useState<Set<string>>(new Set());
   const [verifying, setVerifying] = useState(false);
@@ -283,9 +281,13 @@ const CustomersSection: React.FC = () => {
     try {
       await updateCustomerOrderStatus(orderId, 'shipped');
       await loadCustomers();
+      
+      // Open PirateShip.com in a new tab
+      window.open('https://www.pirateship.com', '_blank');
+      
       toast({
         title: "Equipment shipped",
-        description: "Order has been marked as shipped.",
+        description: "Order has been marked as shipped and PirateShip opened for label creation.",
       });
     } catch (error) {
       console.error('Error updating shipment:', error);
@@ -300,25 +302,14 @@ const CustomersSection: React.FC = () => {
   const handleUnmaskRequest = (orderId: string) => {
     setSelectedOrderId(orderId);
     setShowUnmaskDialog(true);
-    setAdminEmail('');
-    setAdminPassword('');
+    setAdminPassword(''); // Reset password field
   };
 
   const verifyAdminPassword = async () => {
-    if (!adminEmail || !adminPassword) {
+    if (!adminPassword) {
       toast({
-        title: "Fields required",
-        description: "Please enter both admin email and password to unmask credit card details.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check if it's the business tackler email
-    if (adminEmail !== 'thebusinesstackler@gmail.com') {
-      toast({
-        title: "Unauthorized",
-        description: "Only thebusinesstackler@gmail.com can unmask credit card details.",
+        title: "Password required",
+        description: "Please enter the admin password to unmask credit card details.",
         variant: "destructive"
       });
       return;
@@ -329,14 +320,14 @@ const CustomersSection: React.FC = () => {
     try {
       // Use Supabase Auth to verify the admin credentials
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: adminEmail,
+        email: 'thebusinesstackler@gmail.com',
         password: adminPassword,
       });
 
       if (error) {
         toast({
           title: "Authentication failed",
-          description: "Invalid email or password.",
+          description: "Invalid password.",
           variant: "destructive"
         });
         return;
@@ -345,7 +336,6 @@ const CustomersSection: React.FC = () => {
       if (data.user) {
         setUnmaskedCards(prev => new Set([...prev, selectedOrderId]));
         setShowUnmaskDialog(false);
-        setAdminEmail('');
         setAdminPassword('');
         
         // Sign out immediately for security
@@ -591,8 +581,9 @@ const CustomersSection: React.FC = () => {
                                     size="sm"
                                     onClick={() => handleShipmentUpdate(customer.id)}
                                     className="flex items-center gap-1 border-green-200 text-green-600 hover:bg-green-50 h-7 px-2 text-xs"
+                                    title="Order Labels"
                                   >
-                                    <Package className="h-3 w-3" />
+                                    <Ship className="h-3 w-3" />
                                     <span className="hidden sm:inline">Ship</span>
                                   </Button>
                                 )}
@@ -665,9 +656,30 @@ const CustomersSection: React.FC = () => {
                                       </div>
                                       <div>
                                         <h4 className="font-medium">Payment Information</h4>
-                                        <p className="text-sm text-gray-600">
-                                          Card: {getCardDisplay(customer)}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm text-gray-600 font-mono">
+                                            Card: {getCardDisplay(customer)}
+                                          </span>
+                                          {unmaskedCards.has(customer.id) ? (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => maskCard(customer.id)}
+                                              className="h-6 w-6 p-0"
+                                            >
+                                              <EyeOff className="h-3 w-3" />
+                                            </Button>
+                                          ) : (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleUnmaskRequest(customer.id)}
+                                              className="h-6 w-6 p-0"
+                                            >
+                                              <CreditCard className="h-3 w-3" />
+                                            </Button>
+                                          )}
+                                        </div>
                                         <p className="text-sm text-gray-600">
                                           Name: {customer.card_name}
                                         </p>
@@ -1031,23 +1043,16 @@ const CustomersSection: React.FC = () => {
       <Dialog open={showUnmaskDialog} onOpenChange={setShowUnmaskDialog}>
         <DialogContent className="max-w-sm sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Admin Verification Required</DialogTitle>
+            <DialogTitle>Admin Password Required</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Enter your Supabase admin credentials to unmask credit card details.
+              Enter your admin password to unmask credit card details.
             </p>
             <div className="space-y-3">
               <Input
-                type="email"
-                placeholder="Admin email (thebusinesstackler@gmail.com)"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                className="border-2 border-blue-200 focus:border-blue-400"
-              />
-              <Input
                 type="password"
-                placeholder="Supabase password"
+                placeholder="Admin password"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && verifyAdminPassword()}
@@ -1064,7 +1069,7 @@ const CustomersSection: React.FC = () => {
               </Button>
               <Button
                 onClick={verifyAdminPassword}
-                disabled={verifying || !adminEmail || !adminPassword}
+                disabled={verifying || !adminPassword}
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 w-full sm:w-auto"
               >
                 {verifying ? 'Verifying...' : 'Verify'}
