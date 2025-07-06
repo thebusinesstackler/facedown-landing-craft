@@ -60,6 +60,10 @@ const MultiStepOrderForm: React.FC = () => {
     doctorOffice: '',
     doctorName: '',
     wearsGlasses: '',
+    heightFeet: '',
+    heightInches: '',
+    weight: '',
+    bodyBuild: '',
     deliveryDate: getExpectedDeliveryDate(),
     address: '',
     city: '',
@@ -112,6 +116,21 @@ const MultiStepOrderForm: React.FC = () => {
     'Pickup included'
   ];
 
+  const calculateBodyBuild = (heightFeet: string, heightInches: string, weight: string) => {
+    if (!heightFeet || !weight) return '';
+    
+    const totalHeightInches = parseInt(heightFeet) * 12 + (parseInt(heightInches) || 0);
+    const weightLbs = parseInt(weight);
+    const heightMeters = totalHeightInches * 0.0254;
+    const weightKg = weightLbs * 0.453592;
+    const bmi = weightKg / (heightMeters * heightMeters);
+    
+    if (bmi < 18.5) return 'slim';
+    if (bmi >= 18.5 && bmi < 25) return 'medium';
+    if (bmi >= 25 && bmi < 30) return 'medium';
+    return 'obese';
+  };
+
   const formatPhoneNumber = (value: string) => {
     // Remove all non-numeric characters
     const numbers = value.replace(/\D/g, '');
@@ -138,7 +157,19 @@ const MultiStepOrderForm: React.FC = () => {
       processedValue = formatPhoneNumber(value);
     }
     
-    setFormData(prev => ({ ...prev, [name]: processedValue }));
+    const newFormData = { ...formData, [name]: processedValue };
+    
+    // Calculate body build when height or weight changes
+    if (name === 'heightFeet' || name === 'heightInches' || name === 'weight') {
+      newFormData.bodyBuild = calculateBodyBuild(
+        name === 'heightFeet' ? processedValue : formData.heightFeet,
+        name === 'heightInches' ? processedValue : formData.heightInches,
+        name === 'weight' ? processedValue : formData.weight
+      );
+    }
+    
+    setFormData(newFormData);
+    
     // Clear validation error when user starts typing
     if (validationErrors[name]) {
       setValidationErrors(prev => ({ ...prev, [name]: '' }));
@@ -173,6 +204,8 @@ const MultiStepOrderForm: React.FC = () => {
     if (stepNumber === 3) {
       if (!formData.surgeryDate) errors.surgeryDate = 'Please enter your surgery date';
       if (!formData.wearsGlasses) errors.wearsGlasses = 'Please let us know if you wear glasses';
+      if (!formData.heightFeet) errors.heightFeet = 'Please enter your height';
+      if (!formData.weight) errors.weight = 'Please enter your weight';
     }
     
     if (stepNumber === 4) {
@@ -242,7 +275,7 @@ const MultiStepOrderForm: React.FC = () => {
       // Calculate total with shipping
       const totalPrice = (selectedRental?.price || 0) + shippingFee;
       
-      // Save to Supabase
+      // Save to Supabase with additional fields
       const orderData = {
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
@@ -258,6 +291,14 @@ const MultiStepOrderForm: React.FC = () => {
         card_number_masked: maskedCardNumber,
         card_name: formData.cardName,
         expiry_date: formData.expiryDate,
+        // Additional fields - store as JSON or separate fields as needed
+        surgery_date: formData.surgeryDate,
+        doctor_office: formData.doctorOffice,
+        doctor_name: formData.doctorName,
+        wears_glasses: formData.wearsGlasses,
+        height: `${formData.heightFeet}'${formData.heightInches || 0}"`,
+        weight: formData.weight,
+        body_build: formData.bodyBuild,
       };
 
       await saveCustomerOrder(orderData);
@@ -501,6 +542,14 @@ const MultiStepOrderForm: React.FC = () => {
                                 onSelect={handleSurgeryDateSelect}
                                 initialFocus
                                 className={cn("p-3 pointer-events-auto")}
+                                classNames={{
+                                  day_selected: "bg-medical-green text-white hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white",
+                                  day_today: "bg-medical-green/10 text-medical-green font-bold",
+                                  head_cell: "text-medical-green font-medium",
+                                  nav_button: "hover:bg-medical-green/10 text-medical-green",
+                                  nav_button_previous: "hover:bg-medical-green/10 text-medical-green",
+                                  nav_button_next: "hover:bg-medical-green/10 text-medical-green"
+                                }}
                               />
                             </PopoverContent>
                           </Popover>
@@ -575,6 +624,79 @@ const MultiStepOrderForm: React.FC = () => {
                             </div>
                           )}
                         </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>Height *</Label>
+                            <div className="flex gap-2">
+                              <div className="flex-1">
+                                <Select value={formData.heightFeet} onValueChange={(value) => handleInputChange({ target: { name: 'heightFeet', value } } as any)}>
+                                  <SelectTrigger className={cn(
+                                    "hover:border-medical-green focus:ring-medical-green focus:border-medical-green",
+                                    validationErrors.heightFeet && 'border-red-300 focus:border-red-400'
+                                  )}>
+                                    <SelectValue placeholder="Feet" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-white z-50">
+                                    {[4, 5, 6, 7].map(feet => (
+                                      <SelectItem 
+                                        key={feet} 
+                                        value={feet.toString()}
+                                        className="hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white"
+                                      >
+                                        {feet} ft
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex-1">
+                                <Select value={formData.heightInches} onValueChange={(value) => handleInputChange({ target: { name: 'heightInches', value } } as any)}>
+                                  <SelectTrigger className="hover:border-medical-green focus:ring-medical-green focus:border-medical-green">
+                                    <SelectValue placeholder="Inches" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-white z-50">
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <SelectItem 
+                                        key={i} 
+                                        value={i.toString()}
+                                        className="hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white"
+                                      >
+                                        {i} in
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            {validationErrors.heightFeet && <ValidationMessage error={validationErrors.heightFeet} />}
+                          </div>
+
+                          <div>
+                            <Label htmlFor="weight">Weight (lbs) *</Label>
+                            <Input 
+                              id="weight" 
+                              name="weight" 
+                              type="number"
+                              value={formData.weight} 
+                              onChange={handleInputChange} 
+                              placeholder="Enter weight in pounds"
+                              className={cn(
+                                "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                                validationErrors.weight && 'border-red-300 focus:border-red-400'
+                              )}
+                            />
+                            {validationErrors.weight && <ValidationMessage error={validationErrors.weight} />}
+                          </div>
+                        </div>
+
+                        {formData.bodyBuild && (
+                          <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
+                            <p className="text-sm text-blue-700">
+                              <strong>Body Build Assessment:</strong> {formData.bodyBuild.charAt(0).toUpperCase() + formData.bodyBuild.slice(1)} build
+                            </p>
+                          </div>
+                        )}
 
                         <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
                           <p className="text-sm text-blue-700">
