@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/AdminSidebar';
 import CustomersSection from '@/components/CustomersSection';
 import CalendarSection from '@/components/CalendarSection';
+import EmbedSection from '@/components/EmbedSection';
 
 const AdminDashboard: React.FC = () => {
   const [cityName, setCityName] = useState('');
@@ -294,6 +294,7 @@ const AdminDashboard: React.FC = () => {
             {activeSection === 'customers' && <CustomersSection />}
             {activeSection === 'locations' && renderLocationsSection()}
             {activeSection === 'calendar' && <CalendarSection />}
+            {activeSection === 'embed' && <EmbedSection />}
           </div>
         </SidebarInset>
       </div>

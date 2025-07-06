@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Users, MapPin, LogOut } from 'lucide-react';
+import { Calendar, Users, MapPin, LogOut, Code } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +38,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       id: 'locations',
       label: 'Location Manager',
       icon: MapPin,
+    },
+    {
+      id: 'embed',
+      label: 'Embed Form',
+      icon: Code,
     },
   ];
 
