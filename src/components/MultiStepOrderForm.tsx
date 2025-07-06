@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon } from 'lucide-react';
@@ -506,7 +505,7 @@ const MultiStepOrderForm: React.FC = () => {
                           <Label>Do you wear glasses? *</Label>
                           <Select value={formData.wearsGlasses} onValueChange={handleGlassesSelection}>
                             <SelectTrigger className={cn(
-                              "hover:border-medical-green",
+                              "hover:border-medical-green focus:ring-medical-green focus:border-medical-green",
                               validationErrors.wearsGlasses && 'border-red-300 focus:border-red-400'
                             )}>
                               <SelectValue placeholder="Select an option" />
