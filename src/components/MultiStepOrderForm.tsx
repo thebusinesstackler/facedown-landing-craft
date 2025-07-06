@@ -61,7 +61,8 @@ const MultiStepOrderForm: React.FC = () => {
     cardNumber: '',
     expiryDate: '',
     cvv: '',
-    cardName: ''
+    cardName: '',
+    expeditedDelivery: 'no'
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -106,6 +107,10 @@ const MultiStepOrderForm: React.FC = () => {
 
   const handleRentalDurationSelection = (value: string) => {
     setFormData(prev => ({ ...prev, rentalDuration: value }));
+  };
+
+  const handleExpeditedDeliverySelection = (value: string) => {
+    setFormData(prev => ({ ...prev, expeditedDelivery: value }));
   };
 
   const getExpeditedDeliveryDate = () => {
