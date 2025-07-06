@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Table, 
   TableBody, 
@@ -19,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff, UserPlus, Edit, Trash2, Ship } from 'lucide-react';
+import { Search, Plus, Eye, Package, RefreshCw, CreditCard, EyeOff, UserPlus, Edit, Trash2, Ship, PackageCheck } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { getCustomerOrders, updateCustomerOrderStatus, saveCustomerOrder, updateCustomerOrder, deleteCustomerOrder } from '@/utils/supabaseOrderUtils';
@@ -47,6 +48,12 @@ interface CustomerOrder {
   notes?: string;
 }
 
+interface EquipmentReturn {
+  vitrectomy_chair: boolean;
+  table_tap_support_unit: boolean;
+  mirror: boolean;
+}
+
 const CustomersSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [customers, setCustomers] = useState<CustomerOrder[]>([]);
@@ -62,6 +69,7 @@ const CustomersSection: React.FC = () => {
   const [editingCustomer, setEditingCustomer] = useState<CustomerOrder | null>(null);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState<string>('');
+  const [equipmentReturns, setEquipmentReturns] = useState<Record<string, EquipmentReturn>>({});
   
   // Add Customer form state
   const [newCustomer, setNewCustomer] = useState({
@@ -241,6 +249,29 @@ const CustomersSection: React.FC = () => {
       });
     } finally {
       setAddingCustomer(false);
+    }
+  };
+
+  const handleEquipmentReturnChange = (customerId: string, equipment: keyof EquipmentReturn, checked: boolean) => {
+    setEquipmentReturns(prev => ({
+      ...prev,
+      [customerId]: {
+        ...prev[customerId],
+        [equipment]: checked
+      }
+    }));
+  };
+
+  const initializeEquipmentReturn = (customerId: string) => {
+    if (!equipmentReturns[customerId]) {
+      setEquipmentReturns(prev => ({
+        ...prev,
+        [customerId]: {
+          vitrectomy_chair: false,
+          table_tap_support_unit: false,
+          mirror: false
+        }
+      }));
     }
   };
 
@@ -440,13 +471,14 @@ const CustomersSection: React.FC = () => {
         </Card>
       </div>
 
-      {/* Tabs for Customer Orders and Add Customer */}
+      {/* Tabs for Customer Orders, Add Customer, and Returns */}
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <Tabs defaultValue="orders" className="w-full">
           <CardHeader className="pb-4">
-            <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-blue-100 to-purple-100">
+            <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-blue-100 to-purple-100">
               <TabsTrigger value="orders" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs sm:text-sm">Customer Orders</TabsTrigger>
               <TabsTrigger value="add-customer" className="data-[state=active]:bg-white data-[state=active]:text-purple-600 text-xs sm:text-sm">Add Customer</TabsTrigger>
+              <TabsTrigger value="returns" className="data-[state=active]:bg-white data-[state=active]:text-green-600 text-xs sm:text-sm">Returns</TabsTrigger>
             </TabsList>
           </CardHeader>
           
@@ -877,6 +909,156 @@ const CustomersSection: React.FC = () => {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </TabsContent>
+
+          <TabsContent value="returns">
+            <CardContent className="px-2 sm:px-6">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-semibold text-green-700">Equipment Returns</h3>
+                    <p className="text-sm text-gray-600">Track returned equipment and get shipping addresses for PirateShip.com</p>
+                  </div>
+                  <Button 
+                    onClick={() => window.open('https://www.pirateship.com', '_blank')}
+                    className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 w-full sm:w-auto"
+                  >
+                    <Ship className="h-4 w-4" />
+                    Open PirateShip
+                  </Button>
+                </div>
+
+                {/* Returns Table */}
+                <div className="rounded-md border border-gray-200 overflow-hidden shadow-lg">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-gradient-to-r from-green-50 to-blue-50">
+                        <TableRow>
+                          <TableHead className="font-semibold text-gray-700 min-w-[150px]">Customer</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[200px]">Return Address</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[180px]">Equipment Status</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[120px]">Rental Period</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[100px]">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {customers.filter(c => c.status === 'active' || c.status === 'shipped' || c.status === 'completed').length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                              No active rentals or shipments found.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          customers
+                            .filter(c => c.status === 'active' || c.status === 'shipped' || c.status === 'completed')
+                            .map((customer) => {
+                              initializeEquipmentReturn(customer.id);
+                              const returns = equipmentReturns[customer.id] || { vitrectomy_chair: false, table_tap_support_unit: false, mirror: false };
+                              
+                              return (
+                                <TableRow key={customer.id} className="hover:bg-green-25 transition-colors">
+                                  <TableCell>
+                                    <div className="text-sm">
+                                      <div className="font-medium">{customer.name}</div>
+                                      <div className="text-gray-500">{customer.email}</div>
+                                      <div className="text-gray-500">{customer.phone}</div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="text-sm space-y-1">
+                                      <div className="font-medium">{customer.address}</div>
+                                      <div className="text-gray-600">{customer.city}, {customer.state} {customer.zip_code}</div>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          const address = `${customer.address}, ${customer.city}, ${customer.state} ${customer.zip_code}`;
+                                          navigator.clipboard.writeText(address);
+                                          toast({
+                                            title: "Address copied",
+                                            description: "Address has been copied to clipboard for PirateShip.com",
+                                          });
+                                        }}
+                                        className="mt-1 h-6 px-2 text-xs border-green-200 text-green-600 hover:bg-green-50"
+                                      >
+                                        Copy Address
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`vitrectomy-${customer.id}`}
+                                          checked={returns.vitrectomy_chair}
+                                          onCheckedChange={(checked) => 
+                                            handleEquipmentReturnChange(customer.id, 'vitrectomy_chair', checked as boolean)
+                                          }
+                                        />
+                                        <label htmlFor={`vitrectomy-${customer.id}`} className="text-xs sm:text-sm">
+                                          Vitrectomy Chair
+                                        </label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`table-${customer.id}`}
+                                          checked={returns.table_tap_support_unit}
+                                          onCheckedChange={(checked) => 
+                                            handleEquipmentReturnChange(customer.id, 'table_tap_support_unit', checked as boolean)
+                                          }
+                                        />
+                                        <label htmlFor={`table-${customer.id}`} className="text-xs sm:text-sm">
+                                          Table Tap Support Unit
+                                        </label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`mirror-${customer.id}`}
+                                          checked={returns.mirror}
+                                          onCheckedChange={(checked) => 
+                                            handleEquipmentReturnChange(customer.id, 'mirror', checked as boolean)
+                                          }
+                                        />
+                                        <label htmlFor={`mirror-${customer.id}`} className="text-xs sm:text-sm">
+                                          Mirror
+                                        </label>
+                                      </div>
+                                      <div className="mt-2 text-xs">
+                                        <span className={`px-2 py-1 rounded-full text-xs ${
+                                          Object.values(returns).every(Boolean) 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : 'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                          {Object.values(returns).every(Boolean) ? 'All Returned' : 'Partial Return'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    <div className="font-medium">{customer.rental_period}</div>
+                                    <div className="text-gray-500 text-xs">
+                                      Started: {new Date(customer.start_date).toLocaleDateString()}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      customer.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                                      customer.status === 'shipped' ? 'bg-orange-100 text-orange-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
+                                    </span>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </TabsContent>
         </Tabs>
