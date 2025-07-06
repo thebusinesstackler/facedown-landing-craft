@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { getCustomerOrders, updateCustomerOrderStatus, saveCustomerOrder, updateCustomerOrder, deleteCustomerOrder } from '@/utils/supabaseOrderUtils';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CustomerOrder {
   id: string;
@@ -53,6 +55,7 @@ const CustomersSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [showUnmaskDialog, setShowUnmaskDialog] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [unmaskedCards, setUnmaskedCards] = useState<Set<string>>(new Set());
   const [verifying, setVerifying] = useState(false);
@@ -297,14 +300,25 @@ const CustomersSection: React.FC = () => {
   const handleUnmaskRequest = (orderId: string) => {
     setSelectedOrderId(orderId);
     setShowUnmaskDialog(true);
+    setAdminEmail('');
     setAdminPassword('');
   };
 
   const verifyAdminPassword = async () => {
-    if (!adminPassword) {
+    if (!adminEmail || !adminPassword) {
       toast({
-        title: "Password required",
-        description: "Please enter your admin password to unmask credit card details.",
+        title: "Fields required",
+        description: "Please enter both admin email and password to unmask credit card details.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if it's the business tackler email
+    if (adminEmail !== 'thebusinesstackler@gmail.com') {
+      toast({
+        title: "Unauthorized",
+        description: "Only thebusinesstackler@gmail.com can unmask credit card details.",
         variant: "destructive"
       });
       return;
@@ -313,39 +327,40 @@ const CustomersSection: React.FC = () => {
     setVerifying(true);
     
     try {
-      const response = await fetch('/api/admin-auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'validate_password',
-          password: adminPassword
-        }),
+      // Use Supabase Auth to verify the admin credentials
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: adminEmail,
+        password: adminPassword,
       });
 
-      const data = await response.json();
+      if (error) {
+        toast({
+          title: "Authentication failed",
+          description: "Invalid email or password.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      if (data.success) {
+      if (data.user) {
         setUnmaskedCards(prev => new Set([...prev, selectedOrderId]));
         setShowUnmaskDialog(false);
+        setAdminEmail('');
         setAdminPassword('');
+        
+        // Sign out immediately for security
+        await supabase.auth.signOut();
+        
         toast({
           title: "Access granted",
           description: "Credit card details have been unmasked.",
-        });
-      } else {
-        toast({
-          title: "Invalid password",
-          description: "The admin password you entered is incorrect.",
-          variant: "destructive"
         });
       }
     } catch (error) {
       console.error('Error verifying password:', error);
       toast({
         title: "Verification failed",
-        description: "Failed to verify admin password. Please try again.",
+        description: "Failed to verify admin credentials. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -380,57 +395,57 @@ const CustomersSection: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen p-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen p-2 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Customer Management</h2>
-          <p className="text-gray-600">Manage orders and customer information</p>
+          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Customer Management</h2>
+          <p className="text-gray-600 text-sm sm:text-base">Manage orders and customer information</p>
         </div>
-        <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600" onClick={loadCustomers}>
+        <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 w-full sm:w-auto" onClick={loadCustomers}>
           <RefreshCw className="h-4 w-4" />
           Refresh Data
         </Button>
       </div>
 
-      {/* Revenue Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Revenue Overview - Mobile responsive grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-l-4 border-blue-500 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-blue-700">Total Revenue</CardTitle>
-            <CardDescription>All time earnings</CardDescription>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-sm sm:text-lg text-blue-700">Total Revenue</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">All time earnings</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">${totalRevenue.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">${totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
         
         <Card className="border-l-4 border-yellow-500 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-yellow-700">Pending Orders</CardTitle>
-            <CardDescription>Revenue from pending orders</CardDescription>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-sm sm:text-lg text-yellow-700">Pending Orders</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Revenue from pending orders</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">${pendingRevenue.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-yellow-600">${pendingRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-green-500 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-green-700">Active Rentals</CardTitle>
-            <CardDescription>Revenue from active rentals</CardDescription>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-sm sm:text-lg text-green-700">Active Rentals</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Revenue from active rentals</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${activeRevenue.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">${activeRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-gray-500 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-gray-700">Completed Orders</CardTitle>
-            <CardDescription>Revenue from completed orders</CardDescription>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-sm sm:text-lg text-gray-700">Completed Orders</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Revenue from completed orders</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-600">${completedRevenue.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-gray-600">${completedRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
@@ -438,28 +453,28 @@ const CustomersSection: React.FC = () => {
       {/* Tabs for Customer Orders and Add Customer */}
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <Tabs defaultValue="orders" className="w-full">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-blue-100 to-purple-100">
-              <TabsTrigger value="orders" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">Customer Orders</TabsTrigger>
-              <TabsTrigger value="add-customer" className="data-[state=active]:bg-white data-[state=active]:text-purple-600">Add Customer</TabsTrigger>
+              <TabsTrigger value="orders" className="data-[state=active]:bg-white data-[state=active]:text-blue-600 text-xs sm:text-sm">Customer Orders</TabsTrigger>
+              <TabsTrigger value="add-customer" className="data-[state=active]:bg-white data-[state=active]:text-purple-600 text-xs sm:text-sm">Add Customer</TabsTrigger>
             </TabsList>
           </CardHeader>
           
           <TabsContent value="orders">
-            <CardContent>
-              {/* Search and Filters */}
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <CardContent className="px-2 sm:px-6">
+              {/* Search and Filters - Mobile responsive */}
+              <div className="flex flex-col gap-3 mb-4 sm:mb-6">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search customers by name or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-2 border-blue-200 focus:border-blue-400"
+                    className="pl-10 border-2 border-blue-200 focus:border-blue-400 text-sm"
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full md:w-48 border-2 border-purple-200 focus:border-purple-400">
+                  <SelectTrigger className="border-2 border-purple-200 focus:border-purple-400">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -472,217 +487,219 @@ const CustomersSection: React.FC = () => {
                 </Select>
               </div>
 
-              {/* Customer Table */}
+              {/* Customer Table - Mobile responsive with horizontal scroll */}
               <div className="rounded-md border border-gray-200 overflow-hidden shadow-lg">
-                <Table>
-                  <TableHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-                    <TableRow>
-                      <TableHead className="font-semibold text-gray-700">Customer</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Contact</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Rental Details</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Revenue</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Payment Info</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCustomers.length === 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                          No customer orders found. Orders will appear here when customers submit the form or you add them manually.
-                        </TableCell>
+                        <TableHead className="font-semibold text-gray-700 min-w-[120px]">Customer</TableHead>
+                        <TableHead className="font-semibold text-gray-700 min-w-[140px]">Contact</TableHead>
+                        <TableHead className="font-semibold text-gray-700 min-w-[150px]">Rental Details</TableHead>
+                        <TableHead className="font-semibold text-gray-700 min-w-[80px]">Revenue</TableHead>
+                        <TableHead className="font-semibold text-gray-700 min-w-[160px]">Payment Info</TableHead>
+                        <TableHead className="font-semibold text-gray-700 min-w-[100px]">Status</TableHead>
+                        <TableHead className="font-semibold text-gray-700 min-w-[200px]">Actions</TableHead>
                       </TableRow>
-                    ) : (
-                      filteredCustomers.map((customer) => (
-                        <TableRow key={customer.id} className="hover:bg-blue-25 transition-colors">
-                          <TableCell className="font-medium">{customer.name}</TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div>{customer.email}</div>
-                              <div className="text-gray-500">{customer.phone}</div>
-                            </div>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCustomers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                            No customer orders found. Orders will appear here when customers submit the form or you add them manually.
                           </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div className="font-medium">{customer.rental_period}</div>
-                              <div className="text-gray-500">
-                                Start: {new Date(customer.start_date).toLocaleDateString()}
+                        </TableRow>
+                      ) : (
+                        filteredCustomers.map((customer) => (
+                          <TableRow key={customer.id} className="hover:bg-blue-25 transition-colors">
+                            <TableCell className="font-medium text-sm">{customer.name}</TableCell>
+                            <TableCell>
+                              <div className="text-xs sm:text-sm">
+                                <div className="truncate max-w-[120px]">{customer.email}</div>
+                                <div className="text-gray-500">{customer.phone}</div>
                               </div>
-                              {customer.end_date && (
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-xs sm:text-sm">
+                                <div className="font-medium">{customer.rental_period}</div>
                                 <div className="text-gray-500">
-                                  End: {new Date(customer.end_date).toLocaleDateString()}
+                                  Start: {new Date(customer.start_date).toLocaleDateString()}
                                 </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-semibold text-green-600">${customer.price}</TableCell>
-                          <TableCell>
-                            <div className="text-sm space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono">{getCardDisplay(customer)}</span>
-                                {unmaskedCards.has(customer.id) ? (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => maskCard(customer.id)}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    <EyeOff className="h-3 w-3" />
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleUnmaskRequest(customer.id)}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    <CreditCard className="h-3 w-3" />
-                                  </Button>
+                                {customer.end_date && (
+                                  <div className="text-gray-500">
+                                    End: {new Date(customer.end_date).toLocaleDateString()}
+                                  </div>
                                 )}
                               </div>
-                              <div className="text-gray-500">{customer.card_name}</div>
-                              <div className="text-gray-500">{customer.expiry_date}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Select value={customer.status} onValueChange={(value) => handleStatusUpdate(customer.id, value)}>
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="shipped">Shipped</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleEditCustomer(customer)}
-                                className="flex items-center gap-1 border-blue-200 text-blue-600 hover:bg-blue-50"
-                              >
-                                <Edit className="h-4 w-4" />
-                                Edit
-                              </Button>
-                              {customer.status !== 'shipped' && customer.status !== 'completed' && (
+                            </TableCell>
+                            <TableCell className="font-semibold text-green-600 text-sm">${customer.price}</TableCell>
+                            <TableCell>
+                              <div className="text-xs space-y-1">
+                                <div className="flex items-center gap-1">
+                                  <span className="font-mono text-xs">{getCardDisplay(customer)}</span>
+                                  {unmaskedCards.has(customer.id) ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => maskCard(customer.id)}
+                                      className="h-5 w-5 p-0"
+                                    >
+                                      <EyeOff className="h-3 w-3" />
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleUnmaskRequest(customer.id)}
+                                      className="h-5 w-5 p-0"
+                                    >
+                                      <CreditCard className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                                <div className="text-gray-500 truncate max-w-[100px]">{customer.card_name}</div>
+                                <div className="text-gray-500">{customer.expiry_date}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Select value={customer.status} onValueChange={(value) => handleStatusUpdate(customer.id, value)}>
+                                <SelectTrigger className="w-24 h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="active">Active</SelectItem>
+                                  <SelectItem value="shipped">Shipped</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleShipmentUpdate(customer.id)}
-                                  className="flex items-center gap-1 border-green-200 text-green-600 hover:bg-green-50"
+                                  onClick={() => handleEditCustomer(customer)}
+                                  className="flex items-center gap-1 border-blue-200 text-blue-600 hover:bg-blue-50 h-7 px-2 text-xs"
                                 >
-                                  <Package className="h-4 w-4" />
-                                  Ship
+                                  <Edit className="h-3 w-3" />
+                                  <span className="hidden sm:inline">Edit</span>
                                 </Button>
-                              )}
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
+                                {customer.status !== 'shipped' && customer.status !== 'completed' && (
                                   <Button 
                                     variant="outline" 
                                     size="sm"
-                                    className="flex items-center gap-1 border-red-200 text-red-600 hover:bg-red-50"
-                                    disabled={deleting === customer.id}
+                                    onClick={() => handleShipmentUpdate(customer.id)}
+                                    className="flex items-center gap-1 border-green-200 text-green-600 hover:bg-green-50 h-7 px-2 text-xs"
                                   >
-                                    <Trash2 className="h-4 w-4" />
-                                    Delete
+                                    <Package className="h-3 w-3" />
+                                    <span className="hidden sm:inline">Ship</span>
                                   </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Customer</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete {customer.name}? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => handleDeleteCustomer(customer.id)}
-                                      className="bg-red-600 hover:bg-red-700"
+                                )}
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="flex items-center gap-1 border-red-200 text-red-600 hover:bg-red-50 h-7 px-2 text-xs"
+                                      disabled={deleting === customer.id}
                                     >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => setSelectedCustomer(customer)}
-                                    className="border-gray-200 text-gray-600 hover:bg-gray-50"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-md">
-                                  <DialogHeader>
-                                    <DialogTitle>Customer Details</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div>
-                                      <h4 className="font-medium">Personal Information</h4>
-                                      <p className="text-sm text-gray-600">{customer.name}</p>
-                                      <p className="text-sm text-gray-600">{customer.email}</p>
-                                      <p className="text-sm text-gray-600">{customer.phone}</p>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium">Address</h4>
-                                      <p className="text-sm text-gray-600">
-                                        {customer.address}<br />
-                                        {customer.city}, {customer.state} {customer.zip_code}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium">Order Details</h4>
-                                      <p className="text-sm text-gray-600">Package: {customer.rental_period}</p>
-                                      <p className="text-sm text-gray-600">Revenue: ${customer.price}</p>
-                                      <p className="text-sm text-gray-600">Start Date: {new Date(customer.start_date).toLocaleDateString()}</p>
-                                      <p className="text-sm text-gray-600">Status: {customer.status}</p>
-                                      <p className="text-sm text-gray-600">Order Date: {new Date(customer.created_at).toLocaleDateString()}</p>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium">Payment Information</h4>
-                                      <p className="text-sm text-gray-600">
-                                        Card: {getCardDisplay(customer)}
-                                      </p>
-                                      <p className="text-sm text-gray-600">
-                                        Name: {customer.card_name}
-                                      </p>
-                                      <p className="text-sm text-gray-600">
-                                        Expires: {customer.expiry_date}
-                                      </p>
-                                    </div>
-                                    {customer.notes && (
+                                      <Trash2 className="h-3 w-3" />
+                                      <span className="hidden sm:inline">Delete</span>
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent className="max-w-sm sm:max-w-md">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete {customer.name}? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeleteCustomer(customer.id)}
+                                        className="bg-red-600 hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setSelectedCustomer(customer)}
+                                      className="border-gray-200 text-gray-600 hover:bg-gray-50 h-7 px-2 text-xs"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-sm sm:max-w-md max-h-[80vh] overflow-y-auto">
+                                    <DialogHeader>
+                                      <DialogTitle>Customer Details</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 text-sm">
                                       <div>
-                                        <h4 className="font-medium">Notes</h4>
-                                        <p className="text-sm text-gray-600">{customer.notes}</p>
+                                        <h4 className="font-medium">Personal Information</h4>
+                                        <p className="text-sm text-gray-600">{customer.name}</p>
+                                        <p className="text-sm text-gray-600 break-words">{customer.email}</p>
+                                        <p className="text-sm text-gray-600">{customer.phone}</p>
                                       </div>
-                                    )}
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                                      <div>
+                                        <h4 className="font-medium">Address</h4>
+                                        <p className="text-sm text-gray-600">
+                                          {customer.address}<br />
+                                          {customer.city}, {customer.state} {customer.zip_code}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <h4 className="font-medium">Order Details</h4>
+                                        <p className="text-sm text-gray-600">Package: {customer.rental_period}</p>
+                                        <p className="text-sm text-gray-600">Revenue: ${customer.price}</p>
+                                        <p className="text-sm text-gray-600">Start Date: {new Date(customer.start_date).toLocaleDateString()}</p>
+                                        <p className="text-sm text-gray-600">Status: {customer.status}</p>
+                                        <p className="text-sm text-gray-600">Order Date: {new Date(customer.created_at).toLocaleDateString()}</p>
+                                      </div>
+                                      <div>
+                                        <h4 className="font-medium">Payment Information</h4>
+                                        <p className="text-sm text-gray-600">
+                                          Card: {getCardDisplay(customer)}
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          Name: {customer.card_name}
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          Expires: {customer.expiry_date}
+                                        </p>
+                                      </div>
+                                      {customer.notes && (
+                                        <div>
+                                          <h4 className="font-medium">Notes</h4>
+                                          <p className="text-sm text-gray-600">{customer.notes}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </CardContent>
           </TabsContent>
 
           <TabsContent value="add-customer">
-            <CardContent>
-              <form onSubmit={handleAddCustomer} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="px-2 sm:px-6">
+              <form onSubmit={handleAddCustomer} className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-2">
                     <label htmlFor="name" className="text-sm font-medium">Name *</label>
                     <Input
@@ -762,9 +779,9 @@ const CustomersSection: React.FC = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Address Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 md:col-span-2">
+                  <h3 className="text-base sm:text-lg font-medium">Address Information</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-2 sm:col-span-2">
                       <label htmlFor="address" className="text-sm font-medium">Address</label>
                       <Input
                         id="address"
@@ -807,8 +824,8 @@ const CustomersSection: React.FC = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Payment Information (Optional)</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className="text-base sm:text-lg font-medium">Payment Information (Optional)</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-2">
                       <label htmlFor="card_number_masked" className="text-sm font-medium">Card Number (Masked)</label>
                       <Input
@@ -842,7 +859,7 @@ const CustomersSection: React.FC = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={addingCustomer} className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+                  <Button type="submit" disabled={addingCustomer} className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 w-full sm:w-auto">
                     <UserPlus className="h-4 w-4" />
                     {addingCustomer ? 'Adding Customer...' : 'Add Customer'}
                   </Button>
@@ -855,13 +872,13 @@ const CustomersSection: React.FC = () => {
 
       {/* Edit Customer Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-sm sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl text-blue-600">Edit Customer Information</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl text-blue-600">Edit Customer Information</DialogTitle>
           </DialogHeader>
           {editingCustomer && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Customer Name</label>
                   <Input
@@ -935,7 +952,7 @@ const CustomersSection: React.FC = () => {
               </div>
               
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-purple-600">Address Information</h3>
+                <h3 className="text-base sm:text-lg font-medium text-purple-600">Address Information</h3>
                 <div>
                   <label className="block text-sm font-medium mb-1">Address</label>
                   <Input
@@ -946,7 +963,7 @@ const CustomersSection: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium mb-1">City</label>
                     <Input
@@ -989,17 +1006,18 @@ const CustomersSection: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex gap-2 justify-end">
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setShowEditDialog(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSaveCustomerEdit}
                   disabled={updating}
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 w-full sm:w-auto"
                 >
                   {updating ? 'Saving...' : 'Save Changes'}
                 </Button>
@@ -1009,35 +1027,45 @@ const CustomersSection: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Admin Password Dialog */}
+      {/* Admin Authentication Dialog */}
       <Dialog open={showUnmaskDialog} onOpenChange={setShowUnmaskDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-sm sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Admin Verification Required</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Enter your admin password to unmask credit card details.
+              Enter your Supabase admin credentials to unmask credit card details.
             </p>
-            <Input
-              type="password"
-              placeholder="Admin password"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && verifyAdminPassword()}
-              className="border-2 border-blue-200 focus:border-blue-400"
-            />
-            <div className="flex gap-2 justify-end">
+            <div className="space-y-3">
+              <Input
+                type="email"
+                placeholder="Admin email (thebusinesstackler@gmail.com)"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                className="border-2 border-blue-200 focus:border-blue-400"
+              />
+              <Input
+                type="password"
+                placeholder="Supabase password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && verifyAdminPassword()}
+                className="border-2 border-blue-200 focus:border-blue-400"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 justify-end">
               <Button
                 variant="outline"
                 onClick={() => setShowUnmaskDialog(false)}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={verifyAdminPassword}
-                disabled={verifying || !adminPassword}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                disabled={verifying || !adminEmail || !adminPassword}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 w-full sm:w-auto"
               >
                 {verifying ? 'Verifying...' : 'Verify'}
               </Button>
