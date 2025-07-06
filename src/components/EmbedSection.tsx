@@ -16,19 +16,6 @@ const EmbedSection: React.FC = () => {
   const baseUrl = 'https://order.facedownrecoveryequipment.com';
   const embedUrl = `${baseUrl}/order1`;
   
-  // Generate simple HTML iframe code
-  const generateSimpleHtmlCode = () => {
-    return `<iframe 
-  src="${embedUrl}" 
-  width="${containerWidth}" 
-  height="${containerHeight}" 
-  frameborder="0" 
-  scrolling="auto"
-  style="border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); max-width: 100%;"
-  title="Face-Down Recovery Equipment Order Form">
-</iframe>`;
-  };
-
   // Generate div embed code (no iframe)
   const generateDivEmbedCode = () => {
     return `<!-- Place this div where you want the form to appear -->
@@ -48,21 +35,65 @@ const EmbedSection: React.FC = () => {
 </script>`;
   };
 
-  // Generate JavaScript embed code (iframe-based)
-  const generateJsEmbedCode = () => {
+  // Generate fetch-based embed code
+  const generateFetchEmbedCode = () => {
     return `<!-- Place this div where you want the form to appear -->
-<div id="recovery-order-form"></div>
+<div id="order-form-container" style="width: ${containerWidth}; min-height: ${containerHeight}; max-width: 100%;"></div>
 
-<!-- Include the embed script -->
-<script src="${baseUrl}/embed-script.js"></script>
-
-<!-- Optional: Customize the form -->
 <script>
-  embedRecoveryOrderForm({
-    containerId: 'recovery-order-form',
-    width: '${containerWidth}',
-    height: '${containerHeight}'
-  });
+async function loadOrderForm() {
+  const container = document.getElementById('order-form-container');
+  if (!container) return;
+  
+  // Show loading
+  container.innerHTML = \`
+    <div style="text-align: center; padding: 40px; color: #666;">
+      <div style="margin-bottom: 16px;">Loading order form...</div>
+      <div style="width: 40px; height: 40px; border: 3px solid #159764; border-top: 3px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+    </div>
+    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+  \`;
+  
+  try {
+    const response = await fetch('${embedUrl}');
+    const html = await response.text();
+    
+    // Extract main content
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const mainContent = doc.querySelector('main') || doc.querySelector('[class*="container"]') || doc.body;
+    
+    if (mainContent) {
+      container.innerHTML = mainContent.innerHTML;
+      
+      // Execute any scripts
+      const scripts = container.querySelectorAll('script');
+      scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        if (script.src) {
+          newScript.src = script.src;
+        } else {
+          newScript.textContent = script.textContent;
+        }
+        document.head.appendChild(newScript);
+      });
+    }
+  } catch (error) {
+    container.innerHTML = \`
+      <div style="text-align: center; padding: 40px; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">⚠️</div>
+        <div>Unable to load order form. Please try again later.</div>
+      </div>
+    \`;
+  }
+}
+
+// Load when page is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadOrderForm);
+} else {
+  loadOrderForm();
+}
 </script>`;
   };
 
@@ -95,9 +126,9 @@ const EmbedSection: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Embed Order Form
+              Embed Order Form (No iframe)
             </h2>
-            <p className="text-gray-600 mt-1">Get the code to embed your order form on any website</p>
+            <p className="text-gray-600 mt-1">Get the code to embed your order form directly into any website</p>
           </div>
           <div className="flex gap-2">
             <Button 
@@ -160,47 +191,22 @@ const EmbedSection: React.FC = () => {
         {/* Embed Codes */}
         <Card className="lg:col-span-2 shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-t-lg">
-            <CardTitle className="text-blue-700">Embed Codes</CardTitle>
-            <CardDescription>Choose your preferred embedding method</CardDescription>
+            <CardTitle className="text-blue-700">Embed Codes (No iframe)</CardTitle>
+            <CardDescription>Choose your preferred embedding method - all without iframes</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <Tabs defaultValue="simple-html" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="simple-html">Simple HTML</TabsTrigger>
-                <TabsTrigger value="div-embed">Div Embed</TabsTrigger>
-                <TabsTrigger value="javascript">JavaScript Iframe</TabsTrigger>
+            <Tabs defaultValue="div-embed" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="div-embed">Script Embed</TabsTrigger>
+                <TabsTrigger value="fetch-embed">Fetch Embed</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="simple-html" className="mt-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Simple HTML Iframe</h4>
-                    <Button
-                      onClick={() => copyToClipboard(generateSimpleHtmlCode(), 'Simple HTML')}
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy Code
-                    </Button>
-                  </div>
-                  <Textarea
-                    value={generateSimpleHtmlCode()}
-                    readOnly
-                    className="font-mono text-sm min-h-[120px] bg-gray-50"
-                  />
-                  <p className="text-sm text-gray-600">
-                    <strong>✅ Recommended</strong> - Pure HTML iframe that works everywhere. Just copy and paste this code into your website.
-                  </p>
-                </div>
-              </TabsContent>
               
               <TabsContent value="div-embed" className="mt-4">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Div Embed Code (No Iframe)</h4>
+                    <h4 className="font-medium">Script-Based Embed (Recommended)</h4>
                     <Button
-                      onClick={() => copyToClipboard(generateDivEmbedCode(), 'Div Embed')}
+                      onClick={() => copyToClipboard(generateDivEmbedCode(), 'Script Embed')}
                       size="sm"
                       className="flex items-center gap-2"
                     >
@@ -211,20 +217,20 @@ const EmbedSection: React.FC = () => {
                   <Textarea
                     value={generateDivEmbedCode()}
                     readOnly
-                    className="font-mono text-sm min-h-[160px] bg-gray-50"
+                    className="font-mono text-sm min-h-[200px] bg-gray-50"
                   />
                   <p className="text-sm text-gray-600">
-                    Advanced option - Content loads directly into a div without iframe restrictions, but requires JavaScript.
+                    <strong>✅ Recommended</strong> - Uses our optimized script that handles loading, styling, and error handling automatically.
                   </p>
                 </div>
               </TabsContent>
               
-              <TabsContent value="javascript" className="mt-4">
+              <TabsContent value="fetch-embed" className="mt-4">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="font-medium">JavaScript Iframe Code</h4>
+                    <h4 className="font-medium">Fetch-Based Embed</h4>
                     <Button
-                      onClick={() => copyToClipboard(generateJsEmbedCode(), 'JavaScript')}
+                      onClick={() => copyToClipboard(generateFetchEmbedCode(), 'Fetch Embed')}
                       size="sm"
                       className="flex items-center gap-2"
                     >
@@ -233,12 +239,12 @@ const EmbedSection: React.FC = () => {
                     </Button>
                   </div>
                   <Textarea
-                    value={generateJsEmbedCode()}
+                    value={generateFetchEmbedCode()}
                     readOnly
-                    className="font-mono text-sm min-h-[200px] bg-gray-50"
+                    className="font-mono text-sm min-h-[300px] bg-gray-50"
                   />
                   <p className="text-sm text-gray-600">
-                    Advanced iframe embedding with customization options and responsive features.
+                    Manual implementation using fetch API - gives you full control over the loading process and error handling.
                   </p>
                 </div>
               </TabsContent>
@@ -250,52 +256,42 @@ const EmbedSection: React.FC = () => {
       {/* Instructions */}
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="bg-gradient-to-r from-green-100 to-teal-100 rounded-t-lg">
-          <CardTitle className="text-green-700">How to Embed</CardTitle>
-          <CardDescription>Step-by-step instructions for embedding your form</CardDescription>
+          <CardTitle className="text-green-700">How to Embed (No iframe)</CardTitle>
+          <CardDescription>Step-by-step instructions for embedding your form directly</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-medium mb-3 flex items-center gap-2">
                 <Code className="h-4 w-4" />
-                Simple HTML Method (Recommended)
+                Script Embed Method (Recommended)
               </h4>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                <li>Copy the Simple HTML code above</li>
+                <li>Copy the script embed code above</li>
                 <li>Paste it directly into your website's HTML</li>
-                <li>No additional setup required</li>
-                <li>Works on all platforms and websites</li>
+                <li>The script handles all loading and styling automatically</li>
+                <li>Works on all platforms including those that block iframes</li>
+                <li>Includes loading indicators and error handling</li>
               </ol>
             </div>
             <div>
               <h4 className="font-medium mb-3 flex items-center gap-2">
                 <Code className="h-4 w-4" />
-                Div Embed Method
+                Fetch Embed Method
               </h4>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                <li>Copy the div embed code above</li>
+                <li>Copy the fetch embed code above</li>
                 <li>Paste it into your website's HTML</li>
-                <li>The form loads directly without iframe restrictions</li>
-                <li>Works on platforms that block iframes</li>
-              </ol>
-            </div>
-            <div>
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <Code className="h-4 w-4" />
-                JavaScript Iframe Method
-              </h4>
-              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                <li>Add the container div to your HTML</li>
-                <li>Include the embed script</li>
-                <li>Optionally customize with JavaScript</li>
-                <li>Provides responsive behavior and loading indicators</li>
+                <li>Customize the loading and error handling as needed</li>
+                <li>Full control over the embedding process</li>
+                <li>No external dependencies required</li>
               </ol>
             </div>
           </div>
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>💡 Recommendation:</strong> Use the <strong>Simple HTML</strong> method for easiest setup. 
-              It's a standard iframe that works everywhere and requires no additional configuration.
+              <strong>💡 No iframe restrictions:</strong> Both methods load the form content directly into your page without using iframes, 
+              so they work on platforms like Shopify, WordPress, and other sites that may block iframe content.
             </p>
           </div>
         </CardContent>
