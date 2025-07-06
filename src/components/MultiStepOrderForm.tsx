@@ -73,6 +73,7 @@ const MultiStepOrderForm: React.FC = () => {
     expiryDate: '',
     cvv: '',
     cardName: '',
+    couponCode: '',
     domain: 'facedownrecoveryequipment'
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -106,6 +107,10 @@ const MultiStepOrderForm: React.FC = () => {
   ];
 
   const shippingFee = 25;
+
+  // Check if coupon removes shipping
+  const isCouponValid = formData.couponCode.toLowerCase() === 'shipping2025';
+  const finalShippingFee = isCouponValid ? 0 : shippingFee;
 
   // Included items list for all packages
   const includedItems = [
@@ -159,7 +164,7 @@ const MultiStepOrderForm: React.FC = () => {
     
     const newFormData = { ...formData, [name]: processedValue };
     
-    // Calculate body build when height or weight changes
+    // Calculate body build when height or weight changes (but don't display it)
     if (name === 'heightFeet' || name === 'heightInches' || name === 'weight') {
       newFormData.bodyBuild = calculateBodyBuild(
         name === 'heightFeet' ? processedValue : formData.heightFeet,
@@ -272,8 +277,8 @@ const MultiStepOrderForm: React.FC = () => {
       // Mask the card number for storage
       const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
       
-      // Calculate total with shipping
-      const totalPrice = (selectedRental?.price || 0) + shippingFee;
+      // Calculate total with shipping (considering coupon)
+      const totalPrice = (selectedRental?.price || 0) + finalShippingFee;
       
       // Save to Supabase with additional fields
       const orderData = {
@@ -544,11 +549,12 @@ const MultiStepOrderForm: React.FC = () => {
                                 className={cn("p-3 pointer-events-auto")}
                                 classNames={{
                                   day_selected: "bg-medical-green text-white hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white",
-                                  day_today: "bg-medical-green/10 text-medical-green font-bold",
+                                  day_today: "bg-medical-green text-white font-bold",
                                   head_cell: "text-medical-green font-medium",
                                   nav_button: "hover:bg-medical-green/10 text-medical-green",
                                   nav_button_previous: "hover:bg-medical-green/10 text-medical-green",
-                                  nav_button_next: "hover:bg-medical-green/10 text-medical-green"
+                                  nav_button_next: "hover:bg-medical-green/10 text-medical-green",
+                                  day: "hover:bg-medical-green hover:text-white"
                                 }}
                               />
                             </PopoverContent>
@@ -690,14 +696,6 @@ const MultiStepOrderForm: React.FC = () => {
                           </div>
                         </div>
 
-                        {formData.bodyBuild && (
-                          <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
-                            <p className="text-sm text-blue-700">
-                              <strong>Body Build Assessment:</strong> {formData.bodyBuild.charAt(0).toUpperCase() + formData.bodyBuild.slice(1)} build
-                            </p>
-                          </div>
-                        )}
-
                         <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
                           <p className="text-sm text-blue-700">
                             <strong>Expected Delivery Date:</strong> {format(new Date(formData.deliveryDate), 'PPP')}
@@ -804,20 +802,41 @@ const MultiStepOrderForm: React.FC = () => {
                         </div>
                         <div className="flex justify-between">
                           <span>Shipping Fee:</span>
-                          <span>${shippingFee}.00</span>
+                          <span className={isCouponValid ? 'line-through text-gray-500' : ''}>${shippingFee}.00</span>
                         </div>
+                        {isCouponValid && (
+                          <div className="flex justify-between text-medical-green">
+                            <span>Coupon Discount:</span>
+                            <span>-${shippingFee}.00</span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
                           <span>Expected Delivery:</span>
                           <span>{format(new Date(formData.deliveryDate), 'MMM d, yyyy')}</span>
                         </div>
                         <div className="flex justify-between font-bold text-medical-green text-lg border-t pt-2">
                           <span>Total:</span>
-                          <span>${(selectedRental?.price || 0) + shippingFee}.00</span>
+                          <span>${(selectedRental?.price || 0) + finalShippingFee}.00</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="couponCode">Coupon Code</Label>
+                        <Input 
+                          id="couponCode" 
+                          name="couponCode" 
+                          value={formData.couponCode} 
+                          onChange={handleInputChange} 
+                          placeholder="Enter coupon code (optional)" 
+                          className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
+                        />
+                        {isCouponValid && (
+                          <p className="text-medical-green text-sm mt-1">✓ Coupon applied! Shipping fee removed.</p>
+                        )}
+                      </div>
+                      
                       <div>
                         <Label htmlFor="cardName">Name on Card *</Label>
                         <Input 
