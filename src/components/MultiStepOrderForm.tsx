@@ -61,8 +61,7 @@ const MultiStepOrderForm: React.FC = () => {
     cardNumber: '',
     expiryDate: '',
     cvv: '',
-    cardName: '',
-    expeditedDelivery: 'no'
+    cardName: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -94,7 +93,6 @@ const MultiStepOrderForm: React.FC = () => {
   ];
 
   const shippingFee = 25;
-  const expeditedFee = 350;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -107,22 +105,6 @@ const MultiStepOrderForm: React.FC = () => {
 
   const handleRentalDurationSelection = (value: string) => {
     setFormData(prev => ({ ...prev, rentalDuration: value }));
-  };
-
-  const handleExpeditedDeliverySelection = (value: string) => {
-    setFormData(prev => ({ ...prev, expeditedDelivery: value }));
-  };
-
-  const getExpeditedDeliveryDate = () => {
-    const now = new Date();
-    return format(addDays(now, 1), 'yyyy-MM-dd');
-  };
-
-  const canOfferExpeditedDelivery = () => {
-    const now = new Date();
-    const currentDay = getDay(now);
-    // Only offer expedited delivery on Sunday (next day delivery)
-    return currentDay === 0;
   };
 
   const validateStep = (stepNumber: number) => {
@@ -191,9 +173,8 @@ const MultiStepOrderForm: React.FC = () => {
       // Mask the card number for storage
       const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
       
-      // Calculate total with shipping and expedited delivery
-      const expeditedCharge = formData.expeditedDelivery === 'yes' ? expeditedFee : 0;
-      const totalPrice = (selectedRental?.price || 0) + shippingFee + expeditedCharge;
+      // Calculate total with shipping
+      const totalPrice = (selectedRental?.price || 0) + shippingFee;
       
       // Save to Supabase
       const orderData = {
@@ -205,7 +186,7 @@ const MultiStepOrderForm: React.FC = () => {
         state: formData.state,
         zip_code: formData.zipCode,
         rental_period: selectedRental?.title,
-        start_date: formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.deliveryDate,
+        start_date: formData.deliveryDate,
         price: totalPrice,
         status: 'pending',
         card_number_masked: maskedCardNumber,
@@ -260,14 +241,26 @@ const MultiStepOrderForm: React.FC = () => {
             {isSubmitted ? (
               <div className="text-center py-12">
                 <div className="bg-green-100 rounded-full h-24 w-24 flex items-center justify-center mx-auto mb-6">
-                  <Check size={48} className="text-medical-green" />
+                  <Check size={48} className="text-green-600" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Order Placed Successfully!</h3>
-                <p className="text-gray-600 mb-4">
-                  Thank you for your order. We'll contact you shortly to confirm delivery details.
+                <h3 className="text-2xl font-bold mb-4 text-gray-800">Thank You for Your Order!</h3>
+                <p className="text-gray-600 mb-4 text-lg">
+                  We've successfully received your order and are processing it now.
                 </p>
-                <p className="text-gray-600">
-                  <strong>Equipment delivery date:</strong> {format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.deliveryDate), 'PPP')}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 max-w-md mx-auto">
+                  <p className="text-blue-800 font-medium mb-2">Order Details:</p>
+                  <p className="text-blue-700 text-sm">
+                    <strong>Package:</strong> {selectedRental?.title}
+                  </p>
+                  <p className="text-blue-700 text-sm">
+                    <strong>Delivery Date:</strong> {format(new Date(formData.deliveryDate), 'PPP')}
+                  </p>
+                </div>
+                <p className="text-gray-600 mb-2">
+                  Our team will contact you shortly to confirm delivery details.
+                </p>
+                <p className="text-gray-600 text-sm">
+                  You'll receive tracking information once your equipment has shipped.
                 </p>
               </div>
             ) : (
@@ -483,37 +476,6 @@ const MultiStepOrderForm: React.FC = () => {
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Payment Information</h3>
                     
-                    {/* Expedited Delivery Option - Only show on Sunday */}
-                    {canOfferExpeditedDelivery() && (
-                      <div className="space-y-4 mb-6">
-                        <Label className="text-base font-medium mb-3 block">Delivery Speed</Label>
-                        <RadioGroup value={formData.expeditedDelivery} onValueChange={handleExpeditedDeliverySelection} className="space-y-3">
-                          <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                            <RadioGroupItem value="no" id="standard-delivery" />
-                            <Label htmlFor="standard-delivery" className="flex-1">
-                              <div>
-                                <div className="font-medium">Standard Delivery</div>
-                                <div className="text-sm text-gray-500">
-                                  Delivered {format(new Date(formData.deliveryDate), 'MMMM d, yyyy')}
-                                </div>
-                              </div>
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                            <RadioGroupItem value="yes" id="expedited-delivery" />
-                            <Label htmlFor="expedited-delivery" className="flex-1">
-                              <div>
-                                <div className="font-medium">Expedited Next-Day Delivery - +$350</div>
-                                <div className="text-sm text-gray-500">
-                                  Delivered tomorrow ({format(new Date(getExpeditedDeliveryDate()), 'MMMM d, yyyy')})
-                                </div>
-                              </div>
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    )}
-                    
                     {/* Order Summary */}
                     <div className="bg-green-50 rounded-lg p-4 border border-green-100">
                       <h4 className="font-medium text-gray-800 mb-2">Order Summary</h4>
@@ -530,19 +492,13 @@ const MultiStepOrderForm: React.FC = () => {
                           <span>Shipping Fee:</span>
                           <span>${shippingFee}.00</span>
                         </div>
-                        {formData.expeditedDelivery === 'yes' && (
-                          <div className="flex justify-between">
-                            <span>Expedited Delivery:</span>
-                            <span>${expeditedFee}.00</span>
-                          </div>
-                        )}
                         <div className="flex justify-between">
                           <span>Delivery Date:</span>
-                          <span>{format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.deliveryDate), 'MMM d, yyyy')}</span>
+                          <span>{format(new Date(formData.deliveryDate), 'MMM d, yyyy')}</span>
                         </div>
                         <div className="flex justify-between font-bold text-medical-green text-lg border-t pt-2">
                           <span>Total:</span>
-                          <span>${(selectedRental?.price || 0) + shippingFee + (formData.expeditedDelivery === 'yes' ? expeditedFee : 0)}.00</span>
+                          <span>${(selectedRental?.price || 0) + shippingFee}.00</span>
                         </div>
                       </div>
                     </div>
