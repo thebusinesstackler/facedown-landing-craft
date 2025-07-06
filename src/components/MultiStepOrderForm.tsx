@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -16,6 +16,7 @@ import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
 const MultiStepOrderForm: React.FC = () => {
   const [step, setStep] = useState<number>(1);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const [showCouponField, setShowCouponField] = useState(false);
   
   // Calculate expected delivery date based on current day/time
   const getExpectedDeliveryDate = () => {
@@ -345,6 +346,11 @@ const MultiStepOrderForm: React.FC = () => {
     </div>
   );
 
+  // Get earliest delivery date to highlight in calendar
+  const getEarliestDeliveryDate = () => {
+    return new Date(formData.deliveryDate);
+  };
+
   return (
     <section className="w-full">
       <div className="w-full max-w-none">
@@ -546,15 +552,40 @@ const MultiStepOrderForm: React.FC = () => {
                                 selected={formData.surgeryDate ? new Date(formData.surgeryDate) : undefined}
                                 onSelect={handleSurgeryDateSelect}
                                 initialFocus
-                                className={cn("p-3 pointer-events-auto")}
+                                className="p-3 pointer-events-auto"
                                 classNames={{
+                                  months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                                  month: "space-y-4",
+                                  caption: "flex justify-center pt-1 relative items-center",
+                                  caption_label: "text-sm font-medium",
+                                  nav: "space-x-1 flex items-center",
+                                  nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-medical-green hover:text-white",
+                                  nav_button_previous: "absolute left-1",
+                                  nav_button_next: "absolute right-1",
+                                  table: "w-full border-collapse space-y-1",
+                                  head_row: "flex",
+                                  head_cell: "text-medical-green rounded-md w-9 font-medium text-[0.8rem]",
+                                  row: "flex w-full mt-2",
+                                  cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                                  day: "h-9 w-9 p-0 font-normal hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white rounded-md",
+                                  day_range_end: "day-range-end",
                                   day_selected: "bg-medical-green text-white hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white",
                                   day_today: "bg-medical-green text-white font-bold",
-                                  head_cell: "text-medical-green font-medium",
-                                  nav_button: "hover:bg-medical-green/10 text-medical-green",
-                                  nav_button_previous: "hover:bg-medical-green/10 text-medical-green",
-                                  nav_button_next: "hover:bg-medical-green/10 text-medical-green",
-                                  day: "hover:bg-medical-green hover:text-white"
+                                  day_outside: "text-muted-foreground opacity-50",
+                                  day_disabled: "text-muted-foreground opacity-50",
+                                  day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                                  day_hidden: "invisible",
+                                }}
+                                modifiers={{
+                                  earliestDelivery: getEarliestDeliveryDate()
+                                }}
+                                modifiersStyles={{
+                                  earliestDelivery: {
+                                    backgroundColor: '#10b981',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    border: '2px solid #059669'
+                                  }
                                 }}
                               />
                             </PopoverContent>
@@ -822,18 +853,31 @@ const MultiStepOrderForm: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
+                      {/* Coupon Code Section with Link */}
                       <div>
-                        <Label htmlFor="couponCode">Coupon Code</Label>
-                        <Input 
-                          id="couponCode" 
-                          name="couponCode" 
-                          value={formData.couponCode} 
-                          onChange={handleInputChange} 
-                          placeholder="Enter coupon code (optional)" 
-                          className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
-                        />
-                        {isCouponValid && (
-                          <p className="text-medical-green text-sm mt-1">✓ Coupon applied! Shipping fee removed.</p>
+                        {!showCouponField ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowCouponField(true)}
+                            className="text-medical-green hover:text-medical-green/80 text-sm font-medium flex items-center gap-1"
+                          >
+                            Have a coupon? <ChevronDown size={14} />
+                          </button>
+                        ) : (
+                          <div>
+                            <Label htmlFor="couponCode">Coupon Code</Label>
+                            <Input 
+                              id="couponCode" 
+                              name="couponCode" 
+                              value={formData.couponCode} 
+                              onChange={handleInputChange} 
+                              placeholder="Enter coupon code" 
+                              className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
+                            />
+                            {isCouponValid && (
+                              <p className="text-medical-green text-sm mt-1">✓ Coupon applied! Shipping fee removed.</p>
+                            )}
+                          </div>
                         )}
                       </div>
                       
