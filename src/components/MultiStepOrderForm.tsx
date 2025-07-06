@@ -352,7 +352,7 @@ const MultiStepOrderForm: React.FC = () => {
     <section className="w-full">
       <div className="w-full max-w-none">
         <Card className="w-full border-0 shadow-none bg-transparent">
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             {/* Hidden domain field */}
             <input type="hidden" name="domain" value={formData.domain} />
             
@@ -943,7 +943,7 @@ const MultiStepOrderForm: React.FC = () => {
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center">
+        <div className="mt-3 text-center">
           <p className="text-sm text-gray-500">
             Secure payment processing. Your information is protected.
           </p>
