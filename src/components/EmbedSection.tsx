@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,8 +16,8 @@ const EmbedSection: React.FC = () => {
   const baseUrl = 'https://order.facedownrecoveryequipment.com';
   const embedUrl = `${baseUrl}/order1`;
   
-  // Generate iframe code with custom dimensions
-  const generateIframeCode = () => {
+  // Generate simple HTML iframe code
+  const generateSimpleHtmlCode = () => {
     return `<iframe 
   src="${embedUrl}" 
   width="${containerWidth}" 
@@ -24,7 +25,7 @@ const EmbedSection: React.FC = () => {
   frameborder="0" 
   scrolling="auto"
   style="border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); max-width: 100%;"
-  title="Facedown Recovery Equipment Order Form">
+  title="Face-Down Recovery Equipment Order Form">
 </iframe>`;
   };
 
@@ -163,12 +164,36 @@ const EmbedSection: React.FC = () => {
             <CardDescription>Choose your preferred embedding method</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <Tabs defaultValue="div-embed" className="w-full">
+            <Tabs defaultValue="simple-html" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="simple-html">Simple HTML</TabsTrigger>
                 <TabsTrigger value="div-embed">Div Embed</TabsTrigger>
-                <TabsTrigger value="iframe">Simple Iframe</TabsTrigger>
                 <TabsTrigger value="javascript">JavaScript Iframe</TabsTrigger>
               </TabsList>
+              
+              <TabsContent value="simple-html" className="mt-4">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Simple HTML Iframe</h4>
+                    <Button
+                      onClick={() => copyToClipboard(generateSimpleHtmlCode(), 'Simple HTML')}
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Copy Code
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={generateSimpleHtmlCode()}
+                    readOnly
+                    className="font-mono text-sm min-h-[120px] bg-gray-50"
+                  />
+                  <p className="text-sm text-gray-600">
+                    <strong>✅ Recommended</strong> - Pure HTML iframe that works everywhere. Just copy and paste this code into your website.
+                  </p>
+                </div>
+              </TabsContent>
               
               <TabsContent value="div-embed" className="mt-4">
                 <div className="space-y-4">
@@ -189,31 +214,7 @@ const EmbedSection: React.FC = () => {
                     className="font-mono text-sm min-h-[160px] bg-gray-50"
                   />
                   <p className="text-sm text-gray-600">
-                    <strong>✅ Best for sites that block iframes</strong> - Content loads directly into a div without iframe restrictions.
-                  </p>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="iframe" className="mt-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Iframe Embed Code</h4>
-                    <Button
-                      onClick={() => copyToClipboard(generateIframeCode(), 'Iframe')}
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy Code
-                    </Button>
-                  </div>
-                  <Textarea
-                    value={generateIframeCode()}
-                    readOnly
-                    className="font-mono text-sm min-h-[120px] bg-gray-50"
-                  />
-                  <p className="text-sm text-gray-600">
-                    Simple iframe embedding - just paste this HTML code where you want the form to appear.
+                    Advanced option - Content loads directly into a div without iframe restrictions, but requires JavaScript.
                   </p>
                 </div>
               </TabsContent>
@@ -257,25 +258,25 @@ const EmbedSection: React.FC = () => {
             <div>
               <h4 className="font-medium mb-3 flex items-center gap-2">
                 <Code className="h-4 w-4" />
-                Div Embed Method (Recommended)
+                Simple HTML Method (Recommended)
               </h4>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                <li>Copy the div embed code above</li>
-                <li>Paste it into your website's HTML</li>
-                <li>The form loads directly without iframe restrictions</li>
-                <li>Works on all platforms including those that block iframes</li>
+                <li>Copy the Simple HTML code above</li>
+                <li>Paste it directly into your website's HTML</li>
+                <li>No additional setup required</li>
+                <li>Works on all platforms and websites</li>
               </ol>
             </div>
             <div>
               <h4 className="font-medium mb-3 flex items-center gap-2">
                 <Code className="h-4 w-4" />
-                Simple Iframe Method
+                Div Embed Method
               </h4>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                <li>Copy the iframe code above</li>
+                <li>Copy the div embed code above</li>
                 <li>Paste it into your website's HTML</li>
-                <li>Adjust width and height as needed</li>
-                <li>May be blocked on some platforms</li>
+                <li>The form loads directly without iframe restrictions</li>
+                <li>Works on platforms that block iframes</li>
               </ol>
             </div>
             <div>
@@ -293,8 +294,8 @@ const EmbedSection: React.FC = () => {
           </div>
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>💡 Recommendation:</strong> Use the <strong>Div Embed</strong> method for maximum compatibility. 
-              It works on all platforms, including those that block iframes like some social media sites and content management systems.
+              <strong>💡 Recommendation:</strong> Use the <strong>Simple HTML</strong> method for easiest setup. 
+              It's a standard iframe that works everywhere and requires no additional configuration.
             </p>
           </div>
         </CardContent>
