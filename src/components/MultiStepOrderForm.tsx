@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon } from 'lucide-react';
@@ -332,7 +333,7 @@ const MultiStepOrderForm: React.FC = () => {
                 {step === 1 && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-xl font-semibold mb-4">Your Information</h3>
+                      <h3 className="text-xl font-semibold mb-4">Order Your Equipment Today</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="firstName">First Name *</Label>
@@ -479,7 +480,7 @@ const MultiStepOrderForm: React.FC = () => {
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  "w-full justify-start text-left font-normal hover:bg-medical-green hover:text-white hover:border-medical-green",
+                                  "w-full justify-start text-left font-normal hover:bg-medical-green hover:text-white hover:border-medical-green focus:ring-medical-green focus:border-medical-green",
                                   !formData.surgeryDate && "text-muted-foreground",
                                   validationErrors.surgeryDate && 'border-red-300 focus:border-red-400'
                                 )}
@@ -510,9 +511,19 @@ const MultiStepOrderForm: React.FC = () => {
                             )}>
                               <SelectValue placeholder="Select an option" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="no">No, I don't wear glasses</SelectItem>
-                              <SelectItem value="yes">Yes, I wear glasses</SelectItem>
+                            <SelectContent className="bg-white z-50">
+                              <SelectItem 
+                                value="no"
+                                className="hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white"
+                              >
+                                No, I don't wear glasses
+                              </SelectItem>
+                              <SelectItem 
+                                value="yes"
+                                className="hover:bg-medical-green hover:text-white focus:bg-medical-green focus:text-white"
+                              >
+                                Yes, I wear glasses
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           {validationErrors.wearsGlasses && <ValidationMessage error={validationErrors.wearsGlasses} />}
