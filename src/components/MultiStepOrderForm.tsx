@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon } from 'lucide-react';
@@ -342,7 +343,10 @@ const MultiStepOrderForm: React.FC = () => {
                             value={formData.firstName} 
                             onChange={handleInputChange} 
                             placeholder="Enter your first name"
-                            className={validationErrors.firstName ? 'border-red-300 focus:border-red-400' : ''}
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.firstName && 'border-red-300 focus:border-red-400'
+                            )}
                           />
                           {validationErrors.firstName && <ValidationMessage error={validationErrors.firstName} />}
                         </div>
@@ -354,7 +358,10 @@ const MultiStepOrderForm: React.FC = () => {
                             value={formData.lastName} 
                             onChange={handleInputChange} 
                             placeholder="Enter your last name"
-                            className={validationErrors.lastName ? 'border-red-300 focus:border-red-400' : ''}
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.lastName && 'border-red-300 focus:border-red-400'
+                            )}
                           />
                           {validationErrors.lastName && <ValidationMessage error={validationErrors.lastName} />}
                         </div>
@@ -366,7 +373,10 @@ const MultiStepOrderForm: React.FC = () => {
                             type="email" 
                             value={formData.email} 
                             onChange={handleInputChange} 
-                            className={validationErrors.email ? 'border-red-300 focus:border-red-400' : ''}
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.email && 'border-red-300 focus:border-red-400'
+                            )}
                           />
                           {validationErrors.email && <ValidationMessage error={validationErrors.email} />}
                         </div>
@@ -377,7 +387,10 @@ const MultiStepOrderForm: React.FC = () => {
                             name="phone" 
                             value={formData.phone} 
                             onChange={handleInputChange} 
-                            className={validationErrors.phone ? 'border-red-300 focus:border-red-400' : ''}
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.phone && 'border-red-300 focus:border-red-400'
+                            )}
                           />
                           {validationErrors.phone && <ValidationMessage error={validationErrors.phone} />}
                         </div>
@@ -444,7 +457,7 @@ const MultiStepOrderForm: React.FC = () => {
                     </div>
 
                     <div className="flex justify-between pt-4">
-                      <Button type="button" variant="outline" onClick={prevStep}>
+                      <Button type="button" variant="outline" onClick={prevStep} className="hover:bg-medical-green hover:text-white">
                         <ArrowLeft size={16} className="mr-2" /> Back
                       </Button>
                       <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
@@ -467,7 +480,7 @@ const MultiStepOrderForm: React.FC = () => {
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  "w-full justify-start text-left font-normal",
+                                  "w-full justify-start text-left font-normal hover:bg-medical-green hover:text-white hover:border-medical-green",
                                   !formData.surgeryDate && "text-muted-foreground",
                                   validationErrors.surgeryDate && 'border-red-300 focus:border-red-400'
                                 )}
@@ -492,7 +505,10 @@ const MultiStepOrderForm: React.FC = () => {
                         <div>
                           <Label>Do you wear glasses? *</Label>
                           <Select value={formData.wearsGlasses} onValueChange={handleGlassesSelection}>
-                            <SelectTrigger className={validationErrors.wearsGlasses ? 'border-red-300 focus:border-red-400' : ''}>
+                            <SelectTrigger className={cn(
+                              "hover:border-medical-green",
+                              validationErrors.wearsGlasses && 'border-red-300 focus:border-red-400'
+                            )}>
                               <SelectValue placeholder="Select an option" />
                             </SelectTrigger>
                             <SelectContent>
@@ -528,7 +544,7 @@ const MultiStepOrderForm: React.FC = () => {
                     </div>
 
                     <div className="flex justify-between pt-4">
-                      <Button type="button" variant="outline" onClick={prevStep}>
+                      <Button type="button" variant="outline" onClick={prevStep} className="hover:bg-medical-green hover:text-white">
                         <ArrowLeft size={16} className="mr-2" /> Back
                       </Button>
                       <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
@@ -552,7 +568,10 @@ const MultiStepOrderForm: React.FC = () => {
                           value={formData.address} 
                           onChange={handleInputChange} 
                           placeholder="123 Main Street"
-                          className={validationErrors.address ? 'border-red-300 focus:border-red-400' : ''}
+                          className={cn(
+                            "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                            validationErrors.address && 'border-red-300 focus:border-red-400'
+                          )}
                         />
                         {validationErrors.address && <ValidationMessage error={validationErrors.address} />}
                       </div>
@@ -565,7 +584,10 @@ const MultiStepOrderForm: React.FC = () => {
                             value={formData.city} 
                             onChange={handleInputChange} 
                             placeholder="Boca Raton"
-                            className={validationErrors.city ? 'border-red-300 focus:border-red-400' : ''}
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.city && 'border-red-300 focus:border-red-400'
+                            )}
                           />
                           {validationErrors.city && <ValidationMessage error={validationErrors.city} />}
                         </div>
@@ -577,7 +599,10 @@ const MultiStepOrderForm: React.FC = () => {
                             value={formData.state} 
                             onChange={handleInputChange} 
                             placeholder="FL"
-                            className={validationErrors.state ? 'border-red-300 focus:border-red-400' : ''}
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.state && 'border-red-300 focus:border-red-400'
+                            )}
                           />
                           {validationErrors.state && <ValidationMessage error={validationErrors.state} />}
                         </div>
@@ -589,7 +614,10 @@ const MultiStepOrderForm: React.FC = () => {
                             value={formData.zipCode} 
                             onChange={handleInputChange} 
                             placeholder="33431"
-                            className={validationErrors.zipCode ? 'border-red-300 focus:border-red-400' : ''}
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.zipCode && 'border-red-300 focus:border-red-400'
+                            )}
                           />
                           {validationErrors.zipCode && <ValidationMessage error={validationErrors.zipCode} />}
                         </div>
@@ -636,6 +664,7 @@ const MultiStepOrderForm: React.FC = () => {
                           onChange={handleInputChange} 
                           placeholder="John Doe" 
                           required 
+                          className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
                         />
                       </div>
                       <div>
@@ -647,6 +676,7 @@ const MultiStepOrderForm: React.FC = () => {
                           onChange={handleInputChange} 
                           placeholder="1234 5678 9012 3456" 
                           required 
+                          className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -659,6 +689,7 @@ const MultiStepOrderForm: React.FC = () => {
                             onChange={handleInputChange} 
                             placeholder="MM/YY" 
                             required 
+                            className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
                           />
                         </div>
                         <div>
@@ -670,13 +701,14 @@ const MultiStepOrderForm: React.FC = () => {
                             onChange={handleInputChange} 
                             placeholder="123" 
                             required 
+                            className="focus:ring-medical-green focus:border-medical-green hover:border-medical-green"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="flex justify-between pt-4">
-                      <Button type="button" variant="outline" onClick={prevStep}>
+                      <Button type="button" variant="outline" onClick={prevStep} className="hover:bg-medical-green hover:text-white">
                         <ArrowLeft size={16} className="mr-2" /> Back
                       </Button>
                       <Button 
