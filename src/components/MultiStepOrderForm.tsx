@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package } from 'lucide-react';
@@ -7,18 +6,52 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { format, addDays } from 'date-fns';
+import { format, addDays, getDay } from 'date-fns';
 import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
 
 const MultiStepOrderForm: React.FC = () => {
   const [step, setStep] = useState<number>(1);
+  
+  // Calculate next available delivery date based on current day/time
+  const getNextDeliveryDate = () => {
+    const now = new Date();
+    const currentDay = getDay(now); // 0 = Sunday, 1 = Monday, etc.
+    const currentHour = now.getHours();
+    
+    let deliveryDate: Date;
+    
+    if (currentDay === 0) {
+      // Sunday -> deliver Tuesday (2 days later)
+      deliveryDate = addDays(now, 2);
+    } else if (currentDay === 2 && currentHour < 15) {
+      // Tuesday before 3pm -> deliver Thursday (2 days later)
+      deliveryDate = addDays(now, 2);
+    } else if (currentDay === 4 && currentHour < 14) {
+      // Thursday before 2pm -> deliver Saturday (2 days later)
+      deliveryDate = addDays(now, 2);
+    } else {
+      // Default to next available delivery window
+      if (currentDay >= 0 && currentDay <= 2) {
+        // Sunday-Tuesday, next delivery is Thursday
+        const daysUntilThursday = (4 - currentDay + 7) % 7 || 7;
+        deliveryDate = addDays(now, daysUntilThursday);
+      } else {
+        // Wednesday-Saturday, next delivery is Tuesday
+        const daysUntilTuesday = (2 - currentDay + 7) % 7 || 7;
+        deliveryDate = addDays(now, daysUntilTuesday);
+      }
+    }
+    
+    return format(deliveryDate, 'yyyy-MM-dd');
+  };
+
   const [formData, setFormData] = useState({
     selectedPackage: '1week',
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    needDate: format(addDays(new Date(), 2), 'yyyy-MM-dd'),
+    needDate: getNextDeliveryDate(),
     address: '',
     city: '',
     state: '',
@@ -56,6 +89,8 @@ const MultiStepOrderForm: React.FC = () => {
       features: ['Complete equipment set', 'Free delivery & setup', '24/7 support', 'Pickup included', 'Maximum rental discount']
     }
   ];
+
+  const shippingFee = 25;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -123,6 +158,9 @@ const MultiStepOrderForm: React.FC = () => {
       // Mask the card number for storage
       const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
       
+      // Calculate total with shipping
+      const totalPrice = (selectedPackage?.price || 0) + shippingFee;
+      
       // Save to Supabase
       const orderData = {
         name: `${formData.firstName} ${formData.lastName}`,
@@ -134,7 +172,7 @@ const MultiStepOrderForm: React.FC = () => {
         zip_code: formData.zipCode,
         rental_period: selectedPackage?.title,
         start_date: formData.needDate,
-        price: selectedPackage?.price,
+        price: totalPrice,
         status: 'pending',
         card_number_masked: maskedCardNumber,
         card_name: formData.cardName,
@@ -149,7 +187,7 @@ const MultiStepOrderForm: React.FC = () => {
         customerEmail: formData.email,
         customerPhone: formData.phone,
         packageDetails: selectedPackage?.title,
-        price: selectedPackage?.price,
+        price: totalPrice,
         address: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
       });
       
@@ -188,7 +226,7 @@ const MultiStepOrderForm: React.FC = () => {
                   Thank you for your order. We'll contact you shortly to confirm delivery details.
                 </p>
                 <p className="text-gray-600">
-                  <strong>Equipment needed by:</strong> {format(new Date(formData.needDate), 'PPP')}
+                  <strong>Equipment delivery date:</strong> {format(new Date(formData.needDate), 'PPP')}
                 </p>
               </div>
             ) : (
@@ -245,7 +283,7 @@ const MultiStepOrderForm: React.FC = () => {
                           />
                         </div>
                         <div className="md:col-span-2">
-                          <Label htmlFor="needDate">When do you need the equipment? *</Label>
+                          <Label htmlFor="needDate">Delivery Date *</Label>
                           <Input 
                             id="needDate" 
                             name="needDate" 
@@ -254,6 +292,9 @@ const MultiStepOrderForm: React.FC = () => {
                             onChange={handleInputChange} 
                             required 
                           />
+                          <p className="text-sm text-gray-500 mt-1">
+                            Next available delivery: {format(new Date(getNextDeliveryDate()), 'EEEE, MMMM d, yyyy')}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -399,12 +440,20 @@ const MultiStepOrderForm: React.FC = () => {
                           <span>{selectedPackage?.title}</span>
                         </div>
                         <div className="flex justify-between">
+                          <span>Package Price:</span>
+                          <span>${selectedPackage?.price}.00</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Shipping Fee:</span>
+                          <span>${shippingFee}.00</span>
+                        </div>
+                        <div className="flex justify-between">
                           <span>Delivery Date:</span>
                           <span>{format(new Date(formData.needDate), 'MMM d, yyyy')}</span>
                         </div>
                         <div className="flex justify-between font-bold text-medical-green text-lg border-t pt-2">
                           <span>Total:</span>
-                          <span>${selectedPackage?.price}.00</span>
+                          <span>${(selectedPackage?.price || 0) + shippingFee}.00</span>
                         </div>
                       </div>
                     </div>
