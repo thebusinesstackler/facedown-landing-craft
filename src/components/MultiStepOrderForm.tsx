@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon } from 'lucide-react';
@@ -17,8 +18,8 @@ const MultiStepOrderForm: React.FC = () => {
   const [step, setStep] = useState<number>(1);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   
-  // Calculate next available delivery date based on current day/time
-  const getNextDeliveryDate = () => {
+  // Calculate expected delivery date based on current day/time
+  const getExpectedDeliveryDate = () => {
     const now = new Date();
     const currentDay = getDay(now); // 0 = Sunday, 1 = Monday, etc.
     const currentHour = now.getHours();
@@ -55,10 +56,10 @@ const MultiStepOrderForm: React.FC = () => {
     lastName: '',
     email: '',
     phone: '',
+    rentalDuration: '1week',
     surgeryDate: '',
     wearsGlasses: '',
-    deliveryDate: getNextDeliveryDate(),
-    rentalDuration: '1week',
+    deliveryDate: getExpectedDeliveryDate(),
     address: '',
     city: '',
     state: '',
@@ -156,12 +157,14 @@ const MultiStepOrderForm: React.FC = () => {
       if (!formData.lastName.trim()) errors.lastName = 'Please enter your last name';
       if (!formData.email.trim()) errors.email = 'Please enter your email address';
       if (!formData.phone.trim()) errors.phone = 'Please enter your phone number';
-      if (!formData.surgeryDate) errors.surgeryDate = 'Please enter your surgery date';
-      if (!formData.wearsGlasses) errors.wearsGlasses = 'Please let us know if you wear glasses';
-      if (!formData.deliveryDate) errors.deliveryDate = 'Please select a delivery date';
     }
     
     if (stepNumber === 3) {
+      if (!formData.surgeryDate) errors.surgeryDate = 'Please enter your surgery date';
+      if (!formData.wearsGlasses) errors.wearsGlasses = 'Please let us know if you wear glasses';
+    }
+    
+    if (stepNumber === 4) {
       if (!formData.address.trim()) errors.address = 'Please enter your street address';
       if (!formData.city.trim()) errors.city = 'Please enter your city';
       if (!formData.state.trim()) errors.state = 'Please enter your state';
@@ -193,8 +196,8 @@ const MultiStepOrderForm: React.FC = () => {
       return;
     }
 
-    // Check glasses compatibility before proceeding
-    if (step === 1 && formData.wearsGlasses === 'yes') {
+    // Check glasses compatibility before proceeding from step 3
+    if (step === 3 && formData.wearsGlasses === 'yes') {
       toast({
         title: "Equipment Compatibility Notice",
         description: "Our equipment doesn't work as well with glasses. You may still continue, but effectiveness might be reduced.",
@@ -305,7 +308,7 @@ const MultiStepOrderForm: React.FC = () => {
                     <strong>Package:</strong> {selectedRental?.title}
                   </p>
                   <p className="text-blue-700 text-sm">
-                    <strong>Delivery Date:</strong> {format(new Date(formData.deliveryDate), 'PPP')}
+                    <strong>Expected Delivery:</strong> {format(new Date(formData.deliveryDate), 'PPP')}
                   </p>
                 </div>
                 <p className="text-gray-600 mb-2">
@@ -317,7 +320,7 @@ const MultiStepOrderForm: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                {/* Step 1: Personal Information and Surgery Details */}
+                {/* Step 1: Personal Information */}
                 {step === 1 && (
                   <div className="space-y-6">
                     <div>
@@ -370,6 +373,72 @@ const MultiStepOrderForm: React.FC = () => {
                           />
                           {validationErrors.phone && <ValidationMessage error={validationErrors.phone} />}
                         </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                      <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
+                        Continue <ArrowRight size={16} className="ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Equipment Selection */}
+                {step === 2 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-semibold mb-6">Select Your Rental Package</h3>
+                      <RadioGroup value={formData.rentalDuration} onValueChange={handleRentalDurationSelection} className="space-y-4">
+                        {rentalOptions.map((option) => (
+                          <div
+                            key={option.id}
+                            className={`border rounded-lg p-4 transition-colors ${
+                              formData.rentalDuration === option.id ? 'border-medical-green bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-start">
+                              <RadioGroupItem value={option.id} id={option.id} className="mt-1" />
+                              <Label htmlFor={option.id} className="flex-1 ml-3 cursor-pointer">
+                                <div className="flex justify-between">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-lg">{option.title}</h4>
+                                    <p className="text-gray-500 text-sm mb-2">{option.description}</p>
+                                    <ul className="text-sm space-y-1">
+                                      {option.features.map((feature, idx) => (
+                                        <li key={idx} className="flex items-center">
+                                          <Check size={14} className="text-medical-green mr-2" />
+                                          {feature}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div className="text-2xl font-bold text-medical-green ml-4">${option.price}</div>
+                                </div>
+                              </Label>
+                            </div>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    <div className="flex justify-between pt-4">
+                      <Button type="button" variant="outline" onClick={prevStep}>
+                        <ArrowLeft size={16} className="mr-2" /> Back
+                      </Button>
+                      <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
+                        Continue <ArrowRight size={16} className="ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Compatibility Questions */}
+                {step === 3 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-semibold mb-6">Equipment Compatibility & Surgery Information</h3>
+                      <div className="space-y-4">
                         <div>
                           <Label>Date of Your Surgery *</Label>
                           <Popover open={surgeryDateOpen} onOpenChange={setSurgeryDateOpen}>
@@ -398,6 +467,7 @@ const MultiStepOrderForm: React.FC = () => {
                           </Popover>
                           {validationErrors.surgeryDate && <ValidationMessage error={validationErrors.surgeryDate} />}
                         </div>
+
                         <div>
                           <Label>Do you wear glasses? *</Label>
                           <Select value={formData.wearsGlasses} onValueChange={handleGlassesSelection}>
@@ -427,74 +497,12 @@ const MultiStepOrderForm: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <div>
-                          <Label htmlFor="deliveryDate">When would you like the equipment delivered? *</Label>
-                          <Input 
-                            id="deliveryDate" 
-                            name="deliveryDate" 
-                            type="date" 
-                            value={formData.deliveryDate} 
-                            onChange={handleInputChange}
-                            className={validationErrors.deliveryDate ? 'border-red-300 focus:border-red-400' : ''}
-                          />
-                          {validationErrors.deliveryDate && <ValidationMessage error={validationErrors.deliveryDate} />}
-                        </div>
-                        <div>
-                          <Label htmlFor="rentalDuration">How long do you need the equipment? *</Label>
-                          <RadioGroup value={formData.rentalDuration} onValueChange={handleRentalDurationSelection} className="mt-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="1week" id="duration-1week" />
-                              <Label htmlFor="duration-1week">1 Week ($259)</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="2weeks" id="duration-2weeks" />
-                              <Label htmlFor="duration-2weeks">2 Weeks ($320)</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="3weeks" id="duration-3weeks" />
-                              <Label htmlFor="duration-3weeks">3 Weeks ($380)</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="flex justify-end pt-4">
-                      <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
-                        Continue <ArrowRight size={16} className="ml-2" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2: Package Details */}
-                {step === 2 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4">Your Selected Package</h3>
-                      <div className="border rounded-lg p-4 bg-green-50 border-medical-green">
-                        <div className="flex flex-col sm:flex-row sm:justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-lg">{selectedRental?.title}</h4>
-                            <p className="text-gray-500 text-sm mb-2">{selectedRental?.description}</p>
-                            <ul className="text-sm space-y-1">
-                              {selectedRental?.features.map((feature, idx) => (
-                                <li key={idx} className="flex items-center">
-                                  <Check size={14} className="text-medical-green mr-2" />
-                                  {feature}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="text-2xl font-bold text-medical-green mt-2 sm:mt-0">
-                            ${selectedRental?.price}
-                          </div>
+                        <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
+                          <p className="text-sm text-blue-700">
+                            <strong>Expected Delivery Date:</strong> {format(new Date(formData.deliveryDate), 'PPP')}
+                          </p>
                         </div>
-                      </div>
-                      <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
-                        <p className="text-sm text-blue-700">
-                          <strong>Delivery Date:</strong> {format(new Date(formData.deliveryDate), 'PPP')}
-                        </p>
                       </div>
                     </div>
 
@@ -509,8 +517,8 @@ const MultiStepOrderForm: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 3: Delivery Address */}
-                {step === 3 && (
+                {/* Step 4: Delivery Address & Payment */}
+                {step === 4 && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Delivery Address</h3>
                     
@@ -567,20 +575,7 @@ const MultiStepOrderForm: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex justify-between pt-4">
-                      <Button type="button" variant="outline" onClick={prevStep}>
-                        <ArrowLeft size={16} className="mr-2" /> Back
-                      </Button>
-                      <Button type="button" onClick={nextStep} className="bg-medical-green hover:bg-medical-green/90">
-                        Continue <ArrowRight size={16} className="ml-2" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 4: Payment */}
-                {step === 4 && (
-                  <div className="space-y-6">
+                    {/* Payment Information */}
                     <h3 className="text-xl font-semibold">Payment Information</h3>
                     
                     {/* Order Summary */}
@@ -600,7 +595,7 @@ const MultiStepOrderForm: React.FC = () => {
                           <span>${shippingFee}.00</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Delivery Date:</span>
+                          <span>Expected Delivery:</span>
                           <span>{format(new Date(formData.deliveryDate), 'MMM d, yyyy')}</span>
                         </div>
                         <div className="flex justify-between font-bold text-medical-green text-lg border-t pt-2">
