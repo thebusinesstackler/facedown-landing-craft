@@ -3,7 +3,7 @@
     // Configuration
     const config = {
         containerId: 'facedown-order-form',
-        baseUrl: 'https://facedownrecoveryequipment.com',
+        baseUrl: 'https://order.facedownrecoveryequipment.com',
         cssUrl: 'https://cdn.tailwindcss.com',
         minHeight: '800px'
     };

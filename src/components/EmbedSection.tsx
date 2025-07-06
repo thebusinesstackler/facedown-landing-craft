@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +12,7 @@ const EmbedSection: React.FC = () => {
   const [containerWidth, setContainerWidth] = useState('100%');
   const [containerHeight, setContainerHeight] = useState('800px');
 
-  const baseUrl = 'https://facedownrecoveryequipment.com';
+  const baseUrl = 'https://order.facedownrecoveryequipment.com';
   const embedUrl = `${baseUrl}/order1`;
   
   // Generate iframe code with custom dimensions
