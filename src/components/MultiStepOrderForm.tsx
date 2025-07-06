@@ -21,8 +21,8 @@ const MultiStepOrderForm: React.FC = () => {
     let deliveryDate: Date;
     
     if (currentDay === 0) {
-      // Sunday -> deliver Tuesday (2 days later)
-      deliveryDate = addDays(now, 2);
+      // Sunday -> shipped Monday, delivered Wednesday (3 days later)
+      deliveryDate = addDays(now, 3);
     } else if (currentDay === 2 && currentHour < 15) {
       // Tuesday before 3pm -> deliver Thursday (2 days later)
       deliveryDate = addDays(now, 2);
@@ -52,6 +52,7 @@ const MultiStepOrderForm: React.FC = () => {
     email: '',
     phone: '',
     needDate: getNextDeliveryDate(),
+    expeditedDelivery: 'no',
     address: '',
     city: '',
     state: '',
@@ -91,6 +92,7 @@ const MultiStepOrderForm: React.FC = () => {
   ];
 
   const shippingFee = 25;
+  const expeditedFee = 350;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -99,6 +101,22 @@ const MultiStepOrderForm: React.FC = () => {
 
   const handlePackageSelection = (value: string) => {
     setFormData(prev => ({ ...prev, selectedPackage: value }));
+  };
+
+  const handleExpeditedDeliverySelection = (value: string) => {
+    setFormData(prev => ({ ...prev, expeditedDelivery: value }));
+  };
+
+  const getExpeditedDeliveryDate = () => {
+    const now = new Date();
+    return format(addDays(now, 1), 'yyyy-MM-dd');
+  };
+
+  const canOfferExpeditedDelivery = () => {
+    const now = new Date();
+    const currentDay = getDay(now);
+    // Only offer expedited delivery on Sunday (next day delivery)
+    return currentDay === 0;
   };
 
   const sendStepOneEmail = async () => {
@@ -158,8 +176,9 @@ const MultiStepOrderForm: React.FC = () => {
       // Mask the card number for storage
       const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
       
-      // Calculate total with shipping
-      const totalPrice = (selectedPackage?.price || 0) + shippingFee;
+      // Calculate total with shipping and expedited delivery
+      const expeditedCharge = formData.expeditedDelivery === 'yes' ? expeditedFee : 0;
+      const totalPrice = (selectedPackage?.price || 0) + shippingFee + expeditedCharge;
       
       // Save to Supabase
       const orderData = {
@@ -171,7 +190,7 @@ const MultiStepOrderForm: React.FC = () => {
         state: formData.state,
         zip_code: formData.zipCode,
         rental_period: selectedPackage?.title,
-        start_date: formData.needDate,
+        start_date: formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.needDate,
         price: totalPrice,
         status: 'pending',
         card_number_masked: maskedCardNumber,
@@ -226,7 +245,7 @@ const MultiStepOrderForm: React.FC = () => {
                   Thank you for your order. We'll contact you shortly to confirm delivery details.
                 </p>
                 <p className="text-gray-600">
-                  <strong>Equipment delivery date:</strong> {format(new Date(formData.needDate), 'PPP')}
+                  <strong>Equipment delivery date:</strong> {format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.needDate), 'PPP')}
                 </p>
               </div>
             ) : (
@@ -294,8 +313,44 @@ const MultiStepOrderForm: React.FC = () => {
                           />
                           <p className="text-sm text-gray-500 mt-1">
                             Next available delivery: {format(new Date(getNextDeliveryDate()), 'EEEE, MMMM d, yyyy')}
+                            {getDay(new Date()) === 0 && (
+                              <span className="block mt-1 text-blue-600">
+                                Sunday orders are shipped Monday and delivered Wednesday
+                              </span>
+                            )}
                           </p>
                         </div>
+                        
+                        {/* Expedited Delivery Option - Only show on Sunday */}
+                        {canOfferExpeditedDelivery() && (
+                          <div className="md:col-span-2">
+                            <Label className="text-base font-medium mb-3 block">Delivery Speed</Label>
+                            <RadioGroup value={formData.expeditedDelivery} onValueChange={handleExpeditedDeliverySelection} className="space-y-3">
+                              <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                                <RadioGroupItem value="no" id="standard-delivery" />
+                                <Label htmlFor="standard-delivery" className="flex-1">
+                                  <div>
+                                    <div className="font-medium">Standard Delivery - FREE</div>
+                                    <div className="text-sm text-gray-500">
+                                      Shipped Monday, delivered Wednesday ({format(new Date(getNextDeliveryDate()), 'MMMM d, yyyy')})
+                                    </div>
+                                  </div>
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                                <RadioGroupItem value="yes" id="expedited-delivery" />
+                                <Label htmlFor="expedited-delivery" className="flex-1">
+                                  <div>
+                                    <div className="font-medium">Expedited Next-Day Delivery - +$350</div>
+                                    <div className="text-sm text-gray-500">
+                                      Delivered tomorrow ({format(new Date(getExpeditedDeliveryDate()), 'MMMM d, yyyy')})
+                                    </div>
+                                  </div>
+                                </Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -363,7 +418,10 @@ const MultiStepOrderForm: React.FC = () => {
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Delivery Address</h3>
                     <p className="text-gray-600">
-                      Equipment will be delivered on: <strong>{format(new Date(formData.needDate), 'PPP')}</strong>
+                      Equipment will be delivered on: <strong>{format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.needDate), 'PPP')}</strong>
+                      {formData.expeditedDelivery === 'yes' && (
+                        <span className="block text-blue-600 font-medium">Expedited Next-Day Delivery</span>
+                      )}
                     </p>
                     
                     <div className="space-y-4">
@@ -447,13 +505,19 @@ const MultiStepOrderForm: React.FC = () => {
                           <span>Shipping Fee:</span>
                           <span>${shippingFee}.00</span>
                         </div>
+                        {formData.expeditedDelivery === 'yes' && (
+                          <div className="flex justify-between">
+                            <span>Expedited Delivery:</span>
+                            <span>${expeditedFee}.00</span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
                           <span>Delivery Date:</span>
-                          <span>{format(new Date(formData.needDate), 'MMM d, yyyy')}</span>
+                          <span>{format(new Date(formData.expeditedDelivery === 'yes' ? getExpeditedDeliveryDate() : formData.needDate), 'MMM d, yyyy')}</span>
                         </div>
                         <div className="flex justify-between font-bold text-medical-green text-lg border-t pt-2">
                           <span>Total:</span>
-                          <span>${(selectedPackage?.price || 0) + shippingFee}.00</span>
+                          <span>${(selectedPackage?.price || 0) + shippingFee + (formData.expeditedDelivery === 'yes' ? expeditedFee : 0)}.00</span>
                         </div>
                       </div>
                     </div>
