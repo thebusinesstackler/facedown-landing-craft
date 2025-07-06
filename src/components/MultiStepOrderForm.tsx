@@ -175,25 +175,6 @@ const MultiStepOrderForm: React.FC = () => {
   return (
     <section className="py-8 px-4">
       <div className="container mx-auto max-w-4xl">
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-8">
-          {[1, 2, 3, 4].map((num) => (
-            <div key={num} className="flex flex-col items-center flex-1">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                step >= num ? 'bg-medical-green text-white' : 'bg-gray-200 text-gray-500'
-              }`}>
-                {step > num ? <Check size={18} /> : num}
-              </div>
-              <span className={`text-sm mt-2 text-center ${step >= num ? 'text-gray-800' : 'text-gray-400'}`}>
-                {num === 1 && 'Your Info'}
-                {num === 2 && 'Select Package'}
-                {num === 3 && 'Delivery Address'}
-                {num === 4 && 'Payment'}
-              </span>
-            </div>
-          ))}
-        </div>
-
         <Card className="w-full">
           <CardContent className="p-6">
             {isSubmitted ? (
