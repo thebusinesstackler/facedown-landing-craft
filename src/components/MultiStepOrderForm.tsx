@@ -86,21 +86,21 @@ const MultiStepOrderForm: React.FC = () => {
       title: '1 Week Rental',
       price: 259,
       description: 'Perfect for shorter recovery periods',
-      features: ['Complete equipment set']
+      features: []
     },
     {
       id: '2weeks',
       title: '2 Week Rental',
       price: 320,
       description: 'Most popular choice for recovery',
-      features: ['Complete equipment set']
+      features: []
     },
     {
       id: '3weeks',
       title: '3 Week Rental',
       price: 380,
       description: 'Comprehensive recovery support',
-      features: ['Complete equipment set']
+      features: []
     }
   ];
 
@@ -782,15 +782,6 @@ const MultiStepOrderForm: React.FC = () => {
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Payment Information</h3>
                     
-                    {/* Chair Image */}
-                    <div className="text-center mb-6">
-                      <img 
-                        src="/lovable-uploads/c215917e-0b30-4620-961b-6301c351f2ad.png" 
-                        alt="Complete Facedown Recovery Equipment Set" 
-                        className="mx-auto max-w-full h-auto rounded-lg shadow-md"
-                      />
-                      <p className="text-sm text-gray-600 mt-2">Complete 4-piece comfort set including chair, table support, mirror, and headrest covers</p>
-                    </div>
                     
                     {/* Order Summary */}
                     <div className="bg-green-50 rounded-lg p-4 border border-green-100">
