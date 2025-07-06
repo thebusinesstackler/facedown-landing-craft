@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, CalendarIcon } from 'lucide-react';
@@ -58,6 +57,7 @@ const MultiStepOrderForm: React.FC = () => {
     phone: '',
     rentalDuration: '1week',
     surgeryDate: '',
+    doctorOffice: '',
     wearsGlasses: '',
     deliveryDate: getExpectedDeliveryDate(),
     address: '',
@@ -170,6 +170,7 @@ const MultiStepOrderForm: React.FC = () => {
     
     if (stepNumber === 3) {
       if (!formData.surgeryDate) errors.surgeryDate = 'Please enter your surgery date';
+      if (!formData.doctorOffice.trim()) errors.doctorOffice = 'Please enter your doctor\'s office name';
       if (!formData.wearsGlasses) errors.wearsGlasses = 'Please let us know if you wear glasses';
     }
     
@@ -500,6 +501,22 @@ const MultiStepOrderForm: React.FC = () => {
                             </PopoverContent>
                           </Popover>
                           {validationErrors.surgeryDate && <ValidationMessage error={validationErrors.surgeryDate} />}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="doctorOffice">Doctor's Office Name *</Label>
+                          <Input 
+                            id="doctorOffice" 
+                            name="doctorOffice" 
+                            value={formData.doctorOffice} 
+                            onChange={handleInputChange} 
+                            placeholder="Enter your doctor's office name"
+                            className={cn(
+                              "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
+                              validationErrors.doctorOffice && 'border-red-300 focus:border-red-400'
+                            )}
+                          />
+                          {validationErrors.doctorOffice && <ValidationMessage error={validationErrors.doctorOffice} />}
                         </div>
 
                         <div>
