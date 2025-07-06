@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Check, Package, AlertCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -52,6 +51,8 @@ const MultiStepOrderForm: React.FC = () => {
     lastName: '',
     email: '',
     phone: '',
+    surgeryDate: '',
+    wearsGlasses: '',
     deliveryDate: getNextDeliveryDate(),
     rentalDuration: '1week',
     address: '',
@@ -107,6 +108,10 @@ const MultiStepOrderForm: React.FC = () => {
     setFormData(prev => ({ ...prev, rentalDuration: value }));
   };
 
+  const handleGlassesSelection = (value: string) => {
+    setFormData(prev => ({ ...prev, wearsGlasses: value }));
+  };
+
   const validateStep = (stepNumber: number) => {
     const errors: {[key: string]: string} = {};
     
@@ -115,6 +120,8 @@ const MultiStepOrderForm: React.FC = () => {
       if (!formData.lastName.trim()) errors.lastName = 'Please enter your last name';
       if (!formData.email.trim()) errors.email = 'Please enter your email address';
       if (!formData.phone.trim()) errors.phone = 'Please enter your phone number';
+      if (!formData.surgeryDate) errors.surgeryDate = 'Please enter your surgery date';
+      if (!formData.wearsGlasses) errors.wearsGlasses = 'Please let us know if you wear glasses';
       if (!formData.deliveryDate) errors.deliveryDate = 'Please select a delivery date';
     }
     
@@ -148,6 +155,15 @@ const MultiStepOrderForm: React.FC = () => {
   const nextStep = () => {
     if (!validateStep(step)) {
       return;
+    }
+
+    // Check glasses compatibility before proceeding
+    if (step === 1 && formData.wearsGlasses === 'yes') {
+      toast({
+        title: "Equipment Compatibility Notice",
+        description: "Our equipment doesn't work as well with glasses. You may still continue, but effectiveness might be reduced.",
+        variant: "destructive"
+      });
     }
 
     // Send email when step 1 is completed (moving from step 1 to step 2)
@@ -265,7 +281,7 @@ const MultiStepOrderForm: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                {/* Step 1: Personal Information */}
+                {/* Step 1: Personal Information and Surgery Details */}
                 {step === 1 && (
                   <div className="space-y-6">
                     <div>
@@ -319,6 +335,48 @@ const MultiStepOrderForm: React.FC = () => {
                             className={validationErrors.phone ? 'border-red-300 focus:border-red-400' : ''}
                           />
                           {validationErrors.phone && <ValidationMessage error={validationErrors.phone} />}
+                        </div>
+                        <div>
+                          <Label htmlFor="surgeryDate">Date of Your Surgery *</Label>
+                          <Input 
+                            id="surgeryDate" 
+                            name="surgeryDate" 
+                            type="date" 
+                            value={formData.surgeryDate} 
+                            onChange={handleInputChange}
+                            className={validationErrors.surgeryDate ? 'border-red-300 focus:border-red-400' : ''}
+                          />
+                          {validationErrors.surgeryDate && <ValidationMessage error={validationErrors.surgeryDate} />}
+                        </div>
+                        <div>
+                          <Label className="text-base font-medium mb-3 block">Do you wear glasses? *</Label>
+                          <RadioGroup value={formData.wearsGlasses} onValueChange={handleGlassesSelection} className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="no" id="glasses-no" />
+                              <Label htmlFor="glasses-no">No, I don't wear glasses</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="yes" id="glasses-yes" />
+                              <Label htmlFor="glasses-yes">Yes, I wear glasses</Label>
+                            </div>
+                          </RadioGroup>
+                          {validationErrors.wearsGlasses && <ValidationMessage error={validationErrors.wearsGlasses} />}
+                          
+                          {formData.wearsGlasses === 'yes' && (
+                            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md">
+                              <div className="flex items-start">
+                                <Glasses className="text-orange-600 mr-2 mt-0.5" size={16} />
+                                <div>
+                                  <p className="text-orange-800 font-medium text-sm mb-1">
+                                    Equipment Compatibility Notice
+                                  </p>
+                                  <p className="text-orange-700 text-sm">
+                                    Our equipment doesn't work as well if you wear glasses. The effectiveness may be reduced, but you can still use it.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div>
                           <Label htmlFor="deliveryDate">When would you like the equipment delivered? *</Label>
