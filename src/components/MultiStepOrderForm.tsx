@@ -84,23 +84,17 @@ const MultiStepOrderForm: React.FC = () => {
     {
       id: '1week',
       title: '1 Week Rental',
-      price: 259,
-      description: 'Perfect for shorter recovery periods',
-      features: []
+      price: 259
     },
     {
       id: '2weeks',
       title: '2 Week Rental',
-      price: 320,
-      description: 'Most popular choice for recovery',
-      features: []
+      price: 320
     },
     {
       id: '3weeks',
       title: '3 Week Rental',
-      price: 380,
-      description: 'Comprehensive recovery support',
-      features: []
+      price: 380
     }
   ];
 
@@ -114,9 +108,7 @@ const MultiStepOrderForm: React.FC = () => {
   const includedItems = [
     'Vitrectomy Chair',
     'Facedown Table Support', 
-    'Mirror and 4 headrest face covers',
-    'Instructions',
-    'Pickup included'
+    'Mirror and 4 headrest face covers'
   ];
 
   const calculateBodyBuild = (heightFeet: string, heightInches: string, weight: string) => {
@@ -478,7 +470,6 @@ const MultiStepOrderForm: React.FC = () => {
                                 <div className="flex justify-between">
                                   <div className="flex-1">
                                     <h4 className="font-medium text-lg">{option.title}</h4>
-                                    <p className="text-gray-500 text-sm mb-3">{option.description}</p>
                                     
                                     <div className="mb-3">
                                       <p className="font-medium text-sm text-gray-700 mb-2">Included:</p>
@@ -491,15 +482,6 @@ const MultiStepOrderForm: React.FC = () => {
                                         ))}
                                       </ul>
                                     </div>
-                                    
-                                    <ul className="text-sm space-y-1">
-                                      {option.features.map((feature, idx) => (
-                                        <li key={idx} className="flex items-center text-gray-600">
-                                          <Check size={14} className="text-medical-green mr-2" />
-                                          {feature}
-                                        </li>
-                                      ))}
-                                    </ul>
                                   </div>
                                   <div className="text-2xl font-bold text-medical-green ml-4">${option.price}</div>
                                 </div>
