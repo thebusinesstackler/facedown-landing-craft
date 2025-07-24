@@ -249,13 +249,18 @@ export type Database = {
           height: string | null
           id: string
           name: string
+          payment_amount: number | null
+          payment_date: string | null
+          payment_status: string | null
           phone: string | null
           price: number | null
           rental_period: string | null
+          square_customer_id: string | null
           start_date: string | null
           state: string | null
           status: string | null
           surgery_date: string | null
+          transaction_id: string | null
           updated_at: string
           wears_glasses: string | null
           weight: string | null
@@ -276,13 +281,18 @@ export type Database = {
           height?: string | null
           id?: string
           name: string
+          payment_amount?: number | null
+          payment_date?: string | null
+          payment_status?: string | null
           phone?: string | null
           price?: number | null
           rental_period?: string | null
+          square_customer_id?: string | null
           start_date?: string | null
           state?: string | null
           status?: string | null
           surgery_date?: string | null
+          transaction_id?: string | null
           updated_at?: string
           wears_glasses?: string | null
           weight?: string | null
@@ -303,13 +313,18 @@ export type Database = {
           height?: string | null
           id?: string
           name?: string
+          payment_amount?: number | null
+          payment_date?: string | null
+          payment_status?: string | null
           phone?: string | null
           price?: number | null
           rental_period?: string | null
+          square_customer_id?: string | null
           start_date?: string | null
           state?: string | null
           status?: string | null
           surgery_date?: string | null
+          transaction_id?: string | null
           updated_at?: string
           wears_glasses?: string | null
           weight?: string | null
