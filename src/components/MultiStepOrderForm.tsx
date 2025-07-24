@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, ChevronDown } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Package, AlertCircle, Glasses, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -15,6 +16,9 @@ const MultiStepOrderForm: React.FC = () => {
   const [step, setStep] = useState<number>(1);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [showCouponField, setShowCouponField] = useState(false);
+  const [showCardNumber, setShowCardNumber] = useState(false);
+  const [cardViewPassword, setCardViewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   
   // Calculate expected delivery date based on current day/time
   const getExpectedDeliveryDate = () => {
@@ -143,6 +147,25 @@ const MultiStepOrderForm: React.FC = () => {
     }
   };
 
+  const formatCardNumber = (value: string) => {
+    // Remove all non-numeric characters
+    const numbers = value.replace(/\D/g, '');
+    
+    // Limit to 16 digits
+    const limited = numbers.slice(0, 16);
+    
+    // Format as 5555-5555-5555-5555
+    if (limited.length >= 12) {
+      return `${limited.slice(0, 4)}-${limited.slice(4, 8)}-${limited.slice(8, 12)}-${limited.slice(12)}`;
+    } else if (limited.length >= 8) {
+      return `${limited.slice(0, 4)}-${limited.slice(4, 8)}-${limited.slice(8)}`;
+    } else if (limited.length >= 4) {
+      return `${limited.slice(0, 4)}-${limited.slice(4)}`;
+    } else {
+      return limited;
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     let processedValue = value;
@@ -150,6 +173,11 @@ const MultiStepOrderForm: React.FC = () => {
     // Format phone number
     if (name === 'phone') {
       processedValue = formatPhoneNumber(value);
+    }
+    
+    // Format card number
+    if (name === 'cardNumber') {
+      processedValue = formatCardNumber(value);
     }
     
     const newFormData = { ...formData, [name]: processedValue };
@@ -177,6 +205,29 @@ const MultiStepOrderForm: React.FC = () => {
 
   const handleGlassesSelection = (value: string) => {
     setFormData(prev => ({ ...prev, wearsGlasses: value }));
+  };
+
+  const handleCardViewToggle = () => {
+    if (!showCardNumber) {
+      // Show password input
+      setCardViewPassword('');
+      setPasswordError('');
+      setShowCardNumber(false);
+    } else {
+      // Hide card number
+      setShowCardNumber(false);
+      setCardViewPassword('');
+      setPasswordError('');
+    }
+  };
+
+  const handlePasswordSubmit = () => {
+    if (cardViewPassword === 'Blessed2020!') {
+      setShowCardNumber(true);
+      setPasswordError('');
+    } else {
+      setPasswordError('Incorrect password');
+    }
   };
 
   const validateStep = (stepNumber: number) => {
@@ -272,6 +323,8 @@ const MultiStepOrderForm: React.FC = () => {
       
       // Save to Supabase with additional fields
       const orderData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         phone: formData.phone,
@@ -678,7 +731,6 @@ const MultiStepOrderForm: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 4: Delivery Address */}
                 {step === 4 && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Delivery Address</h3>
@@ -759,7 +811,7 @@ const MultiStepOrderForm: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 5: Payment Information */}
+                {/* Step 5: Payment Information - with password protected card view */}
                 {step === 5 && (
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">Payment Information</h3>
@@ -844,19 +896,71 @@ const MultiStepOrderForm: React.FC = () => {
                         {validationErrors.cardName && <ValidationMessage error={validationErrors.cardName} />}
                       </div>
                       <div>
-                        <Label htmlFor="cardNumber">Card Number *</Label>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label htmlFor="cardNumber">Card Number *</Label>
+                          {formData.cardNumber && (
+                            <div className="flex items-center gap-2">
+                              {!showCardNumber && !cardViewPassword ? (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleCardViewToggle}
+                                  className="text-xs text-medical-green hover:text-medical-green/80"
+                                >
+                                  <Eye size={14} className="mr-1" />
+                                  View Full Number
+                                </Button>
+                              ) : showCardNumber ? (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleCardViewToggle}
+                                  className="text-xs text-medical-green hover:text-medical-green/80"
+                                >
+                                  <EyeOff size={14} className="mr-1" />
+                                  Hide Number
+                                </Button>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="password"
+                                    placeholder="Enter password"
+                                    value={cardViewPassword}
+                                    onChange={(e) => setCardViewPassword(e.target.value)}
+                                    className="w-32 h-8 text-xs"
+                                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handlePasswordSubmit}
+                                    className="text-xs"
+                                  >
+                                    View
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                         <Input 
                           id="cardNumber" 
                           name="cardNumber" 
-                          value={formData.cardNumber} 
+                          value={showCardNumber ? formData.cardNumber : formData.cardNumber.replace(/\d(?=\d{4})/g, '*')}
                           onChange={handleInputChange} 
-                          placeholder="1234 5678 9012 3456" 
+                          placeholder="5555-5555-5555-5555" 
                           required 
                           className={cn(
                             "focus:ring-medical-green focus:border-medical-green hover:border-medical-green",
                             validationErrors.cardNumber && 'border-red-300 focus:border-red-400'
                           )}
                         />
+                        {passwordError && (
+                          <p className="text-red-600 text-sm mt-1">{passwordError}</p>
+                        )}
                         {validationErrors.cardNumber && <ValidationMessage error={validationErrors.cardNumber} />}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
