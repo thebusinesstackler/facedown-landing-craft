@@ -15,20 +15,21 @@ const AdminDashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is authenticated (you might want to add proper auth check here)
-    const isAuthenticated = localStorage.getItem('adminAuthenticated');
+    // Check if user is authenticated using the correct key
+    const isAuthenticated = localStorage.getItem('fdr_admin_auth');
     if (!isAuthenticated) {
-      navigate('/admin-login');
+      navigate('/admin'); // Fix: redirect to correct route
     }
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('adminAuthenticated');
+    localStorage.removeItem('fdr_admin_auth'); // Fix: use correct key
+    localStorage.removeItem('fdr_admin_user');
     toast({
       title: "Logged Out",
       description: "You have been logged out successfully.",
     });
-    navigate('/admin-login');
+    navigate('/admin'); // Fix: redirect to correct route
   };
 
   const renderContent = () => {
