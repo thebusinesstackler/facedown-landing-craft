@@ -90,12 +90,23 @@ serve(async (req) => {
         }
 
         const paymentData = {
-          source_id: 'EXTERNAL', // For now, using external source
+          source_id: 'EXTERNAL',
+          external_details: {
+            type: 'CHECK',
+            source: 'Test payment for order',
+            source_id: crypto.randomUUID(),
+            source_fee_money: {
+              amount: 0,
+              currency: 'USD'
+            }
+          },
           amount_money: amountMoney,
           idempotency_key: crypto.randomUUID(),
           note: description,
           buyer_email_address: payload.email,
         }
+
+        console.log('Sending payment request to Square:', JSON.stringify(paymentData, null, 2))
 
         const response = await fetch(`${baseUrl}/v2/payments`, {
           method: 'POST',
@@ -114,6 +125,8 @@ serve(async (req) => {
           throw new Error(result.errors?.[0]?.detail || 'Payment failed')
         }
 
+        console.log('Square payment successful:', result.payment.id)
+
         // Update customer order with payment information
         if (payload.orderId) {
           const { error: updateError } = await supabaseClient
@@ -129,6 +142,8 @@ serve(async (req) => {
 
           if (updateError) {
             console.error('Error updating order:', updateError)
+          } else {
+            console.log('Order updated successfully with payment info')
           }
         }
 
