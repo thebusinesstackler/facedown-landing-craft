@@ -7,6 +7,8 @@ import CustomersSection from '@/components/CustomersSection';
 import CalendarSection from '@/components/CalendarSection';
 import EmbedSection from '@/components/EmbedSection';
 import PaymentsSection from '@/components/PaymentsSection';
+import TransactionsSection from '@/components/TransactionsSection';
+import SettingsSection from '@/components/SettingsSection';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminDashboard = () => {
@@ -42,6 +44,10 @@ const AdminDashboard = () => {
         return <div className="p-6">Location Manager - Coming Soon</div>;
       case 'payments':
         return <PaymentsSection />;
+      case 'transactions':
+        return <TransactionsSection />;
+      case 'settings':
+        return <SettingsSection />;
       case 'embed':
         return <EmbedSection />;
       default:

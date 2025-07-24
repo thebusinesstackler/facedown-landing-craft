@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Users, MapPin, LogOut, Code, CreditCard } from 'lucide-react';
+import { Calendar, Users, MapPin, LogOut, Code, CreditCard, Settings, Receipt } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -41,8 +41,18 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     },
     {
       id: 'payments',
-      label: 'Payments',
+      label: 'Process Payments',
       icon: CreditCard,
+    },
+    {
+      id: 'transactions',
+      label: 'Transactions',
+      icon: Receipt,
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
     },
     {
       id: 'embed',

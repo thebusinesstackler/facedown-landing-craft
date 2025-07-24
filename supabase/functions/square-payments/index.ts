@@ -48,6 +48,33 @@ serve(async (req) => {
     console.log(`Processing Square action: ${action}`)
 
     switch (action) {
+      case 'test_connection': {
+        // Test the connection by making a simple API call to get locations
+        const response = await fetch(`${baseUrl}/v2/locations`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${squareAccessToken}`,
+            'Square-Version': '2024-01-18',
+          },
+        })
+
+        const result = await response.json()
+        
+        if (!response.ok) {
+          console.error('Square connection test error:', result)
+          throw new Error(result.errors?.[0]?.detail || 'Failed to connect to Square')
+        }
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Connected to Square successfully',
+            locations: result.locations?.length || 0
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       case 'create_customer': {
         const { firstName, lastName, email } = payload
         
