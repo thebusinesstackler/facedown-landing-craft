@@ -63,16 +63,57 @@ const TransactionsSection = () => {
     }
   };
 
-  const getSquareReceiptUrl = (transactionId: string) => {
-    const environment = localStorage.getItem('square_settings') 
-      ? JSON.parse(localStorage.getItem('square_settings')!).environment 
-      : 'sandbox';
-    
-    const baseUrl = environment === 'production' 
-      ? 'https://squareup.com' 
-      : 'https://squareupsandbox.com';
-    
-    return `${baseUrl}/receipt/preview/${transactionId}`;
+  const handleViewReceipt = (transactionId: string) => {
+    try {
+      console.log('Attempting to view receipt for transaction:', transactionId);
+      
+      // Get Square settings from localStorage
+      const squareSettings = localStorage.getItem('square_settings');
+      const environment = squareSettings ? JSON.parse(squareSettings).environment : 'sandbox';
+      
+      console.log('Square environment:', environment);
+      
+      // Construct the Square receipt URL
+      const baseUrl = environment === 'production' 
+        ? 'https://squareup.com' 
+        : 'https://squareupsandbox.com';
+      
+      const receiptUrl = `${baseUrl}/receipt/preview/${transactionId}`;
+      
+      console.log('Opening receipt URL:', receiptUrl);
+      
+      // Open in new tab/window
+      const newWindow = window.open(receiptUrl, '_blank', 'noopener,noreferrer');
+      
+      if (!newWindow) {
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups for this site to view receipts, or copy the URL manually.",
+          variant: "destructive"
+        });
+        
+        // Fallback: copy URL to clipboard
+        navigator.clipboard.writeText(receiptUrl).then(() => {
+          toast({
+            title: "URL Copied",
+            description: "Receipt URL copied to clipboard. Paste it in a new tab to view.",
+          });
+        });
+      } else {
+        toast({
+          title: "Receipt Opened",
+          description: "Opening Square receipt in new tab...",
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error opening receipt:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open receipt. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (isLoading) {
@@ -179,7 +220,7 @@ const TransactionsSection = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(getSquareReceiptUrl(transaction.transaction_id), '_blank')}
+                        onClick={() => handleViewReceipt(transaction.transaction_id)}
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View Receipt
