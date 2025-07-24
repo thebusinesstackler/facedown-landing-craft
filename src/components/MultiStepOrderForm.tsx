@@ -77,6 +77,7 @@ const MultiStepOrderForm = () => {
     if (!cardNumber) return '';
     
     if (showFullCardNumber) {
+      // Show the actual entered card number
       return cardNumber;
     }
     
@@ -168,6 +169,8 @@ const MultiStepOrderForm = () => {
         wears_glasses: 'no',
       });
       setCurrentStep(1);
+      setShowFullCardNumber(false);
+      setShowPasswordInput(false);
 
     } catch (error) {
       console.error('Order submission error:', error);
