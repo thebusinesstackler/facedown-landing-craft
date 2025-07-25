@@ -1,15 +1,16 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Check, Package } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { calculateDeliveryDate } from '@/utils/deliveryUtils';
 import { sendOrderConfirmationEmail } from '@/utils/emailUtils';
 import { useToast } from '@/hooks/use-toast';
 import { LocationData } from '@/utils/locationUtils';
 import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
+import SquarePaymentForm from './SquarePaymentForm';
 
 interface OrderNowProps {
   locationData?: LocationData;
@@ -26,10 +27,6 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
     city: locationData?.city_name || '',
     state: locationData?.region_name || '',
     zipCode: '',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardName: '',
     wearsGlasses: 'no',
     needsDelivery: 'yes'
   });
@@ -62,6 +59,13 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
       description: 'Comprehensive support for longer recoveries'
     }
   ];
+
+  // Square configuration
+  const squareConfig = {
+    applicationId: 'sandbox-sq0idb-your-app-id', // Replace with actual Square app ID
+    locationId: 'your-location-id', // Replace with actual location ID
+    environment: 'sandbox' as const,
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -102,7 +106,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
       return;
     }
 
-    // Send email when moving from step 2 to step 3 (after personal info is completed)
+    // Send email when moving from step 2 to step 3
     if (step === 2 && !step1EmailSent) {
       sendStepOneEmail();
     }
@@ -114,17 +118,13 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
     setStep(prev => prev - 1);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePaymentSuccess = async (token: string, verificationToken?: string) => {
     setIsSending(true);
     
     try {
       const selectedRental = rentalOptions.find(option => option.id === formData.rentalPeriod);
       
-      // Mask the card number for storage
-      const maskedCardNumber = formData.cardNumber.replace(/\d(?=\d{4})/g, '*');
-      
-      // Save to Supabase
+      // Save order to Supabase first
       const orderData = {
         name: formData.name,
         email: formData.email,
@@ -137,12 +137,34 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         start_date: deliveryDate,
         price: selectedRental?.price,
         status: 'pending',
-        card_number_masked: maskedCardNumber,
-        card_name: formData.cardName,
-        expiry_date: formData.expiryDate,
       };
 
-      await saveCustomerOrder(orderData);
+      const savedOrder = await saveCustomerOrder(orderData);
+      console.log('Order saved:', savedOrder);
+
+      // Process payment with Square
+      const paymentResponse = await fetch('/api/square-payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'process_payment',
+          token,
+          verificationToken,
+          amount: selectedRental?.price,
+          orderId: savedOrder.id,
+          customerEmail: formData.email,
+          customerName: formData.name,
+        }),
+      });
+
+      if (!paymentResponse.ok) {
+        throw new Error('Payment processing failed');
+      }
+
+      const paymentResult = await paymentResponse.json();
+      console.log('Payment processed:', paymentResult);
 
       // Send completion email
       await sendOrderEmail('completed', {
@@ -173,7 +195,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         });
       }
       
-      console.log('Form submitted with data:', formData);
+      console.log('Order completed successfully');
       setIsSubmitted(true);
     } catch (error) {
       toast({
@@ -185,6 +207,14 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Error",
+      description: error,
+      variant: "destructive"
+    });
   };
 
   const selectedRental = rentalOptions.find(option => option.id === formData.rentalPeriod);
@@ -230,7 +260,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit}>
+              <>
                 {/* Step 1: Select Rental Package */}
                 {step === 1 && (
                   <div>
@@ -360,14 +390,14 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                   </div>
                 )}
 
-                {/* Step 4: Shipping Address */}
+                {/* Step 4: Shipping Address & Payment */}
                 {step === 4 && (
                   <div>
                     <h3 className="text-xl font-semibold mb-4">Delivery Address</h3>
                     <p className="text-gray-600 mb-6">
                       <strong>Estimated Delivery Date:</strong> {deliveryDate}
                     </p>
-                    <div className="space-y-4">
+                    <div className="space-y-4 mb-8">
                       <div>
                         <Label htmlFor="address">Street Address</Label>
                         <Input 
@@ -417,7 +447,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                     </div>
                     
                     {/* Payment Information */}
-                    <h3 className="text-xl font-semibold mt-8 mb-4">Payment Information</h3>
+                    <h3 className="text-xl font-semibold mb-4">Payment Information</h3>
                     <div className="mb-6 bg-green-50 rounded-lg p-4 border border-green-100">
                       <h4 className="font-medium text-gray-800 mb-2">Order Summary</h4>
                       <div className="flex justify-between mb-2">
@@ -429,71 +459,26 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                         <span>${selectedRental?.price}.00</span>
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="cardName">Name on Card</Label>
-                        <Input 
-                          id="cardName" 
-                          name="cardName" 
-                          value={formData.cardName} 
-                          onChange={handleInputChange} 
-                          placeholder="Enter name on card" 
-                          required 
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="cardNumber">Card Number</Label>
-                        <Input 
-                          id="cardNumber" 
-                          name="cardNumber" 
-                          value={formData.cardNumber} 
-                          onChange={handleInputChange} 
-                          placeholder="1234 5678 9012 3456" 
-                          required 
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="expiryDate">Expiry Date</Label>
-                          <Input 
-                            id="expiryDate" 
-                            name="expiryDate" 
-                            value={formData.expiryDate} 
-                            onChange={handleInputChange} 
-                            placeholder="MM/YY" 
-                            required 
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="cvv">CVV</Label>
-                          <Input 
-                            id="cvv" 
-                            name="cvv" 
-                            value={formData.cvv} 
-                            onChange={handleInputChange} 
-                            placeholder="123" 
-                            required 
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-8 flex justify-between">
+                    
+                    <SquarePaymentForm
+                      applicationId={squareConfig.applicationId}
+                      locationId={squareConfig.locationId}
+                      environment={squareConfig.environment}
+                      amount={selectedRental?.price || 0}
+                      onPaymentSuccess={handlePaymentSuccess}
+                      onPaymentError={handlePaymentError}
+                      disabled={isSending}
+                      buttonText={isSending ? "Processing..." : "Complete Order"}
+                    />
+                    
+                    <div className="mt-4 flex justify-start">
                       <Button type="button" variant="outline" onClick={prevStep}>
                         <ArrowLeft size={16} className="mr-2" /> Back
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        className="bg-medical-green hover:bg-medical-green/90"
-                        disabled={isSending}
-                      >
-                        {isSending ? "Processing..." : (
-                          <>Complete Order <Check size={16} className="ml-2" /></>
-                        )}
                       </Button>
                     </div>
                   </div>
                 )}
-              </form>
+              </>
             )}
           </div>
 

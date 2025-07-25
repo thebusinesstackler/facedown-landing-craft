@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CreditCard, DollarSign, RefreshCw, History } from 'lucide-react';
+import { CreditCard, DollarSign, RefreshCw, History, AlertCircle } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -93,83 +93,6 @@ const PaymentsSection = () => {
     }
   };
 
-  const processPayment = async () => {
-    if (!selectedCustomer || !chargeAmount) {
-      toast({
-        title: "Error",
-        description: "Please select a customer and enter an amount",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      // First, create Square customer if not exists
-      let squareCustomerId = selectedCustomer.square_customer_id;
-      
-      if (!squareCustomerId) {
-        const [firstName, ...lastNameParts] = selectedCustomer.name.split(' ');
-        const lastName = lastNameParts.join(' ') || '';
-
-        const { data: customerData, error: customerError } = await supabase.functions.invoke('square-payments', {
-          body: {
-            action: 'create_customer',
-            firstName,
-            lastName,
-            email: selectedCustomer.email,
-          }
-        });
-
-        if (customerError) throw customerError;
-        squareCustomerId = customerData.customer.id;
-
-        // Update the customer order with Square customer ID
-        await supabase
-          .from('customer_orders')
-          .update({ square_customer_id: squareCustomerId })
-          .eq('id', selectedCustomer.id);
-      }
-
-      // Process the payment
-      const { data: paymentData, error: paymentError } = await supabase.functions.invoke('square-payments', {
-        body: {
-          action: 'charge_customer',
-          customerId: squareCustomerId,
-          amount: parseFloat(chargeAmount),
-          description,
-          email: selectedCustomer.email,
-          orderId: selectedCustomer.id,
-        }
-      });
-
-      if (paymentError) throw paymentError;
-
-      toast({
-        title: "Payment Successful",
-        description: `Charged $${chargeAmount} to ${selectedCustomer.name}`,
-      });
-
-      // Refresh the data
-      await fetchCustomers();
-      await fetchPaymentHistory(selectedCustomer.id);
-      
-      // Reset form
-      setChargeAmount('');
-      setDescription('');
-
-    } catch (error) {
-      console.error('Payment processing error:', error);
-      toast({
-        title: "Payment Failed",
-        description: error.message || "Failed to process payment",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const processRefund = async (transactionId: string, amount: number) => {
     try {
       const { error } = await supabase.functions.invoke('square-payments', {
@@ -222,17 +145,17 @@ const PaymentsSection = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Payment Processing Card */}
+        {/* Customer Selection Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <CreditCard className="h-5 w-5 mr-2" />
-              Process Payment
+              Select Customer
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="customer">Select Customer</Label>
+              <Label htmlFor="customer">Choose Customer</Label>
               <Select value={selectedCustomer?.id || ''} onValueChange={handleCustomerSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a customer" />
@@ -255,68 +178,39 @@ const PaymentsSection = () => {
             </div>
 
             {selectedCustomer && (
-              <>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <strong>Name:</strong> {selectedCustomer.name}
-                  </div>
-                  <div>
-                    <strong>Email:</strong> {selectedCustomer.email}
-                  </div>
-                  <div>
-                    <strong>Phone:</strong> {selectedCustomer.phone}
-                  </div>
-                  <div>
-                    <strong>Status:</strong> 
-                    <span className={`ml-1 px-2 py-1 text-xs rounded ${
-                      selectedCustomer.payment_status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {selectedCustomer.payment_status || 'pending'}
-                    </span>
-                  </div>
-                </div>
-
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <Label htmlFor="amount">Charge Amount ($)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={chargeAmount}
-                    onChange={(e) => setChargeAmount(e.target.value)}
-                    placeholder="0.00"
-                    step="0.01"
-                  />
+                  <strong>Name:</strong> {selectedCustomer.name}
                 </div>
-
                 <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Payment description"
-                  />
+                  <strong>Email:</strong> {selectedCustomer.email}
                 </div>
-
-                <Button 
-                  onClick={processPayment} 
-                  disabled={isProcessing || !chargeAmount}
-                  className="w-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Charge ${chargeAmount}
-                    </>
-                  )}
-                </Button>
-              </>
+                <div>
+                  <strong>Phone:</strong> {selectedCustomer.phone}
+                </div>
+                <div>
+                  <strong>Status:</strong> 
+                  <span className={`ml-1 px-2 py-1 text-xs rounded ${
+                    selectedCustomer.payment_status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {selectedCustomer.payment_status || 'pending'}
+                  </span>
+                </div>
+              </div>
             )}
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-yellow-800">Admin Payment Processing</h4>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    Real Square payments require customers to enter their payment details directly. 
+                    Admin-initiated charges need to be implemented with customer payment collection.
+                  </p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

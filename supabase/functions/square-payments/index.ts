@@ -15,8 +15,12 @@ interface SquareCustomer {
 }
 
 interface PaymentRequest {
-  customerId: string
+  token: string
+  verificationToken?: string
   amount: number
+  orderId?: string
+  customerEmail: string
+  customerName: string
   description?: string
 }
 
@@ -49,7 +53,6 @@ serve(async (req) => {
 
     switch (action) {
       case 'test_connection': {
-        // Test the connection by making a simple API call to get locations
         const response = await fetch(`${baseUrl}/v2/locations`, {
           method: 'GET',
           headers: {
@@ -107,8 +110,8 @@ serve(async (req) => {
         )
       }
 
-      case 'charge_customer': {
-        const { customerId, amount, description = 'Order payment' }: PaymentRequest = payload
+      case 'process_payment': {
+        const { token, verificationToken, amount, orderId, customerEmail, customerName, description = 'Order payment' }: PaymentRequest = payload
         
         // Convert amount to cents (Square uses cents)
         const amountMoney = {
@@ -117,23 +120,19 @@ serve(async (req) => {
         }
 
         const paymentData = {
-          source_id: 'EXTERNAL',
-          external_details: {
-            type: 'CHECK',
-            source: 'Test payment for order',
-            source_id: crypto.randomUUID(),
-            source_fee_money: {
-              amount: 0,
-              currency: 'USD'
-            }
-          },
+          source_id: token,
           amount_money: amountMoney,
           idempotency_key: crypto.randomUUID(),
           note: description,
-          buyer_email_address: payload.email,
+          buyer_email_address: customerEmail,
+          ...(verificationToken && { verification_token: verificationToken }),
         }
 
-        console.log('Sending payment request to Square:', JSON.stringify(paymentData, null, 2))
+        console.log('Processing real Square payment:', {
+          amount: amountMoney.amount,
+          customer: customerName,
+          orderId,
+        })
 
         const response = await fetch(`${baseUrl}/v2/payments`, {
           method: 'POST',
@@ -155,7 +154,7 @@ serve(async (req) => {
         console.log('Square payment successful:', result.payment.id)
 
         // Update customer order with payment information
-        if (payload.orderId) {
+        if (orderId) {
           const { error: updateError } = await supabaseClient
             .from('customer_orders')
             .update({
@@ -163,9 +162,9 @@ serve(async (req) => {
               payment_status: result.payment.status,
               payment_amount: amount,
               payment_date: new Date().toISOString(),
-              square_customer_id: customerId,
+              status: 'completed',
             })
-            .eq('id', payload.orderId)
+            .eq('id', orderId)
 
           if (updateError) {
             console.error('Error updating order:', updateError)
@@ -175,9 +174,21 @@ serve(async (req) => {
         }
 
         return new Response(
-          JSON.stringify({ payment: result.payment }),
+          JSON.stringify({ 
+            payment: result.payment,
+            receiptUrl: result.payment.receipt_url,
+            success: true 
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
+      }
+
+      case 'charge_customer': {
+        const { customerId, amount, description = 'Admin charge', email, orderId } = payload
+        
+        // This is for admin-initiated charges - we'll need to implement
+        // a way to collect payment method from customer first
+        throw new Error('Admin charges require customer payment method collection')
       }
 
       case 'get_customer': {
