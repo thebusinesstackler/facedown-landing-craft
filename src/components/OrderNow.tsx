@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { sendOrderConfirmationEmail } from '@/utils/emailUtils';
 import { useToast } from '@/hooks/use-toast';
 import { LocationData } from '@/utils/locationUtils';
 import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
+import { supabase } from '@/integrations/supabase/client';
 import SquarePaymentForm from './SquarePaymentForm';
 
 interface OrderNowProps {
@@ -34,6 +35,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
   const [isSending, setIsSending] = useState(false);
   const [step1EmailSent, setStep1EmailSent] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState(calculateDeliveryDate());
+  const [squareConfig, setSquareConfig] = useState<any>(null);
   const { toast } = useToast();
 
   const rentalOptions = [
@@ -60,12 +62,27 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
     }
   ];
 
-  // Square configuration
-  const squareConfig = {
-    applicationId: 'sandbox-sq0idb-your-app-id', // Replace with actual Square app ID
-    locationId: 'your-location-id', // Replace with actual location ID
-    environment: 'sandbox' as const,
-  };
+  useEffect(() => {
+    const getSquareConfig = async () => {
+      try {
+        const response = await supabase.functions.invoke('square-payments', {
+          body: { action: 'test_connection' }
+        });
+
+        if (response.data?.success) {
+          setSquareConfig({
+            applicationId: response.data.applicationId,
+            locationId: response.data.locationId,
+            environment: response.data.environment
+          });
+        }
+      } catch (error) {
+        console.error('Error getting Square config:', error);
+      }
+    };
+
+    getSquareConfig();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -143,12 +160,8 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
       console.log('Order saved:', savedOrder);
 
       // Process payment with Square
-      const paymentResponse = await fetch('/api/square-payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const paymentResponse = await supabase.functions.invoke('square-payments', {
+        body: {
           action: 'process_payment',
           token,
           verificationToken,
@@ -156,15 +169,14 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
           orderId: savedOrder.id,
           customerEmail: formData.email,
           customerName: formData.name,
-        }),
+        }
       });
 
-      if (!paymentResponse.ok) {
+      if (paymentResponse.error) {
         throw new Error('Payment processing failed');
       }
 
-      const paymentResult = await paymentResponse.json();
-      console.log('Payment processed:', paymentResult);
+      console.log('Payment processed:', paymentResponse.data);
 
       // Send completion email
       await sendOrderEmail('completed', {
@@ -460,16 +472,18 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                       </div>
                     </div>
                     
-                    <SquarePaymentForm
-                      applicationId={squareConfig.applicationId}
-                      locationId={squareConfig.locationId}
-                      environment={squareConfig.environment}
-                      amount={selectedRental?.price || 0}
-                      onPaymentSuccess={handlePaymentSuccess}
-                      onPaymentError={handlePaymentError}
-                      disabled={isSending}
-                      buttonText={isSending ? "Processing..." : "Complete Order"}
-                    />
+                    {squareConfig && (
+                      <SquarePaymentForm
+                        applicationId={squareConfig.applicationId}
+                        locationId={squareConfig.locationId}
+                        environment={squareConfig.environment}
+                        amount={selectedRental?.price || 0}
+                        onPaymentSuccess={handlePaymentSuccess}
+                        onPaymentError={handlePaymentError}
+                        disabled={isSending}
+                        buttonText={isSending ? "Processing..." : "Complete Order"}
+                      />
+                    )}
                     
                     <div className="mt-4 flex justify-start">
                       <Button type="button" variant="outline" onClick={prevStep}>

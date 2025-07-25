@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,12 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import SquarePaymentForm from './SquarePaymentForm';
 
 const MultiStepOrderForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [squareConfig, setSquareConfig] = useState<any>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -34,12 +36,27 @@ const MultiStepOrderForm = () => {
     { id: '3weeks', title: '3 Week Rental', price: 380 },
   ];
 
-  // Square configuration - these should be moved to environment variables
-  const squareConfig = {
-    applicationId: 'sandbox-sq0idb-your-app-id', // Replace with actual Square app ID
-    locationId: 'your-location-id', // Replace with actual location ID
-    environment: 'sandbox' as const,
-  };
+  useEffect(() => {
+    const getSquareConfig = async () => {
+      try {
+        const response = await supabase.functions.invoke('square-payments', {
+          body: { action: 'test_connection' }
+        });
+
+        if (response.data?.success) {
+          setSquareConfig({
+            applicationId: response.data.applicationId,
+            locationId: response.data.locationId,
+            environment: response.data.environment
+          });
+        }
+      } catch (error) {
+        console.error('Error getting Square config:', error);
+      }
+    };
+
+    getSquareConfig();
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -84,12 +101,8 @@ const MultiStepOrderForm = () => {
       console.log('Order saved:', savedOrder);
 
       // Process the payment with Square
-      const paymentResponse = await fetch('/api/square-payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const paymentResponse = await supabase.functions.invoke('square-payments', {
+        body: {
           action: 'process_payment',
           token,
           verificationToken,
@@ -97,15 +110,14 @@ const MultiStepOrderForm = () => {
           orderId: savedOrder.id,
           customerEmail: formData.email,
           customerName: `${formData.firstName} ${formData.lastName}`,
-        }),
+        }
       });
 
-      if (!paymentResponse.ok) {
+      if (paymentResponse.error) {
         throw new Error('Payment processing failed');
       }
 
-      const paymentResult = await paymentResponse.json();
-      console.log('Payment processed:', paymentResult);
+      console.log('Payment processed:', paymentResponse.data);
 
       // Send notification email
       await sendOrderEmail('completed', {
@@ -328,16 +340,18 @@ const MultiStepOrderForm = () => {
                 </div>
               </div>
               
-              <SquarePaymentForm
-                applicationId={squareConfig.applicationId}
-                locationId={squareConfig.locationId}
-                environment={squareConfig.environment}
-                amount={selectedRental?.price || 0}
-                onPaymentSuccess={handlePaymentSuccess}
-                onPaymentError={handlePaymentError}
-                disabled={isSubmitting}
-                buttonText={isSubmitting ? "Processing..." : "Complete Order"}
-              />
+              {squareConfig && (
+                <SquarePaymentForm
+                  applicationId={squareConfig.applicationId}
+                  locationId={squareConfig.locationId}
+                  environment={squareConfig.environment}
+                  amount={selectedRental?.price || 0}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  onPaymentError={handlePaymentError}
+                  disabled={isSubmitting}
+                  buttonText={isSubmitting ? "Processing..." : "Complete Order"}
+                />
+              )}
             </div>
           )}
 

@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SquarePaymentFormProps {
   applicationId: string;
@@ -36,26 +37,44 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
   const [card, setCard] = useState<any>(null);
   const [payments, setPayments] = useState<any>(null);
   const [effectiveLocationId, setEffectiveLocationId] = useState<string>('');
+  const [squareConfig, setSquareConfig] = useState<any>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get location ID from props or localStorage
-    const storedLocationId = localStorage.getItem('square_location_id');
-    const finalLocationId = locationId || storedLocationId || '';
-    setEffectiveLocationId(finalLocationId);
+    const getSquareConfig = async () => {
+      try {
+        // Test connection to get Square configuration
+        const response = await supabase.functions.invoke('square-payments', {
+          body: { action: 'test_connection' }
+        });
 
-    if (!finalLocationId) {
-      onPaymentError('Square location ID not configured');
-      return;
-    }
+        if (response.data?.success) {
+          setSquareConfig({
+            applicationId: response.data.applicationId,
+            locationId: response.data.locationId,
+            environment: response.data.environment
+          });
+          setEffectiveLocationId(response.data.locationId);
+        } else {
+          onPaymentError('Square configuration not found');
+          return;
+        }
+      } catch (error) {
+        console.error('Error getting Square config:', error);
+        onPaymentError('Failed to load Square configuration');
+        return;
+      }
+
+      initializeSquare();
+    };
 
     const initializeSquare = async () => {
       try {
         // Load Square SDK
         if (!window.Square) {
           const script = document.createElement('script');
-          script.src = environment === 'production' 
+          script.src = squareConfig?.environment === 'production' 
             ? 'https://web.squarecdn.com/v1/square.js'
             : 'https://sandbox.web.squarecdn.com/v1/square.js';
           script.async = true;
@@ -72,7 +91,12 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
 
     const initPayments = async () => {
       try {
-        const paymentsInstance = window.Square.payments(applicationId, finalLocationId);
+        if (!squareConfig?.applicationId || !effectiveLocationId) {
+          onPaymentError('Square configuration incomplete');
+          return;
+        }
+
+        const paymentsInstance = window.Square.payments(squareConfig.applicationId, effectiveLocationId);
         setPayments(paymentsInstance);
         
         const cardInstance = await paymentsInstance.card();
@@ -85,14 +109,14 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
       }
     };
 
-    initializeSquare();
+    getSquareConfig();
 
     return () => {
       if (card) {
         card.destroy();
       }
     };
-  }, [applicationId, locationId, environment]);
+  }, []);
 
   const handlePayment = async () => {
     if (!card || !payments) {

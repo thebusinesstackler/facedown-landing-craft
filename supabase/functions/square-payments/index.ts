@@ -40,8 +40,8 @@ serve(async (req) => {
     const squareEnvironment = Deno.env.get('SQUARE_ENVIRONMENT') || 'sandbox'
     const squareLocationId = Deno.env.get('SQUARE_LOCATION_ID')
 
-    if (!squareApplicationId || !squareAccessToken) {
-      throw new Error('Square credentials not configured')
+    if (!squareApplicationId || !squareAccessToken || !squareLocationId) {
+      throw new Error('Square credentials not fully configured')
     }
 
     const baseUrl = squareEnvironment === 'production' 
@@ -74,8 +74,9 @@ serve(async (req) => {
             success: true, 
             message: 'Connected to Square successfully',
             locations: result.locations?.length || 0,
-            locationId: squareLocationId || 'Not configured',
-            environment: squareEnvironment
+            locationId: squareLocationId,
+            environment: squareEnvironment,
+            applicationId: squareApplicationId
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -116,10 +117,6 @@ serve(async (req) => {
       case 'process_payment': {
         const { token, verificationToken, amount, orderId, customerEmail, customerName, description = 'Order payment' }: PaymentRequest = payload
         
-        if (!squareLocationId) {
-          throw new Error('Square location ID not configured')
-        }
-
         // Convert amount to cents (Square uses cents)
         const amountMoney = {
           amount: Math.round(amount * 100),
@@ -136,7 +133,7 @@ serve(async (req) => {
           ...(verificationToken && { verification_token: verificationToken }),
         }
 
-        console.log('Processing real Square payment:', {
+        console.log('Processing Square payment:', {
           amount: amountMoney.amount,
           customer: customerName,
           orderId,
