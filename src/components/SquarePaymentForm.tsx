@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface SquarePaymentFormProps {
   applicationId: string;
-  locationId: string;
+  locationId?: string;
   environment: 'sandbox' | 'production';
   onPaymentSuccess: (token: string, verificationToken?: string) => void;
   onPaymentError: (error: string) => void;
@@ -35,16 +35,29 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [card, setCard] = useState<any>(null);
   const [payments, setPayments] = useState<any>(null);
+  const [effectiveLocationId, setEffectiveLocationId] = useState<string>('');
   const cardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
+    // Get location ID from props or localStorage
+    const storedLocationId = localStorage.getItem('square_location_id');
+    const finalLocationId = locationId || storedLocationId || '';
+    setEffectiveLocationId(finalLocationId);
+
+    if (!finalLocationId) {
+      onPaymentError('Square location ID not configured');
+      return;
+    }
+
     const initializeSquare = async () => {
       try {
         // Load Square SDK
         if (!window.Square) {
           const script = document.createElement('script');
-          script.src = 'https://sandbox.web.squarecdn.com/v1/square.js';
+          script.src = environment === 'production' 
+            ? 'https://web.squarecdn.com/v1/square.js'
+            : 'https://sandbox.web.squarecdn.com/v1/square.js';
           script.async = true;
           script.onload = () => initPayments();
           document.head.appendChild(script);
@@ -59,7 +72,7 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
 
     const initPayments = async () => {
       try {
-        const paymentsInstance = window.Square.payments(applicationId, locationId);
+        const paymentsInstance = window.Square.payments(applicationId, finalLocationId);
         setPayments(paymentsInstance);
         
         const cardInstance = await paymentsInstance.card();
@@ -105,6 +118,21 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
       setIsProcessing(false);
     }
   };
+
+  if (!effectiveLocationId) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <p className="text-sm text-red-600">Square location ID not configured</p>
+              <p className="text-xs text-gray-500 mt-1">Please configure your Square location ID in settings</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (

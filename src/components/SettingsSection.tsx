@@ -13,9 +13,9 @@ const SettingsSection = () => {
   const [squareSettings, setSquareSettings] = useState({
     applicationId: '',
     accessToken: '',
+    locationId: '',
     environment: 'sandbox'
   });
-  const [showTokens, setShowTokens] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -38,18 +38,59 @@ const SettingsSection = () => {
           ...prev,
           applicationId: '***configured***',
           accessToken: '***configured***',
+          locationId: testResponse.data.locationId || 'Not configured',
           environment: testResponse.data.environment || 'sandbox'
+        }));
+      } else {
+        // Load from localStorage for location ID since it's not in Supabase secrets yet
+        const storedLocationId = localStorage.getItem('square_location_id') || '';
+        setSquareSettings(prev => ({
+          ...prev,
+          locationId: storedLocationId || 'Not configured'
         }));
       }
     } catch (error) {
       console.error('Error loading Square settings:', error);
-      // Settings might not be configured yet, which is fine
+      // Try to load location ID from localStorage
+      const storedLocationId = localStorage.getItem('square_location_id') || '';
+      setSquareSettings(prev => ({
+        ...prev,
+        locationId: storedLocationId || 'Not configured'
+      }));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const saveSquareSettings = async () => {
+  const saveLocationId = async () => {
+    if (!squareSettings.locationId || squareSettings.locationId === 'Not configured') {
+      toast({
+        title: "Error",
+        description: "Please enter a valid location ID",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Store location ID in localStorage for now
+      localStorage.setItem('square_location_id', squareSettings.locationId);
+      
+      toast({
+        title: "Location ID Saved",
+        description: "Square location ID has been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Error saving location ID:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save location ID",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const testSquareConnection = async () => {
     setIsSaving(true);
     try {
       // Test the connection with current Supabase secrets
@@ -62,13 +103,13 @@ const SettingsSection = () => {
       }
 
       toast({
-        title: "Settings Tested",
-        description: "Square credentials in Supabase secrets are working correctly.",
+        title: "Connection Test Successful",
+        description: `Square credentials are working correctly. Found ${testResponse.data.locations || 0} locations.`,
       });
     } catch (error) {
       console.error('Error testing Square settings:', error);
       toast({
-        title: "Error",
+        title: "Connection Test Failed",
         description: "Failed to test Square connection. Please check your Supabase secrets configuration.",
         variant: "destructive"
       });
@@ -112,12 +153,13 @@ const SettingsSection = () => {
                   <li><code>SQUARE_APPLICATION_ID</code></li>
                   <li><code>SQUARE_ACCESS_TOKEN</code></li>
                   <li><code>SQUARE_ENVIRONMENT</code> (sandbox or production)</li>
+                  <li><code>SQUARE_LOCATION_ID</code> (will be added to secrets)</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Application ID</Label>
               <Input
@@ -139,6 +181,16 @@ const SettingsSection = () => {
               />
             </div>
             <div>
+              <Label>Location ID</Label>
+              <Input
+                type="text"
+                value={squareSettings.locationId}
+                onChange={(e) => setSquareSettings(prev => ({ ...prev, locationId: e.target.value }))}
+                placeholder="Enter your Square location ID"
+                className={squareSettings.locationId === 'Not configured' ? '' : 'bg-gray-50'}
+              />
+            </div>
+            <div>
               <Label>Environment</Label>
               <Input
                 type="text"
@@ -150,11 +202,19 @@ const SettingsSection = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t">
+          <div className="flex gap-2 pt-4 border-t">
             <Button 
-              onClick={saveSquareSettings} 
+              onClick={saveLocationId} 
+              variant="outline"
+              className="flex-1"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Location ID
+            </Button>
+            <Button 
+              onClick={testSquareConnection} 
               disabled={isSaving}
-              className="w-full"
+              className="flex-1"
             >
               {isSaving ? (
                 <>
@@ -163,7 +223,7 @@ const SettingsSection = () => {
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Settings className="h-4 w-4 mr-2" />
                   Test Square Connection
                 </>
               )}
@@ -179,6 +239,7 @@ const SettingsSection = () => {
                   <li><code>SQUARE_APPLICATION_ID</code> - Your Square App ID</li>
                   <li><code>SQUARE_ACCESS_TOKEN</code> - Your Square Access Token</li>
                   <li><code>SQUARE_ENVIRONMENT</code> - Either "sandbox" or "production"</li>
+                  <li><code>SQUARE_LOCATION_ID</code> - Your Square Location ID (LQ9SB03PF1HYY)</li>
                 </ul>
               </li>
               <li>Get your credentials from <a href="https://developer.squareup.com/apps" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Square Developer Dashboard</a></li>

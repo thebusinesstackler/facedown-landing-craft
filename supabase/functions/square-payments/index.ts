@@ -38,6 +38,7 @@ serve(async (req) => {
     const squareApplicationId = Deno.env.get('SQUARE_APPLICATION_ID')
     const squareAccessToken = Deno.env.get('SQUARE_ACCESS_TOKEN')
     const squareEnvironment = Deno.env.get('SQUARE_ENVIRONMENT') || 'sandbox'
+    const squareLocationId = Deno.env.get('SQUARE_LOCATION_ID')
 
     if (!squareApplicationId || !squareAccessToken) {
       throw new Error('Square credentials not configured')
@@ -72,7 +73,9 @@ serve(async (req) => {
           JSON.stringify({ 
             success: true, 
             message: 'Connected to Square successfully',
-            locations: result.locations?.length || 0
+            locations: result.locations?.length || 0,
+            locationId: squareLocationId || 'Not configured',
+            environment: squareEnvironment
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -113,6 +116,10 @@ serve(async (req) => {
       case 'process_payment': {
         const { token, verificationToken, amount, orderId, customerEmail, customerName, description = 'Order payment' }: PaymentRequest = payload
         
+        if (!squareLocationId) {
+          throw new Error('Square location ID not configured')
+        }
+
         // Convert amount to cents (Square uses cents)
         const amountMoney = {
           amount: Math.round(amount * 100),
@@ -122,6 +129,7 @@ serve(async (req) => {
         const paymentData = {
           source_id: token,
           amount_money: amountMoney,
+          location_id: squareLocationId,
           idempotency_key: crypto.randomUUID(),
           note: description,
           buyer_email_address: customerEmail,
@@ -132,6 +140,7 @@ serve(async (req) => {
           amount: amountMoney.amount,
           customer: customerName,
           orderId,
+          locationId: squareLocationId,
         })
 
         const response = await fetch(`${baseUrl}/v2/payments`, {
