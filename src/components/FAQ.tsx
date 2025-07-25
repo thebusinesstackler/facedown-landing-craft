@@ -13,48 +13,58 @@ interface FAQProps {
 }
 
 const FAQ: React.FC<FAQProps> = ({ locationData }) => {
-  const faqData = [
+  const faqItems = [
     {
-      question: "How quickly can I get the recovery equipment?",
-      answer: "We offer same-day or next-day delivery in most areas. Once you place your order, we'll contact you to schedule a convenient delivery time."
+      question: "How does the rental process work?",
+      answer: "Simply select your rental period, provide your information, and we'll deliver the recovery equipment to your door. After your rental period, we'll pick it up - no hassle on your end."
     },
     {
-      question: "Is the equipment sanitized between uses?",
-      answer: "Yes, all equipment is thoroughly sanitized and inspected before each rental. We follow strict medical-grade cleaning protocols to ensure your safety."
+      question: "What equipment is included?",
+      answer: "Our recovery packages include professional-grade cold therapy machines, compression devices, and all necessary accessories for optimal post-surgery recovery."
     },
     {
-      question: "What if I need to extend my rental period?",
-      answer: "You can extend your rental period by contacting us before your current rental expires. We'll arrange pickup and delivery for the extended period."
+      question: "How quickly can you deliver?",
+      answer: "We typically deliver within 24-48 hours of your order confirmation. Emergency same-day delivery may be available in select areas."
     },
     {
-      question: "Do you provide setup assistance?",
-      answer: "Yes, our delivery team will set up the equipment and provide basic instructions. We also include detailed setup guides and 24/7 support."
+      question: "What if I need the equipment longer than expected?",
+      answer: "No problem! You can extend your rental period by contacting our support team. We'll adjust your billing accordingly."
     },
     {
-      question: "What happens if the equipment breaks?",
-      answer: "If equipment malfunctions due to normal use, we'll replace it at no charge. We provide 24/7 technical support and emergency replacement service."
+      question: "Is the equipment sanitized?",
+      answer: "Absolutely. All equipment is thoroughly sanitized and inspected between each rental to ensure the highest safety standards."
     },
     {
-      question: "Can I cancel my order?",
-      answer: "Yes, you can cancel your order up to 24 hours before scheduled delivery for a full refund. Cancellations within 24 hours may incur a small processing fee."
+      question: "What happens if something breaks?",
+      answer: "Don't worry - normal wear and tear is covered. If there's an issue with the equipment, contact us immediately and we'll replace it at no charge."
+    },
+    {
+      question: "Do you work with insurance?",
+      answer: "Many insurance plans cover durable medical equipment rentals. We can provide documentation to help with your insurance claim."
+    },
+    {
+      question: "What areas do you serve?",
+      answer: locationData 
+        ? `We currently serve ${locationData.city_name}, ${locationData.region_name} and surrounding areas. Contact us to confirm delivery availability to your specific location.`
+        : "We serve many areas across the United States. Contact us to confirm delivery availability to your specific location."
     }
   ];
 
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">
             Frequently Asked Questions
           </h2>
           <Accordion type="single" collapsible className="w-full">
-            {faqData.map((faq, index) => (
+            {faqItems.map((item, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
                 <AccordionTrigger className="text-left">
-                  {faq.question}
+                  {item.question}
                 </AccordionTrigger>
                 <AccordionContent>
-                  {faq.answer}
+                  {item.answer}
                 </AccordionContent>
               </AccordionItem>
             ))}
