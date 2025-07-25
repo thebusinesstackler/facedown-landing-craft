@@ -13,35 +13,10 @@ export interface CustomerOrder {
   endDate: string;
   price: number;
   status: 'active' | 'pending' | 'completed';
-  cardDetails: {
-    cardNumber: string;
-    cardName: string;
-    expiryDate: string;
-    cvv: string;
-  };
   orderDate: string;
 }
 
-const CUSTOMERS_STORAGE_KEY = 'fdr_customer_orders';
-
-export const saveCustomerOrder = (orderData: Omit<CustomerOrder, 'id' | 'orderDate'>): CustomerOrder => {
-  const customers = getCustomerOrders();
-  const newCustomer: CustomerOrder = {
-    ...orderData,
-    id: Date.now().toString(),
-    orderDate: new Date().toISOString()
-  };
-  
-  customers.push(newCustomer);
-  localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers));
-  return newCustomer;
-};
-
-export const getCustomerOrders = (): CustomerOrder[] => {
-  const stored = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
-  return stored ? JSON.parse(stored) : [];
-};
-
+// Remove insecure localStorage usage - orders are now stored in Supabase
 export const calculateEndDate = (startDate: string, period: string): string => {
   const start = new Date(startDate);
   let days = 7; // default 1 week
@@ -57,3 +32,6 @@ export const calculateEndDate = (startDate: string, period: string): string => {
 export const maskCardNumber = (cardNumber: string): string => {
   return '**** **** **** ' + cardNumber.slice(-4);
 };
+
+// Note: Customer orders are now handled through Supabase with proper security
+// Use the supabaseOrderUtils for all order operations

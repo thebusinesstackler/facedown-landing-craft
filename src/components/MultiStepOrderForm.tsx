@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,11 +9,13 @@ import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import SquarePaymentForm from './SquarePaymentForm';
+import { inputValidation } from '@/utils/inputValidation';
 
 const MultiStepOrderForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [squareConfig, setSquareConfig] = useState<any>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -58,11 +59,58 @@ const MultiStepOrderForm = () => {
     getSquareConfig();
   }, []);
 
+  const validateCurrentStep = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (currentStep === 2) {
+      const nameValidation = inputValidation.validateName(`${formData.firstName} ${formData.lastName}`);
+      if (!nameValidation.isValid) {
+        errors.name = nameValidation.error!;
+      }
+
+      const emailValidation = inputValidation.validateEmail(formData.email);
+      if (!emailValidation.isValid) {
+        errors.email = emailValidation.error!;
+      }
+
+      const phoneValidation = inputValidation.validatePhone(formData.phone);
+      if (!phoneValidation.isValid) {
+        errors.phone = phoneValidation.error!;
+      }
+    }
+
+    if (currentStep === 3) {
+      const addressValidation = inputValidation.validateAddress(formData.address);
+      if (!addressValidation.isValid) {
+        errors.address = addressValidation.error!;
+      }
+
+      const zipValidation = inputValidation.validateZipCode(formData.zipCode);
+      if (!zipValidation.isValid) {
+        errors.zipCode = zipValidation.error!;
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Sanitize input
+    const sanitizedValue = inputValidation.sanitizeInput(value);
+    setFormData(prev => ({ ...prev, [field]: sanitizedValue }));
+    
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const nextStep = () => {
+    if (!validateCurrentStep()) {
+      return;
+    }
+    
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
@@ -234,8 +282,12 @@ const MultiStepOrderForm = () => {
                     id="firstName"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    maxLength={50}
                     required
                   />
+                  {validationErrors.name && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="lastName">Last Name</Label>
@@ -243,6 +295,7 @@ const MultiStepOrderForm = () => {
                     id="lastName"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    maxLength={50}
                     required
                   />
                 </div>
@@ -254,8 +307,12 @@ const MultiStepOrderForm = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
+                  maxLength={254}
                   required
                 />
+                {validationErrors.email && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors.email}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="phone">Phone</Label>
@@ -263,8 +320,12 @@ const MultiStepOrderForm = () => {
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
+                  maxLength={20}
                   required
                 />
+                {validationErrors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors.phone}</p>
+                )}
               </div>
               <div>
                 <Label>Do you wear glasses?</Label>
@@ -294,8 +355,12 @@ const MultiStepOrderForm = () => {
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
+                  maxLength={255}
                   required
                 />
+                {validationErrors.address && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors.address}</p>
+                )}
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -304,6 +369,7 @@ const MultiStepOrderForm = () => {
                     id="city"
                     value={formData.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
+                    maxLength={100}
                     required
                   />
                 </div>
@@ -313,6 +379,7 @@ const MultiStepOrderForm = () => {
                     id="state"
                     value={formData.state}
                     onChange={(e) => handleInputChange('state', e.target.value)}
+                    maxLength={50}
                     required
                   />
                 </div>
@@ -322,8 +389,12 @@ const MultiStepOrderForm = () => {
                     id="zipCode"
                     value={formData.zipCode}
                     onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                    maxLength={10}
                     required
                   />
+                  {validationErrors.zipCode && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.zipCode}</p>
+                  )}
                 </div>
               </div>
             </div>

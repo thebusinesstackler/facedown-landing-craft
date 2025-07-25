@@ -1,127 +1,93 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { adminAuth } from '@/utils/adminAuth';
 
-const AdminLogin: React.FC = () => {
-  const [username, setUsername] = useState('');
+const AdminLogin = () => {
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check if already authenticated
+    if (adminAuth.isAuthenticated()) {
+      navigate('/admin/dashboard');
+    }
+  }, [navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (username.trim() === '' || password.trim() === '') {
+    if (!password) {
       toast({
-        title: "Login failed",
-        description: "Please enter both username and password",
-        variant: "destructive",
+        title: "Error",
+        description: "Please enter a password",
+        variant: "destructive"
       });
       return;
     }
 
-    setLoading(true);
-
+    setIsLoading(true);
+    
     try {
-      const { data, error } = await supabase.functions.invoke('admin-auth', {
-        body: { 
-          action: 'login',
-          username: username,
-          password: password
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.success) {
-        localStorage.setItem('fdr_admin_auth', 'true');
-        localStorage.setItem('fdr_admin_user', JSON.stringify(data.user));
-        
+      const result = await adminAuth.login(password);
+      
+      if (result.success) {
         toast({
-          title: "Login successful",
-          description: `Welcome ${data.user.username}!`,
+          title: "Login Successful",
+          description: "Welcome to the admin dashboard",
         });
         navigate('/admin/dashboard');
       } else {
         toast({
-          title: "Login failed",
-          description: data.error || "Invalid credentials",
-          variant: "destructive",
+          title: "Login Failed",
+          description: result.error || "Invalid credentials",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error('Login error:', error);
       toast({
-        title: "Login failed",
+        title: "Error",
         description: "An error occurred during login",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Admin Login
-          </CardTitle>
-          <CardDescription className="text-center">
-            Enter your admin credentials to access the admin panel
-          </CardDescription>
+          <CardTitle className="text-2xl text-center">Admin Login</CardTitle>
         </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="username" className="text-sm font-medium text-gray-700">
-                  Username or Email
-                </label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter username or email"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter admin password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter admin password"
+                required
+                maxLength={100}
+              />
             </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing In...' : 'Sign In'}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Login'}
             </Button>
-          </CardFooter>
-        </form>
+          </form>
+        </CardContent>
       </Card>
-      <div className="mt-4">
-        <Button variant="link" onClick={() => navigate("/")}>
-          Return to Website
-        </Button>
-      </div>
     </div>
   );
 };

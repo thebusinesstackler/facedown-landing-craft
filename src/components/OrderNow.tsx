@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
@@ -12,6 +11,7 @@ import { LocationData } from '@/utils/locationUtils';
 import { saveCustomerOrder, sendOrderEmail } from '@/utils/supabaseOrderUtils';
 import { supabase } from '@/integrations/supabase/client';
 import SquarePaymentForm from './SquarePaymentForm';
+import { inputValidation } from '@/utils/inputValidation';
 
 interface OrderNowProps {
   locationData?: LocationData;
@@ -19,6 +19,7 @@ interface OrderNowProps {
 
 const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
   const [step, setStep] = useState<number>(1);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     rentalPeriod: '1week',
     name: '',
@@ -84,9 +85,52 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
     getSquareConfig();
   }, []);
 
+  const validateCurrentStep = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (step === 3) {
+      const nameValidation = inputValidation.validateName(formData.name);
+      if (!nameValidation.isValid) {
+        errors.name = nameValidation.error!;
+      }
+
+      const emailValidation = inputValidation.validateEmail(formData.email);
+      if (!emailValidation.isValid) {
+        errors.email = emailValidation.error!;
+      }
+
+      const phoneValidation = inputValidation.validatePhone(formData.phone);
+      if (!phoneValidation.isValid) {
+        errors.phone = phoneValidation.error!;
+      }
+    }
+
+    if (step === 4) {
+      const addressValidation = inputValidation.validateAddress(formData.address);
+      if (!addressValidation.isValid) {
+        errors.address = addressValidation.error!;
+      }
+
+      const zipValidation = inputValidation.validateZipCode(formData.zipCode);
+      if (!zipValidation.isValid) {
+        errors.zipCode = zipValidation.error!;
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Sanitize input
+    const sanitizedValue = inputValidation.sanitizeInput(value);
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
+    
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSelectRentalPeriod = (value: string) => {
@@ -120,6 +164,11 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
         description: "Unfortunately, our equipment isn't compatible with glasses. Please contact us for alternative solutions.",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Validate current step
+    if (!validateCurrentStep()) {
       return;
     }
 
@@ -364,8 +413,12 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           value={formData.name} 
                           onChange={handleInputChange} 
                           placeholder="Enter your full name" 
+                          maxLength={100}
                           required 
                         />
+                        {validationErrors.name && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="email">Email Address</Label>
@@ -376,8 +429,12 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           value={formData.email} 
                           onChange={handleInputChange} 
                           placeholder="Enter your email address" 
+                          maxLength={254}
                           required 
                         />
+                        {validationErrors.email && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.email}</p>
+                        )}
                       </div>
                       <div>
                         <Label htmlFor="phone">Phone Number</Label>
@@ -387,8 +444,12 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           value={formData.phone} 
                           onChange={handleInputChange} 
                           placeholder="Enter your phone number" 
+                          maxLength={20}
                           required 
                         />
+                        {validationErrors.phone && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.phone}</p>
+                        )}
                       </div>
                     </div>
                     <div className="mt-8 flex justify-between">
@@ -418,8 +479,12 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           value={formData.address} 
                           onChange={handleInputChange} 
                           placeholder="Enter your street address" 
+                          maxLength={255}
                           required 
                         />
+                        {validationErrors.address && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.address}</p>
+                        )}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -430,6 +495,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                             value={formData.city} 
                             onChange={handleInputChange} 
                             placeholder="Enter your city" 
+                            maxLength={100}
                             required 
                           />
                         </div>
@@ -441,6 +507,7 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                             value={formData.state} 
                             onChange={handleInputChange} 
                             placeholder="Enter your state" 
+                            maxLength={50}
                             required 
                           />
                         </div>
@@ -453,8 +520,12 @@ const OrderNow: React.FC<OrderNowProps> = ({ locationData }) => {
                           value={formData.zipCode} 
                           onChange={handleInputChange} 
                           placeholder="Enter your ZIP code" 
+                          maxLength={10}
                           required 
                         />
+                        {validationErrors.zipCode && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.zipCode}</p>
+                        )}
                       </div>
                     </div>
                     

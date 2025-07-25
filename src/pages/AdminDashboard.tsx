@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -10,6 +9,7 @@ import PaymentsSection from '@/components/PaymentsSection';
 import TransactionsSection from '@/components/TransactionsSection';
 import SettingsSection from '@/components/SettingsSection';
 import { useToast } from '@/hooks/use-toast';
+import { adminAuth } from '@/utils/adminAuth';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('customers');
@@ -17,21 +17,24 @@ const AdminDashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is authenticated using the correct key
-    const isAuthenticated = localStorage.getItem('fdr_admin_auth');
-    if (!isAuthenticated) {
-      navigate('/admin'); // Fix: redirect to correct route
+    // Check authentication with secure session management
+    if (!adminAuth.isAuthenticated()) {
+      toast({
+        title: "Session Expired",
+        description: "Please log in again",
+        variant: "destructive"
+      });
+      navigate('/admin');
     }
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleLogout = () => {
-    localStorage.removeItem('fdr_admin_auth'); // Fix: use correct key
-    localStorage.removeItem('fdr_admin_user');
+    adminAuth.logout();
     toast({
       title: "Logged Out",
       description: "You have been logged out successfully.",
     });
-    navigate('/admin'); // Fix: redirect to correct route
+    navigate('/admin');
   };
 
   const renderContent = () => {
