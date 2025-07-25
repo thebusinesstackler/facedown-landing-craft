@@ -40,15 +40,19 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
   const [squareConfig, setSquareConfig] = useState<any>(null);
   const [cardValidationState, setCardValidationState] = useState<any>({});
   const [isCardValid, setIsCardValid] = useState(false);
+  const [initError, setInitError] = useState<string>('');
   const cardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const getSquareConfig = async () => {
       try {
+        console.log('Fetching Square configuration...');
         const response = await supabase.functions.invoke('square-payments', {
           body: { action: 'test_connection' }
         });
+
+        console.log('Square config response:', response);
 
         if (response.data?.success) {
           const config = {
@@ -56,46 +60,68 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
             locationId: response.data.locationId,
             environment: response.data.environment
           };
+          
+          console.log('Square config received:', config);
+          
+          // Validate applicationId format
+          if (!config.applicationId || config.applicationId.length < 10) {
+            throw new Error('Invalid Square Application ID format');
+          }
+          
           setSquareConfig(config);
-          setEffectiveLocationId(response.data.locationId);
+          setEffectiveLocationId(config.locationId);
           await initializeSquare(config);
         } else {
-          onPaymentError('Square configuration not found');
+          throw new Error('Square configuration not found');
         }
       } catch (error) {
         console.error('Error getting Square config:', error);
-        onPaymentError('Failed to load Square configuration');
+        setInitError('Failed to load Square configuration. Please check your Square settings.');
+        setIsLoading(false);
       }
     };
 
     const initializeSquare = async (config: any) => {
       try {
+        console.log('Initializing Square with config:', config);
+        
         // Load Square SDK if not already loaded
         if (!window.Square) {
           await loadSquareSDK(config.environment);
         }
+        
         await initPayments(config);
       } catch (error) {
         console.error('Failed to initialize Square:', error);
-        onPaymentError('Failed to load payment system');
+        setInitError('Failed to initialize payment system. Please try again.');
+        setIsLoading(false);
       }
     };
 
     const loadSquareSDK = (env: string): Promise<void> => {
       return new Promise((resolve, reject) => {
+        console.log('Loading Square SDK for environment:', env);
         const script = document.createElement('script');
         script.src = env === 'production' 
           ? 'https://web.squarecdn.com/v1/square.js'
           : 'https://sandbox.web.squarecdn.com/v1/square.js';
         script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Failed to load Square SDK'));
+        script.onload = () => {
+          console.log('Square SDK loaded successfully');
+          resolve();
+        };
+        script.onerror = () => {
+          console.error('Failed to load Square SDK');
+          reject(new Error('Failed to load Square SDK'));
+        };
         document.head.appendChild(script);
       });
     };
 
     const initPayments = async (config: any) => {
       try {
+        console.log('Initializing payments with:', config);
+        
         if (!config.applicationId || !config.locationId) {
           throw new Error('Square configuration incomplete');
         }
@@ -110,6 +136,7 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
               borderColor: '#d1d5db',
               borderRadius: '8px',
               borderWidth: '1px',
+              padding: '12px',
             },
             '.input-container.is-focus': {
               borderColor: '#10b981',
@@ -122,6 +149,7 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
             '.message-text': {
               color: '#6b7280',
               fontSize: '14px',
+              marginTop: '4px',
             },
             '.message-text.is-error': {
               color: '#ef4444',
@@ -135,7 +163,6 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
               color: '#9ca3af',
             },
           },
-          // Enable real-time validation
           includeInputLabels: true,
         });
 
@@ -150,13 +177,10 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
           setCardValidationState(prev => ({ ...prev, postalCode: event.postalCode }));
         });
 
-        cardInstance.addEventListener('submit', (event: any) => {
-          console.log('Card form submitted');
-        });
-
         await cardInstance.attach(cardRef.current);
         setCard(cardInstance);
         setIsLoading(false);
+        console.log('Square payment form initialized successfully');
 
         // Validate card state periodically
         const validateCard = async () => {
@@ -182,7 +206,8 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
 
       } catch (error) {
         console.error('Failed to initialize Square payments:', error);
-        onPaymentError('Failed to initialize payment form');
+        setInitError('Failed to initialize payment form. Please check your Square configuration.');
+        setIsLoading(false);
       }
     };
 
@@ -266,15 +291,28 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
     }
   };
 
-  if (!effectiveLocationId) {
+  if (initError) {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-center h-32">
-            <div className="text-center">
-              <p className="text-sm text-red-600">Square location ID not configured</p>
-              <p className="text-xs text-gray-500 mt-1">Please configure your Square location ID in settings</p>
-            </div>
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{initError}</p>
+            <p className="text-sm text-gray-500">
+              Please contact support if this issue persists.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!effectiveLocationId && !isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">
+            <p className="text-sm text-red-600">Square location ID not configured</p>
+            <p className="text-xs text-gray-500 mt-1">Please configure your Square location ID in settings</p>
           </div>
         </CardContent>
       </Card>
