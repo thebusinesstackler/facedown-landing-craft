@@ -117,27 +117,45 @@ serve(async (req) => {
       case 'process_payment': {
         const { token, verificationToken, amount, orderId, customerEmail, customerName, description = 'Order payment' }: PaymentRequest = payload
         
+        console.log('Processing payment with details:', {
+          hasToken: !!token,
+          hasVerificationToken: !!verificationToken,
+          amount,
+          orderId,
+          customerEmail,
+          customerName
+        })
+
         // Convert amount to cents (Square uses cents)
         const amountMoney = {
           amount: Math.round(amount * 100),
           currency: 'USD',
         }
 
-        const paymentData = {
+        const paymentData: any = {
           source_id: token,
           amount_money: amountMoney,
           location_id: squareLocationId,
           idempotency_key: crypto.randomUUID(),
           note: description,
           buyer_email_address: customerEmail,
-          ...(verificationToken && { verification_token: verificationToken }),
+          autocomplete: true,
+          // Add reference ID for tracking
+          reference_id: orderId ? `order_${orderId}` : undefined,
         }
 
-        console.log('Processing Square payment:', {
+        // Include verification token if provided (for 3D Secure)
+        if (verificationToken) {
+          paymentData.verification_token = verificationToken
+          console.log('Including verification token for 3D Secure')
+        }
+
+        console.log('Sending payment request to Square:', {
           amount: amountMoney.amount,
-          customer: customerName,
-          orderId,
+          currency: amountMoney.currency,
           locationId: squareLocationId,
+          hasVerificationToken: !!verificationToken,
+          referenceId: paymentData.reference_id
         })
 
         const response = await fetch(`${baseUrl}/v2/payments`, {
@@ -154,22 +172,34 @@ serve(async (req) => {
         
         if (!response.ok) {
           console.error('Square payment error:', result)
-          throw new Error(result.errors?.[0]?.detail || 'Payment failed')
+          const errorMessage = result.errors?.[0]?.detail || result.errors?.[0]?.code || 'Payment failed'
+          throw new Error(errorMessage)
         }
 
-        console.log('Square payment successful:', result.payment.id)
+        const payment = result.payment
+        console.log('Square payment successful:', {
+          paymentId: payment.id,
+          status: payment.status,
+          cardBrand: payment.card_details?.card?.card_brand,
+          last4: payment.card_details?.card?.last_4,
+          totalMoney: payment.total_money
+        })
 
         // Update customer order with payment information
         if (orderId) {
+          const updateData = {
+            transaction_id: payment.id,
+            payment_status: payment.status,
+            payment_amount: amount,
+            payment_date: new Date().toISOString(),
+            status: payment.status === 'COMPLETED' ? 'completed' : 'pending',
+            card_brand: payment.card_details?.card?.card_brand,
+            card_last_4: payment.card_details?.card?.last_4,
+          }
+
           const { error: updateError } = await supabaseClient
             .from('customer_orders')
-            .update({
-              transaction_id: result.payment.id,
-              payment_status: result.payment.status,
-              payment_amount: amount,
-              payment_date: new Date().toISOString(),
-              status: 'completed',
-            })
+            .update(updateData)
             .eq('id', orderId)
 
           if (updateError) {
@@ -181,8 +211,15 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({ 
-            payment: result.payment,
-            receiptUrl: result.payment.receipt_url,
+            payment: {
+              id: payment.id,
+              status: payment.status,
+              total_money: payment.total_money,
+              card_details: payment.card_details,
+              created_at: payment.created_at,
+              updated_at: payment.updated_at
+            },
+            receiptUrl: payment.receipt_url,
             success: true 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
