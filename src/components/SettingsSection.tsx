@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Settings, Save, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Settings, Save, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 
 const SettingsSection = () => {
   const [squareSettings, setSquareSettings] = useState({
@@ -18,6 +18,7 @@ const SettingsSection = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'success' | 'error'>('unknown');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,15 +32,19 @@ const SettingsSection = () => {
         body: { action: 'test_connection' }
       });
 
+      console.log('Square config response:', testResponse);
+
       if (testResponse.data?.success) {
         setSquareSettings(prev => ({
           ...prev,
           applicationId: testResponse.data.applicationId || 'Not configured',
-          accessToken: '***configured***',
+          accessToken: testResponse.data.success ? '***configured***' : 'Not configured',
           locationId: testResponse.data.locationId || 'Not configured',
           environment: testResponse.data.environment || 'sandbox'
         }));
+        setConnectionStatus('success');
       } else {
+        setConnectionStatus('error');
         const storedLocationId = localStorage.getItem('square_location_id') || '';
         setSquareSettings(prev => ({
           ...prev,
@@ -48,6 +53,7 @@ const SettingsSection = () => {
       }
     } catch (error) {
       console.error('Error loading Square settings:', error);
+      setConnectionStatus('error');
       const storedLocationId = localStorage.getItem('square_location_id') || '';
       setSquareSettings(prev => ({
         ...prev,
@@ -69,12 +75,19 @@ const SettingsSection = () => {
         throw new Error('Failed to connect to Square API. Please check your Supabase secrets.');
       }
 
-      toast({
-        title: "Connection Test Successful",
-        description: `Square sandbox credentials are working correctly. Found ${testResponse.data.locations || 0} locations.`,
-      });
+      if (testResponse.data?.success) {
+        setConnectionStatus('success');
+        toast({
+          title: "Connection Test Successful",
+          description: `Square ${testResponse.data.environment} credentials are working correctly. Found ${testResponse.data.locations || 0} locations.`,
+        });
+      } else {
+        setConnectionStatus('error');
+        throw new Error('Connection test failed');
+      }
     } catch (error) {
       console.error('Error testing Square settings:', error);
+      setConnectionStatus('error');
       toast({
         title: "Connection Test Failed",
         description: "Failed to test Square connection. Please check your sandbox credentials in Supabase secrets.",
@@ -97,60 +110,57 @@ const SettingsSection = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+        <div className="flex items-center space-x-2">
+          {connectionStatus === 'success' && (
+            <div className="flex items-center text-green-600">
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Connected
+            </div>
+          )}
+          {connectionStatus === 'error' && (
+            <div className="flex items-center text-red-600">
+              <AlertCircle className="h-4 w-4 mr-1" />
+              Connection Error
+            </div>
+          )}
+        </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <Settings className="h-5 w-5 mr-2" />
-            Square Payment Settings (Sandbox Mode)
+            Square Payment Settings ({squareSettings.environment})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <AlertCircle className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-blue-800">Sandbox Setup Required</h4>
-                <p className="text-sm text-blue-700 mt-1">
-                  You need to configure these Supabase secrets with your Square sandbox credentials:
-                </p>
-                <div className="mt-3">
-                  <p className="text-sm font-medium text-blue-800">Steps to get sandbox credentials:</p>
-                  <ol className="text-sm text-blue-700 mt-2 ml-4 list-decimal">
-                    <li>Go to <a href="https://developer.squareup.com/apps" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Square Developer Dashboard</a></li>
-                    <li>Select your application</li>
-                    <li>Click on "Sandbox" tab</li>
-                    <li>Copy your <strong>Sandbox Application ID</strong> (starts with "sandbox-")</li>
-                    <li>Copy your <strong>Sandbox Access Token</strong></li>
-                    <li>Get your <strong>Sandbox Location ID</strong> from the locations list</li>
-                  </ol>
-                </div>
-                <div className="mt-4 p-3 bg-blue-100 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800">Update these Supabase secrets:</p>
-                  <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                    <li>• <code className="bg-blue-200 px-1 rounded">SQUARE_APPLICATION_ID</code> → Your sandbox app ID (starts with "sandbox-")</li>
-                    <li>• <code className="bg-blue-200 px-1 rounded">SQUARE_ACCESS_TOKEN</code> → Your sandbox access token</li>
-                    <li>• <code className="bg-blue-200 px-1 rounded">SQUARE_ENVIRONMENT</code> → Set to "sandbox"</li>
-                    <li>• <code className="bg-blue-200 px-1 rounded">SQUARE_LOCATION_ID</code> → Your sandbox location ID</li>
-                  </ul>
+          {connectionStatus === 'success' && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <CheckCircle className="h-5 w-5 text-green-600 mr-2 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-green-800">Square Connection Successful</h4>
+                  <p className="text-sm text-green-700 mt-1">
+                    Your Square {squareSettings.environment} credentials are properly configured and working.
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <AlertCircle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-yellow-800">Current Issue</h4>
-                <p className="text-sm text-yellow-700 mt-1">
-                  Your current configuration appears to be using production credentials with sandbox environment settings. 
-                  Please update to use proper sandbox credentials for testing.
-                </p>
+          {connectionStatus === 'error' && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 text-red-600 mr-2 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-red-800">Square Connection Failed</h4>
+                  <p className="text-sm text-red-700 mt-1">
+                    Please check your Square credentials in Supabase secrets.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -160,7 +170,7 @@ const SettingsSection = () => {
                 value={squareSettings.applicationId}
                 readOnly
                 className="bg-gray-50"
-                placeholder="sandbox-sq0idp-..."
+                placeholder="sandbox-sq0idp-... or sq0idp-..."
               />
             </div>
             <div>
@@ -170,7 +180,7 @@ const SettingsSection = () => {
                 value={squareSettings.accessToken}
                 readOnly
                 className="bg-gray-50"
-                placeholder="Not configured"
+                placeholder="***configured***"
               />
             </div>
             <div>
@@ -180,7 +190,7 @@ const SettingsSection = () => {
                 value={squareSettings.locationId}
                 readOnly
                 className="bg-gray-50"
-                placeholder="Not configured"
+                placeholder="Location ID"
               />
             </div>
             <div>
@@ -190,7 +200,7 @@ const SettingsSection = () => {
                 value={squareSettings.environment}
                 readOnly
                 className="bg-gray-50"
-                placeholder="sandbox"
+                placeholder="sandbox or production"
               />
             </div>
           </div>
@@ -209,31 +219,27 @@ const SettingsSection = () => {
               ) : (
                 <>
                   <Settings className="h-4 w-4 mr-2" />
-                  Test Sandbox Connection
+                  Test Connection
                 </>
               )}
             </Button>
           </div>
 
-          <div className="text-sm text-gray-600 space-y-2">
-            <p><strong>Quick Setup Guide:</strong></p>
-            <ol className="list-decimal list-inside space-y-1 ml-4">
-              <li>Go to <a href="https://supabase.com/dashboard/project/qeqljbfnfubqfnsvicce/settings/functions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Supabase Functions Settings</a></li>
-              <li>Update these secrets with your sandbox values:
-                <ul className="list-disc list-inside ml-4 mt-1">
-                  <li><code>SQUARE_APPLICATION_ID</code> → sandbox-sq0idp-...</li>
-                  <li><code>SQUARE_ACCESS_TOKEN</code> → your sandbox access token</li>
-                  <li><code>SQUARE_ENVIRONMENT</code> → "sandbox"</li>
-                  <li><code>SQUARE_LOCATION_ID</code> → your sandbox location ID</li>
-                </ul>
-              </li>
-              <li>Use "Test Sandbox Connection" button to verify</li>
-            </ol>
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800">
-                <strong>Sandbox Test Cards:</strong> Once configured, you can use test cards like 4111 1111 1111 1111 (Visa) or 5555 5555 5555 4444 (Mastercard) with any future expiry date and any CVV.
+          {squareSettings.environment === 'sandbox' && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Sandbox Test Cards:</strong> You can use test cards like 4111 1111 1111 1111 (Visa) or 5555 5555 5555 4444 (Mastercard) with any future expiry date and any CVV.
               </p>
             </div>
+          )}
+
+          <div className="text-sm text-gray-600 space-y-2">
+            <p><strong>Quick Setup Reference:</strong></p>
+            <ol className="list-decimal list-inside space-y-1 ml-4">
+              <li>Go to <a href="https://supabase.com/dashboard/project/qeqljbfnfubqfnsvicce/settings/functions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Supabase Functions Settings</a></li>
+              <li>Update these secrets with your {squareSettings.environment} values</li>
+              <li>Use "Test Connection" button to verify</li>
+            </ol>
           </div>
         </CardContent>
       </Card>
