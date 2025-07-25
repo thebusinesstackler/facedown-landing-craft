@@ -27,22 +27,19 @@ const SettingsSection = () => {
   const loadSquareSettings = async () => {
     setIsLoading(true);
     try {
-      // Test the connection to get current settings status
       const testResponse = await supabase.functions.invoke('square-payments', {
         body: { action: 'test_connection' }
       });
 
       if (testResponse.data?.success) {
-        // If test is successful, we know secrets are configured
         setSquareSettings(prev => ({
           ...prev,
-          applicationId: '***configured***',
+          applicationId: testResponse.data.applicationId || 'Not configured',
           accessToken: '***configured***',
           locationId: testResponse.data.locationId || 'Not configured',
           environment: testResponse.data.environment || 'sandbox'
         }));
       } else {
-        // Load from localStorage for location ID since it's not in Supabase secrets yet
         const storedLocationId = localStorage.getItem('square_location_id') || '';
         setSquareSettings(prev => ({
           ...prev,
@@ -51,7 +48,6 @@ const SettingsSection = () => {
       }
     } catch (error) {
       console.error('Error loading Square settings:', error);
-      // Try to load location ID from localStorage
       const storedLocationId = localStorage.getItem('square_location_id') || '';
       setSquareSettings(prev => ({
         ...prev,
@@ -62,38 +58,9 @@ const SettingsSection = () => {
     }
   };
 
-  const saveLocationId = async () => {
-    if (!squareSettings.locationId || squareSettings.locationId === 'Not configured') {
-      toast({
-        title: "Error",
-        description: "Please enter a valid location ID",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Store location ID in localStorage for now
-      localStorage.setItem('square_location_id', squareSettings.locationId);
-      
-      toast({
-        title: "Location ID Saved",
-        description: "Square location ID has been saved successfully.",
-      });
-    } catch (error) {
-      console.error('Error saving location ID:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save location ID",
-        variant: "destructive"
-      });
-    }
-  };
-
   const testSquareConnection = async () => {
     setIsSaving(true);
     try {
-      // Test the connection with current Supabase secrets
       const testResponse = await supabase.functions.invoke('square-payments', {
         body: { action: 'test_connection' }
       });
@@ -104,13 +71,13 @@ const SettingsSection = () => {
 
       toast({
         title: "Connection Test Successful",
-        description: `Square credentials are working correctly. Found ${testResponse.data.locations || 0} locations.`,
+        description: `Square sandbox credentials are working correctly. Found ${testResponse.data.locations || 0} locations.`,
       });
     } catch (error) {
       console.error('Error testing Square settings:', error);
       toast({
         title: "Connection Test Failed",
-        description: "Failed to test Square connection. Please check your Supabase secrets configuration.",
+        description: "Failed to test Square connection. Please check your sandbox credentials in Supabase secrets.",
         variant: "destructive"
       });
     } finally {
@@ -140,46 +107,47 @@ const SettingsSection = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <AlertCircle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-yellow-800">Sandbox Configuration Required</h4>
-                <p className="text-sm text-yellow-700 mt-1">
-                  You're using sandbox mode for testing. You need to get your sandbox credentials from Square Developer Dashboard.
-                </p>
-                <p className="text-sm text-yellow-700 mt-2">
-                  <strong>Current Issue:</strong> Your Application ID appears to be for production, but you want to use sandbox mode.
-                </p>
-              </div>
-            </div>
-          </div>
-
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start">
               <AlertCircle className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-800">Sandbox Setup Instructions</h4>
+                <h4 className="font-medium text-blue-800">Sandbox Setup Required</h4>
                 <p className="text-sm text-blue-700 mt-1">
-                  Configure these Supabase secrets for sandbox testing:
+                  You need to configure these Supabase secrets with your Square sandbox credentials:
                 </p>
-                <ol className="text-sm text-blue-700 mt-2 ml-4 list-decimal">
-                  <li>Go to <a href="https://developer.squareup.com/apps" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Square Developer Dashboard</a></li>
-                  <li>Select your application</li>
-                  <li>Go to "Sandbox" tab</li>
-                  <li>Copy your Sandbox Application ID (starts with <code>sandbox-</code>)</li>
-                  <li>Copy your Sandbox Access Token</li>
-                  <li>Get your Sandbox Location ID from the locations list</li>
-                </ol>
                 <div className="mt-3">
-                  <strong>Set these Supabase secrets:</strong>
-                  <ul className="text-sm text-blue-700 mt-1 ml-4 list-disc">
-                    <li><code>SQUARE_APPLICATION_ID</code> - Your Sandbox App ID (starts with "sandbox-")</li>
-                    <li><code>SQUARE_ACCESS_TOKEN</code> - Your Sandbox Access Token</li>
-                    <li><code>SQUARE_ENVIRONMENT</code> - Set to "sandbox"</li>
-                    <li><code>SQUARE_LOCATION_ID</code> - Your Sandbox Location ID</li>
+                  <p className="text-sm font-medium text-blue-800">Steps to get sandbox credentials:</p>
+                  <ol className="text-sm text-blue-700 mt-2 ml-4 list-decimal">
+                    <li>Go to <a href="https://developer.squareup.com/apps" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Square Developer Dashboard</a></li>
+                    <li>Select your application</li>
+                    <li>Click on "Sandbox" tab</li>
+                    <li>Copy your <strong>Sandbox Application ID</strong> (starts with "sandbox-")</li>
+                    <li>Copy your <strong>Sandbox Access Token</strong></li>
+                    <li>Get your <strong>Sandbox Location ID</strong> from the locations list</li>
+                  </ol>
+                </div>
+                <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+                  <p className="text-sm font-medium text-blue-800">Update these Supabase secrets:</p>
+                  <ul className="text-sm text-blue-700 mt-2 space-y-1">
+                    <li>• <code className="bg-blue-200 px-1 rounded">SQUARE_APPLICATION_ID</code> → Your sandbox app ID (starts with "sandbox-")</li>
+                    <li>• <code className="bg-blue-200 px-1 rounded">SQUARE_ACCESS_TOKEN</code> → Your sandbox access token</li>
+                    <li>• <code className="bg-blue-200 px-1 rounded">SQUARE_ENVIRONMENT</code> → Set to "sandbox"</li>
+                    <li>• <code className="bg-blue-200 px-1 rounded">SQUARE_LOCATION_ID</code> → Your sandbox location ID</li>
                   </ul>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-yellow-800">Current Issue</h4>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Your current configuration appears to be using production credentials with sandbox environment settings. 
+                  Please update to use proper sandbox credentials for testing.
+                </p>
               </div>
             </div>
           </div>
@@ -192,7 +160,7 @@ const SettingsSection = () => {
                 value={squareSettings.applicationId}
                 readOnly
                 className="bg-gray-50"
-                placeholder="Not configured"
+                placeholder="sandbox-sq0idp-..."
               />
             </div>
             <div>
@@ -210,9 +178,9 @@ const SettingsSection = () => {
               <Input
                 type="text"
                 value={squareSettings.locationId}
-                onChange={(e) => setSquareSettings(prev => ({ ...prev, locationId: e.target.value }))}
-                placeholder="Enter your Square location ID"
-                className={squareSettings.locationId === 'Not configured' ? '' : 'bg-gray-50'}
+                readOnly
+                className="bg-gray-50"
+                placeholder="Not configured"
               />
             </div>
             <div>
@@ -229,14 +197,6 @@ const SettingsSection = () => {
 
           <div className="flex gap-2 pt-4 border-t">
             <Button 
-              onClick={saveLocationId} 
-              variant="outline"
-              className="flex-1"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save Location ID
-            </Button>
-            <Button 
               onClick={testSquareConnection} 
               disabled={isSaving}
               className="flex-1"
@@ -249,25 +209,25 @@ const SettingsSection = () => {
               ) : (
                 <>
                   <Settings className="h-4 w-4 mr-2" />
-                  Test Square Connection
+                  Test Sandbox Connection
                 </>
               )}
             </Button>
           </div>
 
           <div className="text-sm text-gray-600 space-y-2">
-            <p><strong>Quick Setup for Sandbox Testing:</strong></p>
+            <p><strong>Quick Setup Guide:</strong></p>
             <ol className="list-decimal list-inside space-y-1 ml-4">
-              <li>Go to your <a href="https://supabase.com/dashboard/project/qeqljbfnfubqfnsvicce/settings/functions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Supabase Functions Settings</a></li>
+              <li>Go to <a href="https://supabase.com/dashboard/project/qeqljbfnfubqfnsvicce/settings/functions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Supabase Functions Settings</a></li>
               <li>Update these secrets with your sandbox values:
                 <ul className="list-disc list-inside ml-4 mt-1">
-                  <li><code>SQUARE_APPLICATION_ID</code> - Get from <a href="https://developer.squareup.com/apps" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Square Developer Dashboard</a> (Sandbox tab)</li>
-                  <li><code>SQUARE_ACCESS_TOKEN</code> - Get from Square Developer Dashboard (Sandbox tab)</li>
-                  <li><code>SQUARE_ENVIRONMENT</code> - Set to "sandbox"</li>
-                  <li><code>SQUARE_LOCATION_ID</code> - Get from your sandbox locations</li>
+                  <li><code>SQUARE_APPLICATION_ID</code> → sandbox-sq0idp-...</li>
+                  <li><code>SQUARE_ACCESS_TOKEN</code> → your sandbox access token</li>
+                  <li><code>SQUARE_ENVIRONMENT</code> → "sandbox"</li>
+                  <li><code>SQUARE_LOCATION_ID</code> → your sandbox location ID</li>
                 </ul>
               </li>
-              <li>Use the "Test Square Connection" button above to verify</li>
+              <li>Use "Test Sandbox Connection" button to verify</li>
             </ol>
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-800">
